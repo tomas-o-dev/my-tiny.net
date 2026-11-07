@@ -1,0 +1,411 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Roles</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+
+<br>
+
+<h2>Configuring our Virtual Machines</h2>
+
+<hr>
+
+
+Once we have a common base platform, we can use some scripts to configure and add software packages that our servers need to perform their roles. 
+<br><br>
+A partial setup to get you started with good examples is provided - it's up to you to finish the configuration and enhance it 
+
+<br><br>
+<blockquote>
+<blockquote>
+<blockquote>
+<img src="logos/lab3.jpg" width="450" height="340">
+</blockquote>
+</blockquote>
+</blockquote>
+
+In this Lab Exercise we use a script to set things up automatically: 
+we will have <tt>dnsmasq</tt> on the Gateway as a DHCP and name server, and all 
+of our other hosts will get dynamic addresses from there. In the next Lab Exercises
+we will finish the mail configuration, and after that the LDAP and SSL configuration 
+to complete our TinyNet. 
+
+<br><br>
+The standard configuration files are distributed as an ISO image file 
+that you can mount as a CD on your virtual machine, and then run a script to 
+put everything in its proper place. 
+
+<br><br>
+
+<hr><br>
+
+We use the same font conventions here:
+<br><br>
+<code>This</code> is a command you type in a virtual machine 
+<br><br>
+<cite>This</cite> is a menu option you choose or a keyboard shortcut
+<br><br>
+<tt>This</tt> is used for emphasis - something to look for or remember
+<br><br>
+<em>Menu Item</em>::<em>Page</em> is short for "this <em>Page</em> under 
+<em>Menu Item</em> on the Menu"
+<br><br>
+<hr>
+<br>
+<font color="red"><b>IMPORTANT</b></font><br>
+We want to <font color="red"><b>turn off the VirtualBox internal DHCP server 
+for the Host-Only interfaces</b></font>, because our TinyNet 
+will be using <tt>dnsmasq</tt> on the Gateway. 
+You should have done this when you created your ToClone VM.
+Check it now with <cite>Global Tools&nbsp;::&nbsp;Host Networks</cite>, and also 
+make sure the IP address is <cite>192.168.56.<code>n</code></cite> 
+(where <tt>n</tt> is usually one).
+
+<br><br>
+<hr>
+
+<h3>Create our VMs</h3>
+
+In our previous lab exercises created one Virtual Machine and did some initial 
+configuration. Now we will use VirtualBox to "clone" that VM into others that 
+we can configure as Gateway, WebServer, MailHost, and LDAPhost (like a "VM factory").
+
+<br><br>
+Before we clone, let's get the configuration CD in the drive so we don't have 
+to do that for each VM individually. Do this with NO VMs running.
+<ol>
+<li> At the virtualBox main screen, choose your ToClone VM and select 
+<cite>Settings</cite>&nbsp;&gt;&nbsp;<cite>Storage</cite> <br>
+<li> Click the <cite>CD (circle)</cite> icon under <tt>IDE Controller</tt><br>
+<li> Click the <cite>Browse (folder)</cite> icon next to the <tt>CD/DVD Device</tt> listbox<br>
+<li> Browse to location of the Conf.iso image and select it.
+</ol>
+This is equivalent to putting a real CD into the drive; since it is a file rather than 
+an object, several machines can use it at the same time. 
+
+<br><br>
+Now doublecheck <cite>Settings</cite>&nbsp;::&nbsp;<cite>Network</cite> to make sure  
+<cite>Adapter 1</cite> is Enabled and <cite>Host-Only</cite>, and that NO OTHER 
+Adapters are Enabled. 
+
+<br><br>
+Start manufacturing! At the Virtualbox main menu, choose <cite>Machine</cite> and 
+<cite>Clone</cite> to create four VMs: Gateway, WebServer, MailHost, and LDAPhost. 
+Make each one a <cite>Full Clone</cite>, and 
+BE SURE TO <cite>Reinitialise the MAC address</cite> so each VM will have 
+a unique (layer 2) identity on the network.
+
+<br><br>
+Now we configure the virtual machines one-by one. The Gateway has a couple of 
+extra steps, and must be done first; the rest are simple and all the same.
+
+<br><br>
+<hr>
+<h3>Configuring the Gateway</h3>
+
+Since the gateway is the central point that links all of our subnets, it needs 
+extra network interfaces. At the VirtualBox main screen, highlight the Gateway VM,
+use the big orange icon for 
+<cite>Settings</cite>&nbsp;::&nbsp;<cite>Network</cite> and 
+change <cite>Adapter&nbsp;1</cite> to <cite>Bridged</cite> and Enable 
+<cite>Adapter&nbsp;2,&nbsp;3,&nbsp;and&nbsp;4</cite> as <cite>Host-Only</cite>. 
+<br><br>
+
+Start the Gateway VM, log in as <tt>root</tt>, start <code>mc</code>, and 
+navigate to <cite>/media/cdrom</cite>. 
+<br><br>
+
+Highlight <tt>SetRole.sh</tt>, press <cite>[Enter]</cite> (we know the 
+"executable" bits are set because it is "green star"), and configure 
+as Gateway.
+
+<br><br>
+<font color="red"><b>IMPORTANT:</b></font>
+<br><br>
+
+For all of our other VMs we let the system automatically 
+reboot at this point, <b>but there are two things we want 
+to do before that on the Gateway</b>, so press <cite>[Esc]</cite> or choose 
+<cite>Cancel</cite> to return to <tt>mc</tt>. 
+
+<br><br>
+<b>[&nbsp;1&nbsp;]&nbsp;</b>
+Navigate to <tt>/etc</tt> and then use <cite>[F3]</cite> to View 
+<cite>/etc/HOSTNAME</cite>. This is the "proper" name for the 
+host, which looks a little bit cryptic - see 
+<em>Server Roles&nbsp;::&nbsp;DNS&nbsp;&amp;&nbsp;DHCP</em> 
+for details about the TinyNet naming scheme, along with an 
+explanation of how it works in practice. 
+
+<br><br>
+Now use <cite>[F4]</cite> to Edit <cite>/etc/hosts</cite>. On the Gateway this defines "aliases" that we can use instead of the proper name in 
+<tt>/etc/HOSTNAME</tt>. 
+On the other machines this file is almost empty, 
+because their aliases are managed by dnsmasq.
+<br><br>
+There is a warning in <tt>/etc/hosts</tt> about hostnames 
+with no "dot", but somehow someone still got it wrong! So, 
+<ol>
+<li> Add <code>gw.tinynet.edu</code> at the end of the first line, and
+<li> Add <code>gateway.tinynet.edu</code> at the end of the third line
+<li> Save the file with <cite>[F2]</cite> and exit the editor with 
+<cite>[F10]</cite>
+</ol>
+<br>
+<b>[&nbsp;2&nbsp;]&nbsp;</b>
+The other thing we need to do is fix the DHCP Client Daemon (<tt>dhcpcd</tt>)
+configuration for the Bridged interface. When this   
+service starts it tries to be "helpful" by automatically identifying 
+a nameserver and writing the address to <tt>/etc/resolv.conf</tt>. 
+This works fine for most of our VMs, but on the Gateway it "steals" 
+control over name lookups away from our <tt>dnsmasq</tt> nameserver. 
+
+<br><br>
+Fortunately, the fix is simple. 
+<br><br>
+First, use <cite>[F8]</cite> to delete <cite>/etc/resolv.conf</cite>
+<br><br>
+Then use <cite>[F4]</cite> to open <cite>/etc/dhcpcd.conf</cite> in the mc editor, 
+move all the way down to the very last line, and change it to read<br>
+<pre>nohook <font color="red">resolv.conf, </font>wpa_supplicant</pre>
+<br><br>
+Save the file with <cite>[F2]</cite>, exit the editor with 
+<cite>[F10]</cite>, and exit <tt>mc</tt> with 
+<cite>[F10]</cite> again. 
+Now we can <code>reboot</code> to get the new configurations in place. 
+
+<br><br>
+<br><br>
+When the Gateway finishes rebooting, log in and start <tt>mc</tt>. 
+Use <cite>[F3]</cite> to View the files in 
+<cite>/etc/dnsmasq.d</cite> that control aspects of the DHCP server, 
+DNS, and logging. Documentation is embedded in the files.
+
+<br><br>
+Now use <cite>[F4]</cite> to Edit <cite>/etc/dnsmasq.d/cnames</cite>. 
+Take note of how the naming scheme works, what aliases 
+are already defined for the other servers, and how you can define new aliases. 
+
+<br><br>
+We want to create a new alias (cname) for the mail server.  
+
+<br><br> 
+Press <cite>[F3]</cite> and look for <cite>[B---]</cite> in the top status 
+bar which means you are marking a block. Use the arrow keys to highlight 
+the whole <cite>cname=mailhost.tinynet.edu</cite> line
+and press <cite>[F3]</cite> again at the end of the block. 
+
+<br><br>
+Press <cite>[Enter]</cite> to open a blank line (top status bar will 
+now show <cite>[BM--]</cite>), and press <cite>[F5]</cite> to paste in 
+the block. Then press <cite>[F3]</cite> until the top status bar 
+just shows <cite>[-M--]</cite> (twice is usually enough), which means 
+you have stopped marking blocks of text.
+<i>(yes, that's clunky, but mc does so many good things we just have to 
+forgive this one)</i>
+<br><br>
+Now just change <cite>mailhost</cite> to <code>mail</code> so there is a 
+second alias for this host. Save the file with <cite>[F2]</cite>, 
+exit <tt>mc</tt> and restart dnsmasq to get the new configurations in place. 
+<br><br>
+
+<blockquote>
+<code>/etc/rc.d/rc.dnsmasq stop</code><br>
+<code>/etc/rc.d/rc.dnsmasq start</code>
+</blockquote>
+ 
+<hr>
+
+<br><br>
+<center>
+<table border width="85%" cellpadding="6"><tr><td>
+From now on, be sure the Gateway is at the login screen
+   before starting any other servers
+      (no need to actually log in). Also be sure to turn off the VirtualBox 
+internal DHCP server 
+for the Host-Only interfaces, because our TinyNet 
+will be using <tt>dnsmasq</tt> on the Gateway. 
+
+</td></tr></table>
+</center>
+
+<br><br>
+<hr>
+<h3>Configuring the Other Servers</h3>
+
+This goes quite quickly from the command line
+<ol>
+<li> Change the current directory to the CD: <code>cd&nbsp;/media/cdrom</code>
+<br><br> 
+<li> Run the script <code>./SetRole.sh</code><br>
+Remember - Linux is CaseSensitive!<br>
+<tt>&nbsp;./&nbsp;</tt> tells 
+Linux that the script to run is in the current directory
+<br><br>
+<li> Now reboot ... But Wait!<br>
+Before that, let's get set up to 
+take a live action look at the network startup process.
+</ol>
+
+Log in to the Gateway,   
+and use the <code>clear</code> command to get a blank screen. 
+<br><br>
+
+The <em>Logfiles</em> page under <em>Orientation</em> on the menu shows where 
+each application saves a record of its activity.
+We can watch live updates of DHCP activity by running this command on the Gateway:
+<br><br>
+<code>tail -f /var/log/dnsmasq.log</code>
+<br><br>
+and then booting another server - move the VM windows so you can see both at 
+the same time. 
+<br><br>
+When the new VM reaches the network initialisation stage in its bootup cycle, 
+the Gateway will show dnsmasq checking the hostname against its lists of address 
+ranges for <tt>net-a</tt>, <tt>net-b</tt>, and <tt>net-c</tt> with three 
+DHCPDISCOVER messages (that only show the MAC address), and then assigning an 
+appropriate address with DHCPOFFER and DHCPREQUEST (that show both the MAC and 
+the IP address), and finally DHCPACK, which also shows the hostname.
+<br><br>
+
+
+<hr>
+<br>
+
+Once you have all four machines configured individually, they are 
+ready to take on their roles in the network.
+<br><br>
+
+<blockquote>
+<table border="4" cellpadding="6"><tr><td>
+<font color="red"><b>EXTREMELY IMPORTANT</b></font><br>
+<OL>
+<li> Make sure the VirtualBox DCHP is <i>turned off</i> for Host-Only network interfaces
+<br><br>
+<li> If your VM is not shut down properly it will become corrupted and you will have to recreate it. <br>
+<b>NEVER close your VM by simply closing the window</b> 
+(except in an emergency).<br>
+Use <code>poweroff</code> at the command prompt, or go to the <br>
+VirtualBox menu at the top of the VM window and select 
+<cite>Machine</cite> then <cite>ACPI Shutdown</cite>
+
+<br><br>
+<li> <b>Always start the Gateway first</b>, and wait until the Gateway has 
+finished booting before <br>starting the other VMs. 
+The WebServer, MailHost, and LDAPhost can all boot at the same time.
+
+</ol>
+</td></tr></table>
+</blockquote>
+
+
+<hr>
+<br>
+Since we have dnsmasq running on the Gateway we can also use names 
+on our TinyNet now.<br>Read up on how to poke around the DNS with 
+<code>man dig</code>, and try it out:
+<br><br> 
+<blockquote>
+<code>dig www.tinynet.edu</code>
+<br><br>
+<code>dig gw.net-b.tinynet.edu</code>
+</blockquote>
+
+OK? Now let's have some fun.
+<br><br>
+All machines have a text-mode browser called <code>links</code> 
+and a webserver called <tt>monkey</tt> installed.
+
+<br><br>
+&nbsp;1. On any server, make a list of open (listening) ports. 
+This is one of the few commands you really need to know: 
+just think of the famous flower from Holland (the Tulip)<br>
+<code>netstat&nbsp;-tulp</code> or <code>netstat&nbsp;-tulpn</code>
+
+<br><br>
+&nbsp;2. Open a new virtual terminal with <cite>[Alt][F2]</cite> 
+and start <code>htop</code> to see the PID and owner of the Monkey process. 
+
+<br><br>
+&nbsp;3. Open a new virtual terminal with <cite>[Alt][F3]</cite> 
+and start <code>links</code>. Press <cite>[Esc]</cite> to get the menu, 
+then retrieve the default web page using the loopback address with the URL
+<code>http://127.0.0.1/</code>
+
+<br><br>
+&nbsp;4. Start <code>links</code> on any other server and retrieve 
+the Monkey index page using the <tt>cname</tt> for another (running) 
+server rather than an IP address. 
+
+<br><br>
+&nbsp;5. Retrieve the Monkey index page from your WebServer using 
+your host system browser (Chrome, Safari, Firefox, Edge ...) and 
+one of the WebServer IP addresses - either one will work.
+
+[ You cannot use a <tt>cname</tt> 
+because your host system does not know how to use the TinyNet DNS, 
+but you can always contact a server on the same subnet! ]
+
+<br><br>
+&nbsp;6. Use <code>mc</code> to take a look at the Monkey configuration 
+files in <cite>/etc/monkey</cite>, and poke around in <cite>/var</cite> 
+to find where Monkey serves webpages from.
+<i>Hint: find the</i> <cite>Server_Root</cite> <i>directive in</i> 
+<tt>/etc/monkey/monkey.conf</tt>
+<br><br>
+<center>
+<a href="https://www.w3schools.com/html/html_basic.asp">
+www.w3schools.com/html/html_basic.asp</a><br>
+is a great place to get started with understanding how web pages work!
+</center>
+
+<hr><hr>
+
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>
+
+
+
+

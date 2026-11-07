@@ -1,0 +1,389 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Users</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+<br>
+
+<h2>Creating and Controlling User Accounts</h2>
+
+<hr>
+<br>
+Here we look at user management and administration. 
+
+<br><br>
+Chapter 6 of the RedHat Linux <em>Systems Administrator's Primer</em> 
+from <em>RHEL 9 Guides</em> on the menu  
+is a very good resource on user management in general, and describes 
+the command line tools available for user management on our TinyNet 
+systems. 
+
+<br><br>
+<h3>Creating Users</h3>
+<tt>useradd</tt> is good enough for 
+system accounts (see <em>System Accounts</em> under <em>Server Roles</em> 
+on the menu)  
+but <tt>adduser</tt> is much nicer for adding regular users.
+It asks a lot of questions, but just go with the defaults. Eventually 
+you will see
+<br><br>
+<pre>
+ New account will be created as follows:
+ ---------------------------------------
+  Login name.......: 
+  UID..............: [ Next available ]
+  Initial group....: [ users ]
+  Additional groups: [ None ]
+  Home directory...: [ /home/login_name ]
+  Shell............: [ /bin/bash ]
+  Expiry date......: [ Never ]
+</pre>
+See the man pages for <tt>usermod</tt> (to modify user characteristics) 
+and <tt>userdel</tt> (to delete a user). There is a similar set of 
+utilities for groups: <tt>groupadd, groupmod, groupdel</tt> 
+
+<br><br>
+Remember to set a password for each user you create with 
+<tt>passwd username</tt>.
+Any trivial password is good enough for now - or try <tt>pwgen</tt> 
+(on any TinyNet host).
+
+<br><br>
+The <tt>pwgen</tt> utility  
+generates passwords which are designed to be easily memorized by humans, 
+while being as secure as possible. Human-memorable passwords are never 
+going to be as secure as completely completely random passwords, but 
+people tend to write down things that are difficult to remember (like 
+completely randomly generated passwords) and usually rely on a predictable 
+pattern if they are asked to change their password on a regular basis.
+<br><br>
+The pwgen program is designed to be used both interactively 
+and in shell scripts. Check the man page!
+<br><br>
+Just to note (since it is a bit hard to find): to automatically set 
+a password with <tt>useradd</tt> all you need are the openssl libraries:
+<pre>
+   PP=$(openssl passwd -1 net-r.0tt0)
+   groupadd -g 234 otto
+   useradd -g otto -u 234 -d /var/net-r -c "otto.net-r" -s /bin/rbash -p $PP otto
+</pre>
+creates the new user <tt>otto</tt> with password <tt>net-r.0tt0</tt>
+
+
+<br><br>
+<h3>sudo</h3>
+
+The <tt>su</tt> command ("superuser" or "substitute user") is the standard way 
+for a user logged into one account to temporarily change their identity to 
+another user when they know that other user's password. So, anyone logged in 
+as a normal user can get root privileges if they know the root password. This 
+is a big security risk, known as "privilege escalation".
+
+<br><br>
+But, there are times when system administrators want to give some users limited  
+administrative rights - helpdesk personnel who need to solve problems with 
+permissions, or backup operators for example.     
+
+<br><br>
+An advantage of <tt>sudo</tt> is that an administrator can allow different users access 
+to specific commands based on their needs, without giving out the root password.
+By default, sudo requires that users authenticate themselves with their own password. 
+Once authenticated, permitted commands are executed as if by the root user. 
+
+<br><br>
+Since commands executed via sudo are executed in the user's shell, not a root shell, the root account can be disabled. This is the default for Ubuntu, which is why you see so many helpful instructions predicated by <code>sudo</code>. The logic behind this is that root privileges should be used consciously and cautiously, which is not always the case when people have a root shell.
+
+<br><br>
+The argument against sudo is that having a <tt>/etc/sudoers</tt> that simply says
+<br><br> 
+<pre>%admin ALL=(ALL) ALL</pre>
+means rather than having one root password to protect, the password for 
+every user in the admin group is a root password, which makes the system 
+much more vulnerable. 
+
+<br><br>
+A compromise is to define <tt>User_Alias</tt> 
+and <tt>Cmnd_Alias</tt> in the <tt>/etc/sudoers</tt> configuration file, 
+so only certain users are allowed to run a root shell. This  
+means there are still several root passwords but attackers 
+have to guess the username as well as the password.
+
+<br><br>
+The bottom line is that higher security means less convenience, and 
+system administrators always need to find a balance between these two 
+conflicting goals. 
+
+<br><br>
+<blockquote>
+<table border cellpadding="4">
+<tr><td>
+Whether or not you use sudo, using escape sequences to make a user login prompt green and a root login prompt red <br>is a great idea: 
+see <em>Prompt Color</em> under <em>Host Management</em> on the menu. 
+</td></tr>
+</table> 
+</blockquote>
+
+<br><br>
+The <tt>sudo</tt> and <tt>sudoers</tt> man pages are not the easiest to 
+read - the <em>Configuring sudo</em> page under <em>Documentation</em> 
+on the menu is simpler, but still detailed. This is just a brief, practical introduction.
+
+<br><br>
+<blockquote><blockquote>
+<font color="red"><b>Warning: <tt>/etc/sudoers</tt> MUST free of syntax errors! 
+Any error makes sudo unusable. <br>Always edit it with <code>visudo</code> to prevent errors.
+</b></font><br>
+visudo checks the sudoers file after the edit and will not allow saving the file if there is a syntax error.<br> It also tells you to try again later if someone else is already editing
+the sudoers file.
+<br><br>
+If <code>visudo</code> comes up in a strange editor, add a line under the Defaults specification comment that says<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<cite>Defaults&nbsp;&nbsp;&nbsp;editor=/usr/bin/mcedit:/usr/bin/vi</cite>
+
+</blockquote></blockquote>
+
+Creating the same setup as Ubuntu is straightforward:
+<ol>
+<li> Use the command <code>id -Gn <i>username</i></code> to check the user's current group membership
+<br><br>
+<li> Add the user to the existing group <tt>wheel</tt> with 
+<code>usermod -G wheel,users username</code><br>
+Names of the groups must be separated with a comma and no spaces. If the user is currently 
+a member of a group which is not in the list, the user will be removed from that group. 
+<br>The <tt>wheel</tt> group has a long history: check the 
+<a href="https://unix.stackexchange.com/questions/1262/where-did-the-wheel-group-get-its-name">
+alternate stories of its origin</a>
+and 
+<a href="https://en.wikipedia.org/wiki/Wheel_(computing)">
+"wheel wars" at Wikipedia</a>
+<br><br>
+<li> Verify the groups assigned to the user with <code>id</code> again.
+<br><br>
+<li> Use <code>visudo</code> to edit <tt>/etc/sudoers</tt> 
+and uncomment one of the <cite>%wheel</cite> lines, depending on if you want the user to enter their password again or not.
+<br><br>
+<li> Go one step farther and add a line to the Defaults section that 
+says <code>Defaults requiretty</code> so sudo can only 
+be run from an interactive login session 
+("tty" is the name for a screen or "terminal" in the Unix 
+tradition, because originally <tt>stdout</tt> was a "teletype" printer (tty) rather 
+than a screen). This prevents using SSH for automatic login and execution of commands; 
+see the <em>Smoother SSH</em> page under <em>SSL and SSH</em> on the menu for 
+ways to get around this.
+<br><br>
+<li> You might also want to try <code>Defaults pwfeedback</code> so you can see something 
+when you put in a password - this is off by default to prevent "shoulder surfers" from 
+seeing the number of characters in your password.
+</ol>
+
+Once you have a working sudo setup, it only takes a few steps to disable root 
+logins and force people to use sudo. 
+<br><b><i>Be Careful:</i></b> you can lock 
+yourself out if you disable the root password before you know your sudo 
+setup works properly!
+
+<ol>
+<li> Open a new virtual terminal (VT), log in as a normal user 
+in the proper group, and get a root shell with <code>sudo&nbsp;bash</code>
+<br> 
+<li> The easiest way to disable the root account is to lock it with 
+<code>passwd -l root</code>
+<br>
+<li> Open another VT and try to login as root to test that it worked.
+<br>
+<li> Switch back to your <tt>sudo</tt> VT
+<br>
+<li> A similar command unlocks the account: 
+<code>passwd -u root</code>
+<br>
+<li> Again, switch to another VT and try to login as root 
+to test that unlocking the root account worked.<br> 
+<li> Once you are sure it works, leave the root account locked.
+</ol>
+
+<br><hr>
+
+<h3>Other Tools</h3>
+There are a number of other tools that it is useful to know about, but have no 
+practical application in out TinyNets:
+
+
+<h3>Restricted Shell</h3>
+Restricted shells provide protection to both the system and the user. The system is 
+protected because the user should not have much access to destructive commands. The 
+user is protected damage done to the system using commands not on the path are likely 
+not done by the user. The system manager should be responsible for ensuring the commands 
+on the path do not provide unrestricted shell access. A user always has full access 
+to programs on their path, so giving people the 
+ability to write any files on the path provides an obvious risk.
+
+<br><br>
+If bash is started with the name rbash (via a symlink) 
+the shell becomes restricted. It behaves identically to the standard shell with the 
+exception that the following are disallowed or not performed: 
+<ul>
+<li> changing directories with <cite>cd</cite>
+<li> specifying command names containing <cite>/</cite>
+<li> specifying a file name containing a <cite>/</cite> as an argument 
+to the <cite>.</cite> builtin command 
+<li> setting or unsetting the values of SHELL, PATH, ENV, or BASH_ENV
+<li> redirecting output using the 
+<cite>&gt;</cite>, <cite>&gt;|</cite>, <cite>&lt;&gt;</cite>, 
+<cite>&gt;&amp;</cite>, <cite>&amp;&gt;</cite>, and <cite>&gt;&gt;</cite>
+redirection operators 
+</ul>
+
+However, <i>when a shell script is executed, rbash turns off 
+any restrictions in the shell spawned to execute the script.</i> 
+This includes the files bash reads when it starts up. 
+When bash is invoked as an interactive login shell it first 
+reads and executes commands 
+from <tt>/etc/profile</tt>, and then looks for 
+<ol>
+<li> ~/.bash_profile<br>
+    The personal initialization file, executed for login shells 
+<li> ~/.bashrc<br>
+    The individual per-interactive-shell startup file 
+</ol>
+in that order, and reads and executes commands from the first 
+one that exists and is readable.
+When a login shell exits, bash looks for and executes commands from 
+<tt>~/.bash_logout</tt> and <tt>/etc/bash.bash_logout</tt>, if they exist. 
+These are files are useful for initialising and cleaning up after a 
+restricted login.
+
+
+<h3>chroot Jail</h3>
+<tt>chroot</tt> changes the 
+apparent root directory for a running process and its children. 
+This means it cannot name (and therefore not access) files 
+outside the designated directory tree. The modified environment is 
+often called a "chroot jail". This takes some work to set up, but it is often 
+considered worth it for remote logins. 
+<br><br>
+For a chroot process to be able to start successfully, you must populate the chroot directory with all required program files, configuration files, device nodes, and shared libraries at their expected locations relative to the level of the chroot directory.
+This means copying copy the appropriate binaries and their libraries (use <tt>ldd</tt>!) into the jail directory tree (e.g., /jail/usr/lib, /jail/sbin, etc.), ensuring that there 
+are no setuid or setgid executables that are owned by root.
+A program can break out of a chroot jail if it can gain root privilege and use chroot() to change its current working directory to the real root directory.  
+<br><br>
+Rather then manually copying all commands and required libraries, see this article for a very useful script: <br>
+<a href="http://how-to.linuxcareer.com/how-to-automatically-chroot-jail-selected-ssh-user-logins">
+http://how-to.linuxcareer.com/how-to-automatically-chroot-jail-selected-ssh-user-logins</a>
+<br><br>
+That article also shows how to automatically chroot jail selected user ssh logins based 
+on the user group. This technique can be quite useful if you want your user to be provided with a limited system environment and at the same time keep them separate from your main system. You can also use this technique to create a simple ssh honeypot.
+<br><br>
+The classic use for chroot is ftp. 
+A good reference is 
+<a href="http://www.thegeekstuff.com/2012/03/chroot-sftp-setup/">
+http://www.thegeekstuff.com/2012/03/chroot-sftp-setup/</a>
+<br><br>
+The format of a command to start a service in a chroot jail is
+<br><br>
+<pre>
+    /usr/sbin/chroot <i>jailpath</i> /bin/su <i>user</i> <i>daemonname</i> &
+</pre>
+with the pathname of the jail directory, the username that runs the daemon, and 
+the path (inside the jail) of the daemon that provides the service.
+
+<br><br>
+<h3>PAM</h3>
+
+PAM, short for Pluggable Authentication Modules, is a system of libraries 
+that allows the local system administrator to choose how individual applications authenticate users. Linux-PAM separates the tasks of authentication into four independent management groups: account management; authentication management; password management; and session management. These groups take care of different aspects of a typical user's request for a restricted service. One of the most common uses of PAM is to provide a "single-sign in" for users by getting their credentials from an LDAP server rather than a local /etc/passwd file.
+<br><br>
+PAM is NOT like xinetd that encloses and restricts access to some service. An application needs to be "PAM aware", meaning it was been written and compiled explicitly to use PAM. Slackware does not have PAM enabled (up to version 14.2, and possibly beyond). This is at least in part because experimenting with PAM is an easy way to lock yourself out of the system permanently: the system is not accepting your authentication credentials, but you need to log into the system 
+to make the changes needed to prevent you from being locked out.
+
+<br><br>
+<h3>RADIUS</h3>
+RADIUS, which stands for "Remote Authentication Dial In User Service", 
+is another application that supports centralized authentication.
+RADIUS specialises in AAA (Authentication, Authorization, Accounting) 
+for equipment such as wireless access points, and is often the back-end 
+of choice for802.1X Port-based Access Control authentication as well. 
+<ul>
+    <li> Authentication: If the user can access the equipment.
+    <li> Authorization: Level of access to the equipment.
+    <li> Accounting: What the user is doing
+</ul>
+RADIUS servers receive user connection requests, authenticate the user, and then return the configuration information necessary for the client to deliver service to the user.
+Servers can typically use a number of data sources, including text files, LDAP servers, SQL databases, and even PAM; they also typically support different types of encryption, depending on the authentication architecture in place. 
+<br><br>
+RADIUS is often used in enterprises to manage access to the Internet, internal wireless networks, virtual private networks (VPNs), network ports, and to facilitate roaming by 
+issuing a single set of credentials that are usable on many networks. 
+Most sites need complex policies, interactions with databases, and logging.
+Switches and Access Points are typical RADIUS clients. The bottom line is that while we could set up RADIUS on our TinyNet, without actual hardware it is too minimal to be 
+meaningful (iwconfig reports that Virtualbox Host-Only adapters do not have wireless extensions). 
+
+<br><br>
+<h3>Brain Teaser</h3>
+
+Best practice recommends that users keep changing their passwords regularly. 
+But typically users won't change their password unless they are forced to.
+
+<br><br>
+It's the system administrators responsibility to find a way to force them 
+to change their password, but putting a gun on their head is not an option!
+(even though the most security conscious sysadmins may be tempted to do that).
+
+<br><br>
+Here is the basis of a script to automatically change a user's password if it 
+is more than one day old. Save this from your browser, or download it with <tt>wget</tt>
+<a href="pwchg.sh.txt">http://www.my-tiny.net/pwchg.sh.txt</a>
+
+<br><br>
+It's a brain teaser because you not only need to finish it and test it, you also need 
+to figure out how to use it. Ideally we could run it every time the user logs in or 
+logs out, so the user is assigned a new password frequently - but how? Should it be used 
+for every account on the system? only for our "sudoers"? only for the "root-shell 
+sudoers"? What could go wrong?
+
+<br><br>
+
+<hr><hr>
+
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>
+
+

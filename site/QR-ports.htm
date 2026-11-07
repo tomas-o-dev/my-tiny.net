@@ -1,0 +1,229 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Common Ports</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+
+<br>
+<!-- -->
+<br>
+
+<h2>Relevant Port Assignments</h2>
+
+<hr>
+<br>
+It is usually better to go with the standard ports, which as we know are listed 
+in <tt>/etc/services</tt>. Rather than having everyone search through the 2090 lines 
+of assignments there, here is a list of relevant ports for the Lab Exercises
+
+<br><br>
+<a href="refs/common_ports.pdf">A more extensive (and colorful!) list of commonly used ports is here</a>
+
+<br><br> 
+<pre>
+# The Well Known Ports are those from 0 through 1023.
+# The Registered Ports are those from 1024 through 49151
+# The Dynamic and/or Private Ports are those from 49152 through 65535
+
+domain   53/tcp	   #Domain Name Server
+domain   53/udp	   
+
+bootps   67/tcp	   dhcps	#Bootstrap Protocol Server
+bootps   67/udp	   
+bootpc   68/tcp	   dhcpc	#Bootstrap Protocol Client
+bootpc   68/udp	   
+
+http     80/tcp	   www www-http	#World Wide Web HTTP
+http     80/udp	   
+https   443/tcp
+https   443/udp
+
+imap    143/tcp	   imap2 imap4	#Interim Mail Access Protocol v2
+imap    143/udp	   imap2 imap4	
+imaps   993/tcp	   # imap4 protocol over TLS/SSL
+imaps   993/udp
+
+ldap    389/tcp	   #Lightweight Directory Access Protocol
+ldap    389/udp	   
+ldaps   636/tcp	   sldap	   #ldap protocol over TLS/SSL
+ldaps   636/udp	   sldap
+
+smtp     25/tcp	   mail		#Simple Mail Transfer
+smtp     25/udp	   mail		
+smtps   465/tcp	   #smtp protocol over TLS/SSL (was ssmtp)
+smtps   465/udp	   
+
+submission   587/tcp
+submission   587/udp
+
+ssh      22/tcp	   #Secure Shell Login
+ssh      22/udp	   
+
+telnet   23/tcp
+telnet   23/udp
+
+tftp     69/tcp	   #Trivial File Transfer
+tftp     69/udp	   
+</pre>
+
+Some others from /etc/services that might be interesting - 
+<br><br>
+For NFS
+<pre>
+nfsd-status	1110/tcp   #Cluster status info
+nfsd-keepalive	1110/udp   #Client status info
+
+nfsd		2049/tcp   nfs		# NFS server daemon
+nfsd		2049/udp   nfs		
+
+lockd		4045/udp   # NFS lock daemon/manager
+lockd		4045/tcp
+
+rpc2portmap	369/tcp
+rpc2portmap	369/udp
+
+sunrpc          111/tcp	   rpcbind	#SUN Remote Procedure Call
+sunrpc          111/udp	   
+</pre>
+
+<br><br>
+For CIFS
+<pre>
+netbios-ssn	139/tcp	   #NETBIOS Session Service
+netbios-ssn	139/udp	   
+microsoft-ds	445/tcp
+microsoft-ds	445/udp
+</pre>
+
+<br><br>
+Centralised syslog
+<pre>
+syslog          514/udp 									
+syslog-conn     601/tcp    #Reliable Syslog Service 			
+syslog-conn     601/udp 	 			
+syslog-tls      6514/tcp   #syslog over TLS 			
+syslog-tls      6514/udp 	 			
+</pre>
+
+<br><br>
+Network Monitoring
+<pre>
+snmp            161/tcp
+snmp            161/udp
+snmptrap        162/tcp  snmp-trap
+snmptrap        162/udp	   
+</pre>
+
+<br><br>
+Database
+<pre>
+sql*net         66/tcp   #Oracle SQL*NET
+sql*net         66/udp	   
+orasrv        1525/tcp   #oracle
+orasrv        1525/udp   
+tlisrv        1527/tcp   #oracle
+tlisrv        1527/udp   
+
+ms-sql-s      1433/tcp   #Microsoft-SQL-Server
+ms-sql-s      1433/udp   
+ms-sql-m      1434/tcp   #Microsoft-SQL-Monitor
+ms-sql-m      1434/udp   
+</pre>
+
+<br><br>
+For talking to cisco equipment
+<pre>
+cisco-fna	130/tcp	   #cisco FNATIVE
+cisco-fna	130/udp	   
+cisco-tna	131/tcp	   #cisco TNATIVE
+cisco-tna	131/udp	   
+cisco-sys	132/tcp	   #cisco SYSMAINT
+cisco-sys	132/udp	   
+
+licensedaemon	1986/tcp   #cisco license management
+licensedaemon	1986/udp   
+
+tr-rsrb-p1	1987/tcp   #cisco RSRB Priority 1 port
+tr-rsrb-p1	1987/udp   
+tr-rsrb-p2	1988/tcp   #cisco RSRB Priority 2 port
+tr-rsrb-p2	1988/udp   
+tr-rsrb-p3	1989/tcp   #cisco RSRB Priority 3 port
+tr-rsrb-p3	1989/udp   
+
+stun-p1		1990/tcp   #cisco STUN Priority 1 port
+stun-p1		1990/udp   
+stun-p2		1991/tcp   #cisco STUN Priority 2 port
+stun-p2		1991/udp   
+stun-p3		1992/tcp   #cisco STUN Priority 3 port
+stun-p3		1992/udp   
+
+snmp-tcp-port	1993/tcp   #cisco SNMP TCP port
+snmp-tcp-port	1993/udp   
+
+stun-port	1994/tcp   #cisco serial tunnel port
+stun-port	1994/udp   
+
+perf-port	1995/tcp   #cisco perf port
+perf-port	1995/udp   
+
+tr-rsrb-port	1996/tcp   #cisco Remote SRB port
+tr-rsrb-port	1996/udp   
+
+gdp-port	1997/tcp   #cisco Gateway Discovery Protocol
+gdp-port	1997/udp   
+
+x25-svc-port	1998/tcp   #cisco X.25 service (XOT)
+x25-svc-port	1998/udp   
+
+tcp-id-port	1999/tcp   #cisco identification port
+tcp-id-port	1999/udp   
+</pre>
+
+
+<hr><hr>
+<br>
+
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,500 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Multitail</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<br>
+
+<h2>MultiTail</h2>
+
+<hr>
+<br>
+
+MultiTail is an ideal tool for seeing the effects of tests. MultiTail lets you view one or multiple files in separate windows on your console, or merge files with a different color for each so you can easily understand which file the lines are from. Output of programs can be viewed, programs can be automatically restarted, restart interval can be set, the difference since the previous run can be displayed instead of everything, a window can be cleared before a new iteration, can scroll back in a window, line wrapping can be switched off to allow
+scrolling left and right with the cursor keys, and a search function with regular expressions is included. 
+<a href="https://www.vanheusden.com/multitail/features.php">
+[wow - this guy thinks of <i>everything</i>]</a>
+
+<br><br>
+To see a list of keys to use while the program runs,  
+press <cite>[F1]</cite> or <cite][Control] h</cite> at any time: it gives you context related information. Just quickly, if you look at multiple files with MultiTail press <cite>b</cite> select the window, use the up/down arrow keys 
+to scroll in the window, <cite>gg</cite> to move to the top or <cite>G</cite> to 
+move to the end, <cite>Y</cite> to deactivate and activate linewrap, 
+and <cite>q</cite> to exit the program.
+
+<br><br>
+Here are some basic examples: (you should adjust the filenames ...)
+
+<br><br>
+View two logfiles two windows:<br>
+<br><code>multitail /var/log/messages /var/log/auth.log</code>
+
+<br><br>
+View two log files in columns<br>
+<br><code>multitail -s 2 /var/log/messages /var/log/auth.log</code>
+
+<br><br>
+Merge two log-files with a different color for each so you can easily understand which logfile the lines are from:<br>
+<br><code>multitail -ci green /var/log/yum.log -ci yellow -I /var/log/mysqld.log</code>
+
+<br><br>
+Run a command and view a log file: the <cite>-l</cite> option allows the command 
+to execute in a window.<br>
+Careful: use lowercase L not one! 
+Also do not forget to use quotes <cite> " </cite> if the external command needs parameter! (like "ping 127.0.0.1")<br>
+<br><code>multitail /var/log/iptables.log -l "ping www.tinynet.edu"</code>
+
+<br><br>
+Merge the output of a command in color with a log file:<br> 
+the <cite>-L</cite> option is like <cite>-l</cite> but merges the output 
+with the previous window <br>
+<br><code>multitail /var/log/iptables.log -ci green -L "ping www.tinynet.edu"</code>
+
+<br><br>
+Run a command at a specified interval: <cite>-r</cite> restarts, 
+<cite>-R</cite> shows only what has changed since the previous run.<br>
+Use <cite>-rc</cite> or <cite>-Rc</cite> to clear the window before each iteration.<br>
+<br><code>multitail -R 2 -l netstat -t</code>
+
+<br><br>
+<table border cellpadding="16"><tr><td>
+You can set up windows, colors and filters from within multitail, 
+and use <cite>w</cite> to generate a shell script to start it with 
+the current settings. Check <cite>F1</cite> for the list of keys.
+</td></tr></table>
+<br>
+
+Here are two more useful multitail command switches from the man page:
+
+<dl><dt>
+<code>--no-repeat</code>
+</dt><dd>
+    "Last message repeated x times" will be printed 
+    instead of the same line over and over again. 
+</dd>
+<br>
+<dt>
+<code>--label</code>&nbsp;<cite>text</cite>
+</dt><dd>
+    Put <cite>text</cite> in front of each line. 
+    Useful when merging multiple files and/or commands. 
+</dd></dl>
+
+<pre>
+Introduction to MultiTail (by the developer) 
+    <a href="http://www.tldp.org/LDP/LG/issue95/vanheusden.html">http://www.tldp.org/LDP/LG/issue95/vanheusden.html</a>
+Quickstart, with a summary of the man page at the end 
+    <a href="https://arkit.co.in/multitail-command-to-view-multiple-logs-in-single-terminal/">https://arkit.co.in/multitail-command-to-view-multiple-logs-in-single-terminal/</a>
+
+If you keep getting bothered with a message about /var/spool/mail, 
+at a command prompt enter (only need to do this once) 
+      echo "check_mail:0" &gt;&gt;/etc/multitail.conf 
+</pre>
+
+<br><hr>
+<br>
+<h3>Penetration Testing (PenTest)</h3>
+
+Multitail is an ideal tool for watching tests of firewall rules. FIN scan, for example: 
+<br><br>
+<blockquote>
+1. Add the IPtables rule with a LOG target<br><br>
+<cite>iptables -A INPUT -p tcp --tcp-flags FIN,ACK FIN -j LOG --log-level error --log-prefix "iptables FIN Scan:&nbsp;"</cite>
+<br><br>
+2. Use Multitail with the command in one window 
+and the logfile in another (remember: use lowercase L not one). Multitail closes 
+the command window when the command finishes, so it is better 
+to send a few packets and sleep for a minute after. 
+<br><br>
+<blockquote>
+<code>multitail /var/log/messages -l "hping -c 3 -p 80 -F 192.168.56.101; sleep 60" </code>
+</blockquote>
+or, let multitail do the repetitions with <code>-r 1</code> (minus r one) to repeat the command every second until you quit with <cite>q</cite>:
+<br><br>
+<blockquote>
+<code>multitail /var/log/messages -r 1 -l "hping -c 1 -p 80 -F 192.168.56.101; sleep 60"</code>
+</blockquote>
+Merging the command and the log messages using different colors can also be effective:
+<br><br>
+<blockquote>
+<code>multitail /var/log/messages -ci green -L "hping -c 3 -p 80 -F 192.168.56.101; sleep 60"</code>
+</blockquote>
+</blockquote>
+That may look like a lot of typing, but you can 
+use the up arrow key to repeat the last command, and just edit it for a new 
+variation. 
+<br><br>
+You can also use <cite>w</cite> from within multitail to save the current settings
+to a shell script that can be used to start it later.
+
+<br><br>
+<hr>
+<br><br>
+
+<h3>Monitor a logfile on another system</h3>
+
+For this we need to setup a way to connect to the remote host and execute the 
+<tt>tail</tt> command. One thing we have to love about Linux/Unix though is that 
+there are any number ways to get things done. In this case we can use:
+<ol>
+<li> ssh multiplexing and a manual login
+<li> ssh with key based authentication
+<li> xinetd listener
+<li> netcat listener (hack it!)
+</ol>
+SSH multiplexing and key based authentication are described in the 
+<em>Smoother SSH</em> page under <em>SSL and SSH</em> on the menu.<br> 
+SSH multiplexing is quite easy, and the two methods can be combined. 
+A command like this on the Gateway (with lowercase L not one)
+<br><br>
+<code>multitail -l "ssh root@mail.tinynet.edu tail -f /var/log/maillog" /var/log/maillog</code>
+<br><br>
+requires either ssh multiplexing AND one manual login =or= key based authentication 
+on the MailServer to keep SSH from asking for a password.
+<br><br>
+We should consider SSH the "most proper" method because information going across the 
+network is encrypted - the other two methods would need a <tt>stunnel</tt> client and 
+server setup for each connection, which would take essentially the same amount of effort.
+On the other hand, if we are only monitoring logfiles we don't <i>really</i> need to 
+encrypt the data in transit. 
+
+<br><br>
+Both the <tt>xinetd</tt> and <tt>netcat</tt> method need a script that the listener will 
+execute when we connect to their port, and both use <tt>netcat</tt> to connect. The 
+difference between these two methods is how the listener is configured. 
+<ul>
+<li> The <tt>xinetd</tt> method is better in the sense that it can handle multiple 
+simultaneous connections, and allows control over who can connect and 
+when they can connect.
+<br><br>
+<li> The <tt>netcat</tt> method is more educational because it takes advantage of some 
+interesting operating system features, but it is a bit less reliable than <tt>xinetd</tt>.
+</ul>
+<h4>Step-by-Step</h4>
+<b>[&nbsp;1&nbsp;]</b>&nbsp;&nbsp;First, we need to set up the script that the listener 
+will execute when we connect to the port. We can use a similar script for 
+Both the <tt>xinetd</tt> and <tt>netcat</tt> method. 
+The script here is the same as the one in the
+<em>xinetd and Arbitrary Services</em> section of the 
+<em>xinetd and Telnet</em> page under 
+<em>Utilities</em> on the menu.
+<br><br>
+To create an empty script, use the command: 
+<code>echo&nbsp;'#!/bin/bash'&nbsp;&gt;/usr/local/sbin/showlog</code><br>
+(use single quote) and then open the file in your editor and type in 
+<br><br>
+<pre>
+    read FILE theRest
+    /usr/bin/tail -f /var/log/$FILE 
+</pre>
+Save it and set the executable bits on the file. It needs to work before the listener 
+is started, so test it with any file that exists in /var/log: for example, 
+<code>echo&nbsp;&quot;stunnel.log&quot;&nbsp;|/usr/local/sbin/showlog</code>
+
+<br><br>
+<b>[&nbsp;2&nbsp;]</b>&nbsp;&nbsp;Next, we need to set up the listener.
+<br><br>
+For the <tt>xinetd</tt> persistent listener, 
+see the <em>xinetd and Arbitrary Services</em> section of the 
+<em>xinetd</em> page under <em>Utilities</em> on the menu 
+for all the details on how to set up the service configuration. 
+
+<br><br>
+For <tt>netcat</tt> you need to review the <em>Standard I/O&nbsp;::&nbsp;Redirection</em> 
+and <em>Utilities&nbsp;::&nbsp;Netcat</em> 
+pages on the menu. Then create another script, for example 
+<cite>/usr/local/sbin/loglisner</cite>
+and put this in the body: (<i>be careful with the spaces in the <tt>if</tt></i>)
+<pre>
+    # check for the named pipe
+      if [ ! -p /tmp/piper ]; then 
+        rm /tmp/piper
+      fi
+      mkfifo /tmp/piper
+
+    # Start the listener for viewing logfiles on port 23432 
+    #     use bsdnc because -lk makes it easy to reconnect 
+    #     send it to the background with & so we can use the terminal 
+      cat /tmp/piper |bsdnc -lk 23432 |/usr/local/sbin/showlog 1&gt;/tmp/piper & 
+</pre>
+Save it and set the executable bits on the file. Run the script 
+and check that the service is ready with <code>netstat&nbsp;-tulp</code>
+<br><br>
+If there is an error in the script, stop it with <cite>Ctrl c</cite> and 
+then kill the process listening on port 23432 using <code>htop</code> or, 
+from the command line, using the process ID number shown in 
+<code>netstat&nbsp;-tulp</code> and 
+<code>kill -9 <i>number</i></code>
+When everything checks out, edit <tt>/etc/rc.d/rc.local</tt> 
+to call your script every time the system boots up.
+
+<br><br>
+<b>[&nbsp;3&nbsp;]</b>&nbsp;&nbsp;Once the listener is ready, you can use <tt>netcat</tt> 
+(under <em>Utilities</em> on the menu) to connect to the service.<br> 
+To connect from the Gateway to the service on the Mailserver, for example 
+<br><br>
+<code>multitail -l "echo maillog |nc -w 300 mail.tinynet.edu 23432" /var/log/maillog</code>
+<br><br>
+The <cite>-w</cite> switch for netcat closes the connection after 
+a given number of seconds, so you probably want to adjust that. 
+<br>
+When using the <tt>netcat</tt> method, be sure to <b><i>only</i></b> 
+quit multitail with <cite>&nbsp;q&nbsp;</cite> 
+(<b><i>not</i></b> <cite>Ctrl c</cite>).
+<br><br>
+<pre>
+File test operators in bash 
+    <a href="https://www.tldp.org/LDP/abs/html/fto.html">https://www.tldp.org/LDP/abs/html/fto.html</a>
+</pre>
+
+<br><hr><br><br>
+
+<h3>Logfile Analysis with Regular Expressions (regex)</h3>
+
+The real power of multitail comes with regular expressions. Regular expressions allow us to select the output we want to see and ignore the rest, 
+which is super-useful when we work with logfiles. 
+
+<br><br>
+The downside is that 
+regular expressions can be very cryptic when they use multiple wildcard 
+symbols to select sets of words, characters, or numbers, and 
+(as if that isn't enough) we need to be aware that 
+<a href="https://stackoverflow.com/questions/2298007/why-are-there-so-many-different-regular-expression-dialects">
+there are a number of regular expression dialects</a> developers can choose 
+to use.
+
+<br><br>
+Regular expressions are so useful for logfile analysis that it is worth 
+a few basic examples. The standard unix tool for applying regular expressions 
+is <tt>grep</tt>, which is capable of using three dialects of 
+Regular Expressions: 
+Basic (BRE) which is the default, Extended (ERE) with <cite>-E</cite>, 
+and Perl-Compatible (PCRE) with <cite>-P</cite>
+
+<br><br>
+The developers 
+of multitail decided to use the "Perl Compatible Regular Expressions" (PCRE) 
+libraries, which have also been adopted by the developers of Python and JavaScript. The examples here will show the "native" <tt>grep</tt> syntax and 
+the PCRE syntax to illustrate the differences.
+
+<br><br>
+Let's start by using <tt>grep</tt> to isolate the DHCP activity for today in the dnsmasq.log file on the gateway. Then we can look at how to do this in multitail, adding in the logfile from a remote client.
+
+There are more ideas in the <em>Centralized syslog Server</em> 
+section of the 
+<em>Orientation&nbsp;::&nbsp;Logfiles</em> page on the menu.
+
+
+<br>
+<h4>Selecting the DHCP activity for today with <i>grep</i></h4>
+
+Scrolling through <tt>/var/log/dnsmasq.log</tt> we find that since every 
+incoming message is passed to all of the interfaces, and dnsmasq is enforcing 
+separate subnets for each interface, there are a lot of <tt>dnsmasq-dhcp</tt> 
+messages that say "wrong network", "no address available", and "range" (at startup). So, we want to exclude these when we select lines that start with today's three-letter Month and day and have "-dhcp" in the line. 
+
+<br><br>
+We don't want to change our script every day, so before we run the command 
+we save the output of the <tt>date</tt> command to a variable, like this:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>bd="$(date +%b' '%_d)"</code><br> 
+using <i>percent underscore d</i> because by default, for the first 9 days of the month 
+the date command returns <cite>Feb&nbsp;02</cite> (for example), while syslog 
+puts in an extra space rather than the leading zero: <cite>Feb&nbsp;&nbsp;2</cite> 
+
+<br><br>
+In the examples here the commands 
+here also are being run from <tt>/var/log</tt> so we don't have to type the 
+path to the file.
+
+<br><br>
+<cite>grep</cite> searches <tt>stdin</tt> and writes all of the lines with the search string to <tt>stdout</tt>. We have to use  
+<cite>&nbsp;-e&nbsp;</cite> to protect a pattern that begins with 
+<cite>&nbsp;-&nbsp;</cite> because <cite>grep</cite>
+is aggressive about its command line arguments 
+(it does not respect the quotes alone).
+
+<br><br>
+Using <tt>grep</tt> we cannot select and exclude lines at the same time, 
+so we need to pipe several commands together to filter the output of each 
+one, like this:
+
+<br><br>
+<pre>
+series of exclude filters:
+    bd="$(date +%b' '%_d)"; cat dnsmasq.log |grep "^$bd" |grep -e '-dhcp' |grep -v 'no addr' |grep -v 'wrong' |grep -v 'range'
+
+or, using immediate input redirection instead of cat and a pipe
+    bd="$(date +%b' '%_d)"; grep "^$bd" &lt;dnsmasq.log |grep -e '-dhcp' |grep -v 'no addr' |grep -v 'wrong' |grep -v 'range'
+</pre>
+That's very inefficient: let's reduce the first part where we select all 
+of the lines that start with today's date and the series of 
+<cite>&nbsp;-v&nbsp;</cite> exclude filters to regular expressions:
+
+<br><br>
+<pre>
+    bd="$(date +%b' '%_d)"; grep "^$bd.*-dhcp" &lt; dnsmasq.log |grep -v "no addr\|wrong\|range"
+</pre>
+<br>
+Using <tt>multitail</tt> we <b>can</b> select and exclude lines at the 
+same time, as long as we follow the rules <br>
+<font color="red">(the documentation is not clear on this!)</font>:
+<ul>
+<li> You can have multiple <cite>&nbsp;-ev&nbsp;</cite> (exclude) but 
+<i><b>only one</b></i> <cite>&nbsp;-e&nbsp;</cite> (select)<br>
+and 
+<li> All <cite>&nbsp;-ev&nbsp;</cite> 
+<i><b>must come before</b></i> <cite>&nbsp;-e&nbsp;</cite>
+</ul>
+<br>
+The <tt>multitail</tt> equivalents of the <tt>grep</tt> examples are:
+<pre>
+series of exclude filters: (only one -e is allowed, so that MUST be a regex)
+    bd="$(date +%b' '%_d)"; multitail -ev "no addr" -ev "wrong" -ev "range" -e ^$bd".*-dhcp" dnsmasq.log <font color="red"><i>next file or command</i></font>
+
+all regex:
+    bd="$(date +%b' '%_d)"; multitail -ev ".*no addr+|.*wrong+|.*range" -e "^$bd+.*-dhcp" dnsmasq.log <font color="red"><i>next file or command</i></font>
+</pre>
+
+<b>Under the microscope</b>
+<pre>
+Set the shell variable     bd="$(date +%b' '%_d)";
+                grep    "^$bd.*-dhcp"	 "no addr\|wrong\|range"
+                mtail   "^$bd+.*-dhcp"	 ".*no addr+|.*wrong+|.*range"
+</pre>
+
+<h4>All Together</h4>
+Once we have a listener set up on the mailserver, the whole multitail 
+command looks like this when we use <cite>&nbsp;\&nbsp;</cite> to 
+break a single command into multiple lines for easier typing, 
+and put in an extra select filter to match the interface we want:  
+<br><br>
+<pre>
+    bd="$(date +%b' '%_d)"; multitail -s 2 \
+    -ev ".*no addr+|.*wrong+|.*range" \
+    -e "^$bd+.*-dhcp+.*eth3" \
+    /var/log/dnsmasq.log \
+    -l "echo dhcpcd-log |nc -w 300 mail.tinynet.edu 23435"
+</pre>
+Remember: <u>No Spaces After the</u> <cite>&nbsp;\&nbsp;</cite>
+<br><br>
+xinetd can "get tired" of launching the shell script after 
+a few rounds of fast experimentation, so if you use an xinetd 
+listener and the multitail command suddenly stops working, 
+restart xinetd on the mailserver.
+
+
+<br><br>
+<h4>Final Notes</H4>
+There are several tools around that use regular expressions to highlight 
+strings in logfiles (rather than whole lines like multitail does), but 
+this is a bit tricky in bash, so we'll leave it as a topic for further 
+exploration. Both multitail and grep have <b>a lot</b> of other regex 
+command line options, but the final word here is that even simple 
+regular expressions can make logfile analysis much more efficient.
+<br><br>
+
+Lots of people ask "which regex dialect is better?". Two things to know: 
+<cite>grep&nbsp;-P&nbsp;</cite> means "this regex is PCRE dialect", 
+and the PCRE dialect is widely adopted because of its extra capabilities. 
+Check the links for details, but PCRE makes some things easy:
+<ul>
+<li>
+<a href="https://stackoverflow.com/questions/3041320/regex-and-operator/3041326">
+Select the line when it contains both <tt>foo</tt> and <tt>baz</tt>
+at the same time:</a>
+<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<code>&nbsp;.*(foo)+.*(baz)+|.*(baz)+.*(foo)+.*&nbsp;</code>
+<br><br>
+The <cite>.*</cite> lets it match however many characters it needs to 
+before it gets to "word1", then it looks for "word2" following any 
+number of characters.
+<br><br>
+<li>
+<a href=https://stackoverflow.com/questions/469913/regular-expressions-is-there-an-and-operator>Select the complete line when it contains <tt>foo</tt> and <tt>bar</tt> 
+and <tt>baz</tt> in any order:</a>
+<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<code>&nbsp;(?=.*foo)(?=.*bar)(?=.*baz)&nbsp;</code>
+<br><br>
+Again, the <cite>.*</cite> in the lookahead <cite>(?= )</cite> lets it 
+match however many characters it needs to before it gets to "word1". 
+Here, though, the match position is reset before the second lookahead 
+seeks out "word2". Reset again, and the final part matches "word3"; 
+since it's the last word to check for, it isn't necessary that it be in 
+a lookahead, but it doesn't hurt.
+</ul>
+
+<br><br>
+<hr>
+<br>
+
+<pre>
+Want to impress at a job interview? Be a master of Regular Expressions!
+    step-by-step interactive tutorial
+       <a href="https://regexone.com/">https://regexone.com/</a> 
+    tutorial with solutions 
+       <a href="https://ryanstutorials.net/regular-expressions-tutorial/">https://ryanstutorials.net/regular-expressions-tutorial/</a> 
+    useful example patterns
+       <a href="http://www.cbs.dtu.dk/courses/27610/regular-expressions-cheat-sheet-v2.pdf">http://www.cbs.dtu.dk/courses/27610/regular-expressions-cheat-sheet-v2.pdf</a>
+    interactive regex tester
+        <a href="https://regex101.com/">https://regex101.com/</a>
+    try it with this regex - RFC 2616 section 5 explains when HTTP is used
+        GET (http(s?):\/)?\/.+\?(.+=.+)+( HTTP\/)
+    and this test string
+        GET /index.html?x=1&y=2 HTTP/1.1
+  An interactive bash script for defining regular expressions in several dialects:
+    txt2regex <a href="https://aurelio.net/projects/txt2regex/">https://aurelio.net/projects/txt2regex/</a>
+    man page: <a href="https://man.cx/txt2regex(1)">https://man.cx/txt2regex(1)</a>
+</pre>
+
+<hr><hr>
+
+ 
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>
+
+
+

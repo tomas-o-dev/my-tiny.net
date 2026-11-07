@@ -1,0 +1,174 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Man Pages</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+<!--  -->
+<br>
+
+<h2>Using the <i>man</i> Pages</h2>
+
+<hr>
+<br>
+While we prefer to use our menu-driven tools, sometimes we just have to 
+use the command line. However, instead 
+of trying to remember everything, just remember you can easily look stuff up 
+in the man pages.
+
+<br><br>
+<table border cellpadding="4"><tr><td>
+<h4>First, an Important Tip</h4>
+
+Just typing a command and <cite>[Enter]</cite> has unpredictable results: 
+the command may execute and do something you don't want, or it may present 
+a short list of options. Much better to try the command with 
+<code>--help</code> which will normally display the options list. If the 
+list is long, use <code>--help 2>&1 |less</code> so you can use the arrow keys to 
+scroll up and down, and <code>q</code> to quit. Another common option is 
+<code>--version</code>.
+
+</td></tr></table>
+<br><br>
+The <b>man</b>ual pages explain every command available on the system including what they do and the command line arguments they accept. Some can be a little bit difficult to get your mind around, but they are fairly consistent in their structure so once you get used to them it's not so bad.
+
+<br><br>
+To see the man page for the <tt>whereis</tt> command for example, just type <code>man&nbsp;whereis</code> and start reading. Type <code>q</code> to quit.
+
+<br><br>
+The sections we see in most of the man pages are (not necessary all or in the same order):
+<br><br>
+<b>NAME:</b> One line answer about what this command do. 
+
+<br><br>
+<b>SYNOPSIS:</b> Gives syntax and what available options for a given command
+
+<br><br>
+<b>DESCRIPTION:</b> A brief intro about the command
+
+<br><br>
+<b>OPTIONS:</b> A description for each option that command have
+
+<br><br>
+<b>EXAMPLES or NOTES:</b> Self explanatory.
+
+<br><br>
+<b>ENVIRONMENT:</b> Aspects of your shell that could be affected by the command, or variables that will be used.
+
+<br><br>
+<b>FILES:</b> Files associated with this command.
+
+<br><br>
+<b>EXIT VALUES:</b> Exit values when executing this command.
+
+<br><br>
+<b>AUTHORS:</b> the people who created or assisted in the creation of the command.
+
+<br><br>
+<b>SEE ALSO:</b> Other commands, tools or working aspects that are related to this command.
+
+<br><br>
+<b>BUGS:</b> usually just some known limitations
+
+<br><br>
+Always read the DESCRIPTION before starting. You will most probably find interesting info about the aspects you want in the OPTIONS: and EXAMPLES 
+section. For example, <code>man&nbsp;whereis</code> tells us to use:
+<table>
+<tr><td><code>whereis&nbsp;-b&nbsp;<i>command</i></code></td>
+<td>to list only the binary files for that <i>command</i></td></tr>
+<tr><td><code>whereis&nbsp;-m&nbsp;<i>command</i></code></td>
+<td>to list only the man pages for that <i>command</i></td></tr>
+</table>
+and has a really cool example for a complicated search for commands with 
+no man pages!
+
+<br><br>
+If you want to search within a page, just use <code>/</code> followed by the term you would like to search for and hit <code>enter</code> If the term appears multiple times you can cycle through them by pressing <code>n</code> for next.
+
+<br><br>
+The man pages as a whole are organized into sections, each containing pages about a specific category of topics as shown below. The section is in parenthesis in the top line, before the NAME: use <code>man&nbsp;man</code> to 
+see the list of sections.
+
+<br><br>
+While we are with <code>man man</code> we should note that 
+<code>man&nbsp;-k</code> and <code>man&nbsp;-f</code> use <code>apropos</code> 
+which does not work on our TinyNet machines (sadface). Doesn't 
+matter though, we can use <code>whereis&nbsp;-m</code> instead, and 
+<code>man&nbsp;-w</code> to show the search path if we are having problems 
+getting the page to display. Also, if we know where it is, we can 
+just navigate there with <code>mc</code> and use <cite>[F3]</cite> 
+to view the page.
+
+<br><br>
+Some commands will have multiple pages, depending on context. For instance, 
+the <code>passwd</code> command has two pages, one in section 1 (user commands) that describes the command line options etc. for the command in user  management and another in section 5 that describes the format of the 
+<tt>/etc/passwd</tt> file. Generally, the most commonly used topic is displayed 
+by default, and there are references to any other topics with the same name in 
+the SEE&nbsp;ALSO section. To choose a page in a specific section just put it in the command, like <code>man&nbsp;5&nbsp;passwd</code> to see the file format page.
+
+<br><br>
+A lot of command options have both a long and short version. By convention, 
+the short version starts with a single dash ( - ) while the long version 
+starts with two dashes ( -- ). The big difference is that when we use a 
+single dash we can put the the letters for several options together after 
+the dash, like <code>netstat&nbsp;-tulp</code> or 
+<code>chmod&nbsp;-R&nbsp;a+rwxt&nbsp;/var/run</code> 
+(check the man pages!) which saves 
+some typing. The long options are nice for scripts, where we only have to 
+type things once and probably want to remember what the options are without 
+having to poke through the man page again.
+
+<br><br>
+So, have a look at <code>man&nbsp;ls</code> and play with some of the 
+command line options you find there. Make sure you play with a few as 
+combinations. Also make sure you play with ls using both absolute and 
+relative paths. 
+
+<br><br>
+<hr><hr>
+<br>
+
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>
+
+

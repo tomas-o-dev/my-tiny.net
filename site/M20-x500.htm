@@ -1,0 +1,402 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::LDAP Concepts</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net :: Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<!-- -->
+
+
+<br>
+
+<h2>LDAP Concepts and Terms</h2>
+<hr>
+<br>
+Even though the <b>&nbsp;L&nbsp;</b> in LDAP stands for  
+"lightweight" it still can seem pretty heavy. Nonetheless, it is a 
+very popular way to provide common logins across corporate networks. That 
+makes it worth the time and effort it takes to get familiar with the basic 
+concepts and terminology - these apply equally to the tiny system we set up 
+here and Microsoft Active Directory, which is probably the most popular 
+application of LDAP in the real world.
+
+<br><br>
+We need to get a grip on some LDAP concepts and terms. For a more complete 
+introduction, with some worked examples, see 
+<a href="http://www.zytrax.com/books/ldap/ch2/"> 
+http://www.zytrax.com/books/ldap/ch2/</a>
+(but note that our build does not have Data Synchronisation and Replication capability).
+
+<br><br>
+Data in a LDAP directory is organized in a tree structure, as opposed to  
+a typical Relational Database (RDBMS) where the data is organized in rows 
+and columns (conceptually). RDBMS are suitable for add, delete, modify, etc. 
+whereas LDAP is optimized for large number of reads and very few modifications 
+or write. 
+
+<br><br>
+LDAP has its own (recursive) jargon to describe this 
+
+<br><br>
+<img src="logos/ldap-rootdse.jpg" alt="LDAP tree">
+
+<br><br>
+<table cellpadding="6">
+
+<tr>
+<td valign="top"> <b>Term</b> </td>
+<td valign="top"> <b>Description</b>
+</td></tr>
+
+<tr>
+<td valign="top"> DIT        </td>
+<td valign="top"> DIT stands for Directory Information Tree. 
+The entire LDAP database is called the DIT.
+</td></tr>
+
+<tr>
+<td valign="top"> entry      </td>
+<td valign="top"> An entry (or node) groups sets of 
+<u>objectclasses</u> within a DIT.
+</td></tr>
+
+<tr>
+<td valign="top"> attribute  </td>
+<td valign="top"> attributes are various fields for which values 
+can be given to every tree node. For example if a node in DIT tree 
+represents a person then address, phone number, email address, 
+password etc. can be attributes for that entry. An attribute 
+defined in one <u>schema</u> can be used by an <u>objectClass</u> 
+defined in another schema.
+</td></tr>
+
+<tr>
+<td valign="top"> schema      </td>
+<td valign="top"> schema files are used to define various types of 
+attributes and group them into <u>objectClasses</u>. 
+All the schemas which include definitions of the objectClasses and 
+attributes used in a DIT must be known to the LDAP server 
+(there are some objectClasses and attributes defined as being 
+<i>operational</i> which are embedded in the LDAP server software 
+and do not need definition, but we can mostly ignore them).
+</td></tr>
+
+<tr>
+<td valign="top"> objectClass </td>
+<td valign="top"> An objectClass is a set of attributes
+(an <i>attribute container</i> in the jargon). The 
+objectClass defines whether an attribute is mandatory (MUST be 
+present) or optional (MAY be present) within an entry.
+Every entry (DIT node) must belong to at least one objectClass, and it is 
+possible for an entry to belong to several objectClasses. An 
+objectClass can be derived from other objectClasses as a child class. 
+Child classes support all attributes of all parent classes.
+</td></tr>
+
+<tr>
+<td valign="top"> dn         </td>
+<td valign="top"> dn stands for Distinguished Name. 
+Every entry in the DIT must have a unique dn so that it can be uniquely 
+identified. A dn is usually a list of attributes (examples below).
+</td></tr>
+
+<tr>
+<td valign="top"> rootDSE     </td> 
+<td valign="top"> The top-most entry in the DIT is 
+abstract (the null DN, denoted as ""), and all other entries are created as  
+children of rootDSE. This is similar to object-oriented programming where 
+all objects are automatically inherited from the <i>object</i> class.
+</td></tr>
+
+<tr>
+<td valign="top"> rootDN     </td> 
+<td valign="top"> a confusingly named directive in openLDAP configuration  
+which defines the DN of a superuser for each DIT that can bypass normal 
+directory access rules. The rootdn does not need to appear in the directory, 
+or even be related, in any way, to the DIT structure.
+</td></tr>
+
+<tr>
+<td valign="top"> RDN     </td> 
+<td valign="top"> RDN stands for Relative Distinguished Name, and refers to an 
+attribute that is unique at its level in the hierarchy. A DN is a series of RDNs 
+that, taken together, are unique in the DIT. 
+RDN is usually used to refer to each individual attribute or a subset of DN attributes 
+on the path up the DIT from any entry to the rootDSE or search <u>base-dn</u>. 
+</td></tr>
+
+<tr>
+<td valign="top"> base     </td>
+<td valign="top"> The dn of the first child 
+of rootDSE in the DIT and the starting point for a search 
+are both called the base or base-dn.
+</td>
+
+<tr>
+<td valign="top"> bind        </td>
+<td valign="top"> When connection is made to an LDAP server the first operation of 
+the sequence is called a bind. The bind operation sends the dn of the entry that 
+will be used for authentication and the password to be used. In the case of an 
+<i>anonymous bind</i> both values will be NULL. 
+</td></tr>
+
+<tr>
+<td valign="top"> ACL  </td>
+<td valign="top"> an Access Control List defines whether 
+anonymous binds are supported, and which users 
+are allowed to see particular attributes.
+</td></tr>
+
+<tr>
+<td valign="top"> LDIF  </td>
+<td valign="top"> LDAP Data Interchange Format, a plain text 
+file format used to import and export directory information 
+between servers, or to describe a set of changes to be applied 
+to a directory. 
+</td></tr>
+</table>
+
+<br><br>
+A more abstract representation: when you create an entry in a DIT 
+its data contents are contained in attributes, which are grouped 
+into objectclasses, which are packaged into schemas. SUP denotes 
+inheritance - the class or attribute below extends the one above.
+
+<br><br>
+<img src="logos/ldap-object-hierarchy.gif" alt="LDAP tree">
+
+<br><br>
+The complexity and power of LDAP comes from the fact that there are  
+loads of attributes and loads of objectClasses (apparently randomly)  
+included in a load of (generally unhelpfully named) schemas. 
+
+<br><br>
+While many objectClasses show no MUST attributes you actually have to 
+follow the full hierarchy to determine if this is the really case. Thus, 
+if you want to create an entry with the inetOrgPerson objectClass you 
+MUST specify at least one <tt>cn</tt> and <tt>sn</tt> attribute value 
+or it will fail. 
+
+<br><br>
+Names of some important attributes are:
+<blockquote><blockquote><blockquote>
+<table>
+<tr>
+<td valign="top"> <b>Short name</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+<td valign="top"> <b>Full name</b>
+</td></tr>
+<tr>
+<td valign="top"> dn               </td>
+<td valign="top"> distinguished name
+</td></tr>
+<tr>
+<td valign="top"> cn               </td>
+<td valign="top"> commonName
+</td></tr>
+<tr>
+<td valign="top"> sn               </td>
+<td valign="top"> surname (family name)
+</td></tr>
+<tr>
+<td valign="top"> gn               </td>
+<td valign="top"> given name
+</td></tr>
+<tr>
+<td valign="top"> uid              </td>
+<td valign="top"> userid
+</td></tr>
+<tr>
+<td valign="top"> userPassword     </td>
+<td valign="top"> userPassword
+</td></tr>
+<tr>
+<td valign="top"> ou               </td>
+<td valign="top"> organizationalUnitName
+</td></tr>
+<tr>
+<td valign="top"> o               </td>
+<td valign="top"> organizationName
+</td></tr>
+<tr>
+<td valign="top"> dc         </td>
+<td valign="top"> domain component 
+</td></tr>
+</table>
+</blockquote></blockquote></blockquote>
+<br>
+<h3>LDIF and the DIT</h3>
+
+The people at zytrax offer this helpful advice:
+<blockquote>
+<i>Designing the DIT is actually a very important step and you can spend 
+the rest of your life designing your DIT. ... Much wailing and gnashing 
+of teeth usually accompanies selecting the primary objectClass. This is 
+an essential LDAP ritual so start practising now.</i>
+</blockquote>
+
+Here we will just use some well-known objectclasses and attributes. Later 
+you might want to invest some time to dig deeper so that you can discover 
+which objectClasses and attributes are truly best for an application - or 
+even create your own.
+
+<br><br>
+The <i>inetorgperson</i> schema has a BIG hierarchy with lots of attributes, 
+so we include it and its SUPerclasses in /etc/openldap/slapd.conf. There are 
+some additional notes on this at the end.
+
+<br><br>
+Attributes <tt>dc</tt> or <tt>o</tt> are commonly used to define the base 
+of the DIT. Similar to the first diagram above, our slapd.conf is ready for 
+two DITs: <tt>o=tinynet.edu</tt> and <tt>dc=tinynet,dc=edu</tt>. 
+
+<br><br>
+LDAP command line tools, such as ldapadd(1) and ldapsearch(1), read and write 
+LDIF entry records. ldapmodify(1) reads LDIF change records. A formal 
+specification of LDIF is published in RFC 2849, and <code>man 5 ldif</code> 
+has complete information. However, doing LDAP queries 
+and creating LDIF by hand is tedious, boring, and prone to obscure typing 
+errors, which is why we have PHPLDAPAdmin (PLA) for searching and updating 
+the DIT. 
+
+<br><br>
+We also have two LDIF files prepared as a starting point: <tt>topclass.ldif</tt> 
+to populate the top levels of the DIT, and <tt>userdata.ldif</tt> to create some 
+entries for testing. 
+
+<br><br>
+Here is an entry from userdata.ldif<br>
+<pre>
+dn: cn=Barbara Jensen,ou=UserNetA,o=tinynet.edu
+ou: UserNetA
+cn: Barbara Jensen
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+mail: bjensen@net-a.tinynet.edu
+givenname: Barbara
+sn: Jensen
+uid: bjensen
+title: Account Executive
+userPassword: {PLAIN}LetMeIn
+</pre>
+
+Each entry starts with a <tt>dn:</tt> line. 
+In general, any attribute may be used for this purpose as long as the whole 
+string is unique and includes the base dn, but to save excessive searching 
+it will typically have the attributes most frequently used to access the entry. 
+So the value 
+<tt>cn=Barbara&nbsp;Jensen,ou=UserNetA,o=tinynet.edu</tt>
+implies that cn= and ou= will be the attributes most frequently used to 
+access entries. 
+
+<br><br>
+Before we created the LDIF file we checked the schema files to find the data 
+that MUST be present, and in this case only attributes cn and sn are mandatory. 
+Every objectClass pertaining to the entry must be defined - we cannot just 
+define the children classes and let the parent ones be included implicitly. 
+The objectClass <tt>top</tt> is one of those defined as being 
+<i>operational</i> which we should be able to ignore, but it is required 
+in the definition of the person objectClass, so we put it in.
+
+<br><br>
+A dn is written with the lowest level of the DIT hierarchy on the left and the 
+highest on the right, similar to a domain name. Every component attribute of the 
+dn must be individually defined except the topmost (the base-dn, called the 
+<i>suffix</i> in slapd.conf). So in this case, cn and ou need to be defined, 
+but o does not.
+
+<br><br>
+userPassword encoding is {PLAIN} because some of our other applications 
+want it that way. Everything else should be clear 
+enough from the discussion of concepts above.
+
+<br><br>
+Let's go back to questions about designing the schema for a moment. 
+By convention, one cn for an entry is the same as givenname joined 
+to sn; other ones might be <i>cn=B.&nbsp;Jensen</i> or 
+<i>cn=Jensen,&nbsp;Barbara</i> etc.. We can have more than one, as long 
+as the dn is unique and the schema allows it. BUT, using cn in the dn 
+means people have to guess - it might make more sense to have 
+<i>dn:&nbsp;sn=Jensen,gn=Barbara,ou=UserNetA,o=tinynet.edu</i> 
+to make this easier. 
+
+<br><br>
+Also on schema design, topclass.ldif sets up the ou= groups so we can 
+have more than one person with the same name in our directory. Reality 
+has proven that people's names are not unique! (have you Googled your  
+name lately?)
+
+<br><br>
+<hr><hr>
+
+<br>
+Note: The other schema that is commonly used in examples is nis.schema 
+which can be known by their use of "posixAccount" in the examples. This 
+works for system administrators that want to replace the normal /etc/passwd 
+and /etc/shadow with LDAP for system-wide logins. On linux this requires a 
+utility called PAM, which only very recently got included in the Slackware distro but is still not in our mytyVM distro.  
+
+<br><br>
+If an entry will be used for system-wide authentication (with 
+the NIS schema and "posixaccount" attributes) then this DN MUST be used 
+with any secure Bind Operation. In this case a DN like  
+<tt>uid=bjensen,ou=UserNetA,o=tinynet.edu</tt>
+may be more appropriate than one that uses cn. 
+While this initial or "creation" dn has no special 
+terminology within the LDAP standards, when used for authentication it is 
+sometimes referred to as the Principal DN.
+<br><br>
+<hr><hr>
+
+<br>
+There is a lot more that can be said about LDAP, 
+but let's get on with trying it in practice.
+
+<br><br>
+<hr>
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Debug eMail</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<!--  -->
+
+<br>
+
+<h2>Debugging the eMail service</h2>
+
+<hr>
+<br>
+Our test strategy is to do one thing at a time, so we start by speaking 
+SMTP with the MailHost to make sure the local delivery is working. 
+
+<br><br>
+BUT when we look in <tt>/var/log/maillog</tt> we see a lot of messy 
+error messages. These can be hard to figure out, but the simple strategy 
+is <b><i>start at the bottom, look for things you recognise</i>, and then 
+think through the problem.</b>
+
+<br><br><hr><br>
+
+First, notice the message that says<br>
+<b>Can't open file ... Permission Denied</b><br>
+What do we do?
+
+<br><br>
+When we use <code>mc</code> to look at the permissions for <tt>dovecot.IMAP</tt> 
+with <cite>[F9]&nbsp;&nbsp;File&nbsp;&nbsp;cHmod</cite> we see on the left that 
+the owner and group can write to the file, and on the right that the owner 
+and group is <tt>root</tt>
+
+<br><br>
+When we look at the table in <em>Orientation::LogFiles</em>, 
+we see that <tt>dovecot.IMAP</tt> and 
+<tt>dovecot.LDA</tt> are there for dovecot - but what it does not say 
+is that IMAP is for mailbox messages, 
+and LDA is for "Local Delivery Agent" messages. 
+
+<br><br>
+The main configuration file for dovecot is <tt>/etc/dovecot/dovecot.conf</tt> 
+and we can see there that the "Internal user for unprivileged processes" is 
+<tt>dovecot</tt> while the "System user and group used to access mail" 
+is <tt>vmail</tt>, so this is most likely to be the proper owner. 
+
+<br><br>
+Even though the "Can't open file" message is in the postfix logfile, 
+we know that postfix relies on dovecot to deliver the mail, so the message 
+must be passed back to postfix when dovecot cannot open its logfile.
+
+<br><br>
+So, the solution is to use <code>mc</code> 
+and <cite>[F9]&nbsp;&nbsp;File&nbsp;&nbsp;chOwn</cite> 
+to change the owner and group to <cite>dovecot</cite>
+for <tt>dovecot.IMAP</tt> and to <cite>vmail</cite>
+for <tt>dovecot.LDA</tt>
+
+<br><br>
+If we tried the mail again now, we would get another permissions error:<br>
+<pre>net_connect_unix(/var/run/dovecot/stats-writer) failed: Permission denied</pre>
+Dovecot creates this file for its internal use when it starts up. 
+When we check, we can see this file has <cite>660</cite> 
+permissions, the owner is <cite>root</cite>, and the group is <cite>dovecot</cite>.
+The problem here is that the both the <tt>IMAP</tt> and <tt>LDA</tt> processes 
+want to use this file (it is actually a "unix socket", similar to a 
+"named pipe", but we can explore that later).
+
+<br><br>
+Since the group already has read and write permissions, the best way to 
+fix this is to simply add the users <tt>dovecot</tt> 
+and <tt>vmail</tt> to the lines in <tt>/etc/group</tt> with the same names. 
+This is easiest from the command line: let's check the current entries, 
+make the changes, and check again.
+Remember to save yourself some typing with <cite>[Up Arrow]</cite> to get a 
+previous command back ...
+<br><br>
+<blockquote>
+<code>tail /etc/group</code>
+<br><br>
+<code>usermod -G dovecot,vmail dovecot</code>
+<br><br>
+<code>usermod -G dovecot,vmail vmail</code>
+<br><br>
+<code>tail /etc/group</code>
+
+</blockquote>
+
+Now we are ready to try the mail again, but before that let's check two 
+more things that the <tt>RoleConfig</tt> script should have taken care of:
+
+<ol>
+<li>the file <tt>/home/vmail/mail-pwd</tt> has owner <cite>vmail</cite> and permissions <cite>660</cite><br>
+use <code>ls -l /home/vmail/*</code> or mc to check
+<br><br>
+<li>the directory <tt>/home/vmail</tt> is world-writeable with the sticky bit set<br>
+use <code>find / -perm /1000</code> for a list of everything that has the Sticky Bit set<br> 
+</ol>
+Check <em>Getting Started&nbsp;::&nbsp;First Things First</em> if these are incorrect and you don't remember how to fix them.
+
+
+
+<br><br><hr><br>
+
+<b>"User Unknown"</b>
+<br><br>
+
+Following our one thing at a time strategy, we have a small set of accounts 
+that dovecot will deliver mail for - later we will have dovecot deliver mail 
+for everyone in our LDAP directory.
+<br><br>
+The filename is specified in <tt>/etc/dovecot/dovecot-auth.conf</tt> down in 
+the <tt>## Authentication databases</tt> section:
+
+<pre>
+  ...<i>LDAP stuff</i>...
+  passdb {
+    driver = passwd-file
+    args = /home/vmail/mail-pwd
+  }
+  ...<i>LDAP stuff</i>...
+  userdb {
+    driver = static
+    args = uid=vmail gid=vmail 
+  }
+</pre>
+We sent our mail to <cite>mailadmin@mailhost.tinynet.edu</cite>, but 
+when we look at <tt>/home/vmail/mail-pwd</tt> we find the account name is<br>
+<cite>mailadmin@<font color="red">mail</font>.tinynet.edu:{PLAIN}admin::::::</cite>
+<br><br>
+As it says in the comments, this is an 
+important address because <tt>/etc/postfix/virtual_alias</tt> maps all of 
+the email addresses required by the Internet standards to this mailbox. 
+Putting all of this mail in a single place makes it convenient to manage.
+<br><br>
+So, all we need to do is change the account to
+<cite>mailadmin@mail<font color="red">host</font>.tinynet.edu:{PLAIN}admin::::::</cite>
+<br><br>
+IMPORTANT: these account names can only use numbers, dot, dash, and LOWERCASE letters.
+<br><br>
+While you are here, add your own name to the list by copying and pasting 
+the <tt>mailhost</tt> line, and put your account name before the 
+<cite>&nbsp;@&nbsp;</cite>. Your unencrypted (PLAINtext) password 
+is <cite>admin</cite>, which you can also change if you like. The extra 
+bunch of <cite>&nbsp;:&nbsp;</cite> are for fields we do not use.
+
+<br><br>
+Dovecot automatically notices new users immediately after they're added, 
+(no need to restart to get the changes in place like normal). 
+So, we're ready to try the mail again!
+
+<br><br><hr><br>
+
+Back in <tt>/var/log/maillog</tt> look down for the 
+<b>Connect from localhost</b> message. The next line (and a few after) 
+have the message identifier you saw when you sent the message you typed.
+
+<br><br>
+There are lots of messages about this being undeliverable, and some 
+<tt>double-bounce</tt> messages that mean the MailServer tried to 
+return the message to <tt>example.com</tt> by sending it first to the 
+Gateway, but this is just a fake domain for testing so the Gateway 
+bounces it back to the MailServer, and eventually after a few of these 
+round trips it either gets delivered to <tt>mailadmin</tt> or they just 
+give up and discard the message.
+
+<br><br>
+So, all of the critical errors are fixed. Postfix complains about 
+"reject after permit" in its configuration file but refuses to start 
+if it is not there, so never mind.  
+
+<br><br>
+
+<hr><hr>
+<br>
+
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>
+
+

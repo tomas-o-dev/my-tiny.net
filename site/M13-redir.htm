@@ -1,0 +1,418 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Redirection</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<!-- -->
+
+<br>
+
+<h2>Command Redirection</h2>
+
+<hr><br>
+
+Command redirection is used frequently in shell scripts, 
+and looks cryptic until you get used to it.
+
+<br>
+
+<h3>stdin, stdout, stderr</h3>
+
+<tt>File descriptors</tt> are numbers that index a per-process data structure 
+in the kernel that records which I/O channels (file, device, socket, pipe) 
+a process has open. Each I/O system call (read, write, etc.) takes a file 
+descriptor that indicates which channel the call should operate on.
+
+<br><br>
+By convention, the first entry in the table has index 0 and is called 
+standard input (stdin), 1 is the standard output (stdout) and 2 is the 
+standard error (stderr) channel. This is just a convention; as far as the 
+kernel is concerned, there is nothing special about these numbers.
+
+<br><br>
+On that note, we also need to recognise that what and whether a program 
+writes something to stdout or stderr (or both) is entirely up to the programmer. 
+Good programming practice dictates that error messages should go to stderr and 
+normal output to stdout, but you will find sloppy programming that mixes the two 
+or otherwise ignores this convention.
+
+<br><br>
+When you log in and are working from the command line, standard input (stdin, FD0) 
+is taken from your terminal keyboard and both standard output (stdout, FD1) and 
+standard error (stderr, FD2) are sent to your terminal screen. In other words, the 
+shell expects to be getting its input from the keyboard and showing the normal output 
+and any error messages on the terminal screen.
+
+<br><br>
+Shells will allow you to set up connections between these file descriptors 
+(with bash there are 9 available to each process) and specific files, devices, 
+or even pipelines to other processes  before your process starts. Some of the 
+possible manipulations are rather clever; the implementation that makes it possible 
+is also rather clever.
+
+<br><br>
+Alongside the device nodes in /dev/ these links should exist on all systems:
+<pre>
+      /dev/fd      points at  /proc/self/fd
+      /dev/stdin   points at  /proc/self/fd/0
+      /dev/stdout  points at  /proc/self/fd/1
+      /dev/stderr  points at  /proc/self/fd/2
+</pre>
+
+Remember that in the Linux /proc filesystem, those aren't real files, but tightly 
+controlled gateways to kernel information. <tt>/dev/stdin</tt> is a symlink 
+to <tt>/proc/self/fd/0</tt> which refers to the first file descriptor that  
+the program doing the open call (the "currently running program") has open. 
+So, what is pointed to by /dev/stdin will change from program to program, 
+because /proc/self/ is really just a fast and generic way to say 
+<tt>/proc/{process_id}/</tt>
+
+<br><br>
+<h3>Pipes</h3>
+
+Shells allow you to set up connections between process file descriptors.
+
+<br><br>
+Perhaps the most commonly used character is <cite>|</cite>, which is referred 
+to as "pipe". This enables you to pass the output of one command through the 
+input of another. Essentially, when this operator is present on the command line, 
+the shell points the left side command's stdout (FD1) to the right side command's 
+stdin (FD0). This connection applies only to this particular process, and lasts 
+only as long as the process is running.
+
+<br><br>
+So, for example, if we run the command
+<code>ls -l | more</code>
+
+<br>
+the output (stdout) of the ls command will be "piped through more". In detail, 
+this command tells the shell to
+<blockquote><blockquote>
+1. create a process for more<br>
+2. create a process for ls<br>
+3. connect <i>ls stdout (FD1)</i> to <i>more stdin (FD0)</i> 
+</blockquote></blockquote>
+
+Another example: the first step to compiling a package is often &nbsp;&nbsp; 
+<code>make configure</code>
+<br>
+which shows a lot of output when it checks for libraries and versions. 
+To avoid seeing this, pipe the stdout of the command through grep with 
+the "discard lines" argument &nbsp;&nbsp; 
+<code>make configure | grep -v Checking</code> 
+
+
+<br><br>
+<h3>Redirects</h3>
+
+The other characters that are used quite often are <cite>&lt;</cite> 
+to redirect stdin and <cite>&gt;</cite> or <cite>&gt;&gt;</cite> to 
+redirect stdout. 
+
+<br><br>
+Redirecting stdout to a file is very common, for example the command 
+ &nbsp;&nbsp; 
+<code>ls -1 /bin &gt;myfile</code>
+<br>
+means
+<blockquote><blockquote>
+1. create a process for ls<br>
+2. point <i>ls stdout (FD1)</i> to a file in the current directory named 
+<tt>myfile</tt> <br>
+Using <cite>&gt;</cite> will create a new file every time<br>
+Using <cite>&gt;&gt;</cite> will add to the end of an existing file, or create a new one
+</blockquote></blockquote>
+
+Redirecting <tt>stdin</tt> is not so common, but can be quite useful. For   example, &nbsp;&nbsp;  <code>wc&nbsp;-w&nbsp;inputfile.txt</code>
+<br>will output the word count and file name, something like <tt>2468&nbsp;inputfile.txt</tt>
+<br><br>
+However, when <cite>wc</cite> doesn't know the filename, it simply outputs 
+the count. <br>
+You can hide the file name from it by using input redirection: 
+&nbsp;&nbsp; 
+<code>wc -w &lt;inputfile.txt</code>
+<br>
+which will:
+<blockquote><blockquote>
+1. create a process for wc<br>
+2. point <i>wc stdin (FD0)</i> to inputfile.txt
+</blockquote></blockquote>
+
+<cite>wc</cite> doesn't know the file name because the shell never 
+passes <tt>inputfile.txt</tt> to wc as a command line argument. Note 
+that the shell does not "open the file and send the contents", which 
+implies a data copy that does not happen - wc reads <tt>inputfile.txt</tt> 
+just like it would read from the device file that represents the keyboard.
+
+<br><br>
+Another example: <cite>cat</cite> opens a file and writes the content to 
+<tt>stdout</tt>.
+<cite>grep</cite> searches <tt>stdin</tt> and writes all of the lines with the search string to <tt>stdout</tt>. We have to use  
+<cite>&nbsp;-e&nbsp;</cite> to protect a pattern that begins with 
+<cite>&nbsp;-&nbsp;</cite> because <cite>grep</cite>
+is aggressive about its command line arguments 
+(it does not respect the quotes alone).
+<br><br>
+So &nbsp;&nbsp;&nbsp;&nbsp;<code>cat /var/log/dnsmasq.log | grep -e "-dhcp"</code>
+<br>
+and &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>grep -e "-dhcp" &lt; /var/log/dnsmasq.log</code>
+<br>are two different ways to get the same output: all of the lines in the file 
+that have <tt>-dhcp</tt> someplace.
+<br><br>
+
+<h3>/dev/null</h3>
+
+If you direct output to /dev/null it disappears into the "bit bucket" (or cyberspace). 
+This device is  used a lot in shell scripts where you do not want to see any output or 
+error messages. You can redirect stdout and/or stderr to /dev/null and the messages vanish. 
+
+<br><br>
+The redirect operators are evaluated from left to right, 
+and the current settings are 
+used whenever duplication of the descriptor occurs. So, 
+
+<br><br>
+Output and error messages go to the same place:
+<code><i>command</i> &gt;/dev/null 2&gt;&amp;1</code>
+<br>
+<blockquote><blockquote>
+1. create a process for some <i>command</i><br>
+2. point <i>command stdout (FD1)</i> to /dev/null<br>
+3. point <i>command stderr (FD2)</i> to where <i>command FD1</i> currently points ( /dev/null )
+</blockquote></blockquote>
+
+Or, stderr goes to the screen while stdout goes to the file specified:
+<code><i>command</i> 2&gt;&amp;1 &gt;/dev/null</code>
+<br>
+<blockquote><blockquote>
+1. create a process for some <i>command</i><br>
+2. point <i>command stderr (FD2)</i> to where <i>command FD1</i> currently points ( the screen )<br>
+3. point <i>command stdout (FD1)</i> to /dev/null<br>
+</blockquote></blockquote>
+
+This can be useful - for example, what is the effect of this?  
+<code>make configure 2&gt;&amp;1 &gt;/dev/null</code>
+
+<br><br>
+<h3>Pipes and Redirection</h3>
+
+Redirection and pipes can be combined in various ways.
+<br> For example, to save all of the lines from the process list with <tt>sh</tt> someplace to a file called <tt>shellprocs</tt>
+<br>&nbsp;&nbsp;<code>ps | grep sh &gt; shellprocs</code>
+<blockquote><blockquote>
+1. create a process for grep<br>
+2. create a process for ps<br>
+3. connect <i>ps stdout (FD1)</i> to <i>grep stdin (FD0)</i><br>
+4. point <i>grep stdout (FD1)</i> to the file shellprocs in the current directory
+</blockquote></blockquote>
+or, to see the first ten lines of the sorted file on the screen
+<br> &nbsp;&nbsp;
+<code>sort &lt; mylist | head</code>
+<blockquote><blockquote>
+1. create a process for sort<br>
+2. create a process for head<br>
+3. connect <i>sort stdout (FD1)</i> to <i>head stdin (FD0)</i></i><br>
+4. point <i>sort stdin (FD0)</i> to the file mylist in the current directory
+</blockquote></blockquote>
+
+The important thing to remember is that <u>the pipe is always processed first</u>, 
+and then the redirect operators for each side are evaluated from left to right, 
+with the current settings being used whenever duplication of the descriptor occurs. 
+This is important: since the pipe was set up first, the FD1 (left side) 
+and FD0 (right side) are already changed, and any duplication of these will 
+reflect that. 
+
+<br><br>
+So, with <code><i>command</i> &gt;/dev/null 2&gt;&amp;1 | grep 'something'</code>
+
+<br><br>
+all stdout and stderr messages from "command" go to /dev/null. 
+Nothing goes to the pipe, and thus "grep" will not display anything 
+on the screen. 
+
+<br><br>
+But with <code><i>command</i> 2&gt;&amp;1 &gt;/dev/null | grep 'something'</code>
+
+<br><br>
+all output that "command" writes to its FD2 (stderr) makes its way to the pipe 
+and is read by "grep" on the other side. All output that "command" writes to 
+its FD1 (stdout) makes its way to /dev/null. 
+
+
+<br><br>
+<h3>Named Pipes</h3>
+
+Technically, a Unix "named pipe" is a First In First Out (FIFO) 
+interprocess communication mechanism.
+In contrast to "unnamed pipes" (represented by <cite>&nbsp;|&nbsp;</cite> between 
+two commands) a named pipe 
+appears as a special file in the filesystem, which can be accessed by 
+independent processes that were not spawned by the same parent process. 
+Using a named pipe is straightforward, just write something to it in one process 
+and read from it in another. Data written to the named pipe will be stored 
+until another process reads from the pipe. The first process will exit when 
+it's done writing and sends EOF, and the second process stops when it sees the 
+EOF and exits.
+
+<br><br>
+Let's try it out: 
+<br><br>
+In one virtual terminal, create a named pipe like this (you only need to do this once): 
+<code>mkfifo&nbsp;/tmp/piper</code>
+<br><br>
+See what it looks like with <code>ls&nbsp;-l&nbsp;/tmp/piper</code>
+<pre>
+    total 0
+    prw-r--r--  1 root  root  0 Aug 11 16:59 piper
+</pre>
+The <tt>p</tt> in the left column of the output indicates that the file is a pipe. 
+You can change the permission bits as with any other file.
+<br><br>
+Now start a process and write to the pipe: 
+<code>echo "logged in as: $(whoami)" &gt;/tmp/piper</code>
+<br><br>
+Nothing will happen until you switch to another virtual terminal with, for example, 
+<cite>Alt&nbsp;F2</cite> and read from the pipe: 
+<code>cat&nbsp;/tmp/piper</code>
+<br><br>
+When you switch back to the "echo" virtual terminal you will see the command prompt 
+is back. <br>
+Try it again: use <cite>Up Arrow</cite> and change the command to 
+<code>echo "current directory: $PWD" &gt;/tmp/piper</code>
+<br><br>
+Switch to the "cat" virtual terminal and use <cite>Up Arrow</cite> to run the same command as before: <code>cat&nbsp;/tmp/piper</code>
+<br><br>
+
+<h4>Persistent Listener Loop</h4>
+Now let's run a command to "listen" on the named pipe. 
+This command strings together the bash commands to create loop that 
+reads whatever arrives and prints it to <tt>stdout</tt>. 
+Run this in the "cat" virtual terminal:
+<br><br>
+<code>while read LINE &lt;/tmp/piper; do echo $LINE; done</code>
+<br><br>
+Switch to the "echo" virtual terminal and use <cite>Up Arrow</cite> to retrieve 
+the last command and run it a few times; when you will switch back to the other 
+virtual terminal you will see the output for each one. Use <cite>Ctrl c</cite> to 
+stop listening.
+<br><br>
+Here are two shell scripts (as a bonus) for further 
+experimentation.
+<br><br>
+<table border cellpadding="8" valign="top">
+<tr><td>The listener script for one VT</td>
+<td>The sender script for another VT</td>
+</tr><tr>
+<td>
+<pre>
+  #!/bin/bash
+    while read LINE &lt;/tmp/piper; do 
+      if [ "$LINE" == "quit" -o "$LINE" == "stop" ]; then&nbsp;&nbsp;
+        break
+      fi
+      echo $LINE
+    done
+    echo "Listener exiting"
+</pre>
+</td><td>
+<pre>
+  #!/bin/bash
+    if [ "$1" != "" ]; then
+    # send the input
+      echo "$1" &gt;/tmp/piper
+    else
+    # send current process number
+      echo "Hello from $$" &gt;/tmp/piper
+    fi
+</pre>
+</td></tr>
+</table>
+
+<br><br>
+<h4>Persistent Listener Using exec and file descriptor</h4>
+Creating a new file descriptor is as easy as picking a number, keeping 
+in mind that file descriptors 0, 1 and 2 are reserved for stdin, stout 
+and stderr respectively, and numbers above 9 could conflict with file 
+descriptors used internally by the shell. 
+
+<br><br>
+The bash built-in <tt>exec</tt> command is generally used to replace one  
+process with another, and apply any redirects which are specified to the 
+bash process itself. That may sound a bit tricky, but it is very useful 
+in practice.
+
+<br><br>
+Attaching the fifo to a file descriptor causes the shell to buffer data written to the fifo. Without it, any write to the fifo blocks until something reads what is written. With the file descriptor, the buffer means it can be read later, or read continuously until there is an 
+"End Of File" marker. EOF is a concept, not a character or an "event" that can be sent to the pipe - the only way to generate an EOF on the reading end of a pipe/fifo is to close all open handles to its writing end.
+<br><br>
+In the "echo" virtual terminal, we attach to the fifo a file descriptor like this:<br> 
+(Careful! There is only one space!)
+&nbsp;&nbsp;&nbsp; <code>exec&nbsp;4&lt;&gt;/tmp/piper</code>
+<br><br>
+Switch to the "cat" virtual terminal and use <cite>Up Arrow</cite> to run the same 
+command as before:&nbsp;&nbsp;&nbsp; <code>cat&nbsp;/tmp/piper</code>
+<br><br>
+Switch back, use <cite>Up Arrow</cite>, and write to the pipe using either 
+the pipe name or the file descriptor
+<br>
+<code>echo&nbsp;"logged&nbsp;in&nbsp;as:&nbsp;$(whoami)"&nbsp;>/tmp/piper</code>
+&nbsp;&nbsp;&nbsp;or&nbsp;&nbsp;&nbsp;
+<code>echo "current&nbsp;directory:&nbsp;$PWD"&nbsp;>&4</code>
+
+<br><br>
+<tt>cat</tt> will keep reading until the file descriptor is closed in the "echo" virtual terminal 
+with&nbsp;&nbsp;&nbsp;<code>exec&nbsp;4&gt;&amp;-</code>
+<br><br>
+If you are wondering about a practical application, this is how <cite>tail&nbsp;-f</cite>
+works internally.
+<br><br>
+<hr><hr>
+<br>
+
+
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,333 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Sudo</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+<br>
+
+<h2>Restricting Root Access with <i>sudo</i></h2>
+
+<hr>
+<br>
+
+Sudo (for "superuser do" or "substitute user do") is a standard way to give users some administrative rights without giving out the root password. An advantage of sudo is that an administrator can allow different users access to specific commands based on their needs.
+Since commands executed via sudo are executed in the user's shell, not a root shell, the root account can be disabled. This is the default for Ubuntu, which is why you see so many helpful instructions predicated by <code>sudo</code>. The <tt>sudo</tt> and <tt>sudoers</tt> man pages are not the easiest to read - this page is simpler, but still detailed. 
+
+<br><br>
+By default, sudo requires that users authenticate themselves with their own password. Once authenticated and assuming that the command is permitted, the command is executed as if by the root user.
+
+<br><br>
+So, once access is provided to your account in <tt>/etc/sudoers</tt>, you can pass any command that requires root privileges as an argument to the sudo command.
+
+For example:
+
+<pre>sudo /etc/init.d/dhcpd restart            # Run the script as root</pre>
+
+The sudo command also provides a comprehensive audit trail: sudo can log both successful and unsuccessful attempts (as well as errors) to syslog, a log file, or both. If a user who is not listed in <tt>/etc/sudoers</tt> tries to run a command via sudo, mail can be sent to the proper authorities, as defined in the sudoers file (defaults to root). 
+
+<br><br>
+Once a user has been authenticated, a timestamp is updated and the user may then use sudo without a password for 5 minutes (unless overridden in <tt>/etc/sudoers</tt>). If the timestamp directory (<tt>/var/run/sudo</tt> by default) is not owned by root and only writeable by root, sudo will ignore the directory's contents. 
+
+<br><br>
+Since commands executed via sudo are executed in the user's shell, not a root shell, the root account can be disabled. This is the default for Ubuntu, which is why you see so many helpful instructions predicated by <code>sudo</code>. The Ubuntu setup is like this
+<br><br>
+<pre>
+<font color="red">grep admin /etc/group</font>
+admin:x:115:toby
+
+<font color="red">sudo cat /etc/sudoers</font>
+%admin ALL=(ALL) ALL
+</pre>
+The above shows a user with the name toby belongs to the admin group, 
+and every member of the admin group is allowed to run any command on 
+any host as any other user. 
+<br><br>
+Whether or not we disable the root account, sudo is useful because it lets us 
+perform actions as our system users. For example, only the postfix user has 
+access to the mail spool, vmail owns all of the dovecot mailboxes, slapd and 
+the webserver run as nobody. None of these accounts have a password or a shell 
+associated with them, but they all own files and processes. With a properly 
+configured <tt>/etc/sudoers</tt> we can access these accounts without a root shell, 
+like this for example: 
+<pre>sudo -u vmail mc</pre>
+
+Before taking a look at <tt>/etc/sudoers</tt> there is one more important thing: sudo invokes an executable as another user, so bash built-in commands won't work. To use shell built-in commands via sudo, you need to get a shell first. There are three ways to do this:
+<br><br>
+<code>sudo bash</code><br>
+Use sudo to run bash, or any other one listed in <tt>/etc/shells</tt>
+<br><br>
+<code>sudo -s</code><br>
+The -s (shell) flag runs the shell specified in <tt>/etc/passwd</tt> or the one specified by the SHELL environment variable if it is set. 
+<br><br>
+For these you can add the -E (preserve environment) flag to preserve your existing environment variables, if the security policy in <tt>/etc/sudoers</tt> (see below). 
+<br><br>
+<code>sudo -i</code><br>
+The -i (simulate initial login) flag runs the shell specified in /etc/passwd</tt> 
+as a login shell, so login-specific resource files such as <tt>.profile</tt> or <tt>.login</tt> 
+will be read. sudo also attempts to change to that user's home directory before 
+running the shell.
+<br><br>
+A command specified after the -s or -i flag is passed to the shell for execution via the shell's -c option. If no command is specified, an interactive shell is executed. 
+
+<br><br>
+<h3>visudo</h3>
+
+Administrators wanting to edit <tt>/etc/sudoers</tt> should use the <code>visudo</code> command. visudo locks the sudoers file against multiple simultaneous edits, provides basic sanity checks, and checks for parse errors. If the sudoers file is currently being edited you will receive a message to try again later. visudo parses the sudoers file after the edit and will not save the changes if there is a syntax error. 
+<br><br>
+<font color="red">Warning: It is imperative that sudoers be free of syntax errors! Any error makes sudo unusable. Always edit it with visudo to prevent errors.</font>
+<br><br>
+The default for the editor that visudo will use is the path to <tt>vi</tt> found when sudo was compiled, which may not work if you installed a binary package. 
+<tt>vi</tt> is not the easiest editor to use so you probably want to change it anyway.
+<br><br>
+The env_editor option is on by default, allowing visudo to use the editor defined by the VISUAL or EDITOR environment variables. This can be a security hole since it allows the user to execute any program they wish by simply setting VISUAL or EDITOR. To fix this, use 
+a <tt>Default editor</tt> directive with a colon <cite>:</cite> separated list of editors. visudo will then choose the editor that matches the EDITOR or VISUAL environment variable if possible, or the first editor in the list that exists and is executable.  
+<br>
+<pre>Defaults    editor=/usr/bin/mcedit:/usr/bin/vi</pre>
+
+
+<br><br>
+<h3>/etc/sudoers</h3>
+
+The <tt>sudoers(5)</tt> man page is not the easiest to read, so this part is a bit 
+detailed.
+<br><br>
+The sudoers file is composed of two types of entries: <tt>aliases</tt> that define lists and <tt>user specifications</tt> that define rules about who may run what as who on which host. 
+<br><br>
+A user specification has the format
+<pre>
+User_List&nbsp;&nbsp;Host_List&nbsp;=&nbsp;(Runas_List)&nbsp;&nbsp;tag_list&nbsp;&nbsp;Cmnd_List
+</pre>
+While technically each of these is individually optional, in practice only 
+<tt>(Runas_List)</tt> and <tt>tag_list</tt> are sometimes omitted, and the others 
+are always there.
+
+<br><br>
+An <tt>alias name</tt> is a string of uppercase letters, numbers, and underscore characters <cite>_</cite> that must start with an uppercase letter. The reserved 
+word <tt>ALL</tt> is a built in alias that always matches successfully.
+<br><br>
+<tt>User_List</tt> is a list of user names, system group names (prefaced with 
+<cite>%</cite>),  
+and/or User_Alias names who are allowed to run a command.
+<br><br>
+<tt>Host_List</tt> is a list of host names, IP addresses, subnets, and/or Host_Alias 
+names. Note that the IP address <tt>127.0.0.1</tt> (localhost) will never match, and 
+the host name <tt>localhost</tt> will only match if that is the actual host name, 
+which is usually only the case for standalone systems. The Host_List is 
+really only useful if you are creating a master sudoers file to be used on 
+a number of systems, possibly distributed via rdist(1) or shared via NFS-mount.
+<br><br>
+<tt>Runas_List</tt> is similar to the User_List except that instead of determining who 
+may run the command it defines the <tt>Runas_Spec</tt> that determines the user and/or the group that a command may 
+be run as using the -u (user) and -g (group) command line flags. There is more detail on this later.
+<br><br>
+A <tt>tag</tt> is relevant for a the rule unless and until its companion tag appears later down the line (see the example sudoers file). 
+There are five possible tag pairs: 
+<ul><li>
+NOPASSWD / PASSWD: By default, sudo requires that a user authenticate him or herself before a command is run. This behaviour can be modified via the NOPASSWD tag. 
+<br><br></li><li>
+NOEXEC / EXEC: The NOEXEC tag can be used to prevent programs from running further commands themselves (once a program is running with sudo it has full root privileges, so it could launch a root shell to circumvent any restrictions in the sudoers file).
+<br><br></li><li>
+SETENV / NOSETENV: sudo will normally reset the environment to only contain variables set to default values (see below). The SETENV tag for a command allows the user to preserve all of their environment variables with <tt>sudo -E</tt>. 
+The SETENV tag is implied if the Cmnd_List is ALL, and NOSETENV: ALL can be used to reverse this. 
+<br><br></li><li>
+LOG_INPUT / NOLOG_INPUT, and LOG_OUTPUT / NOLOG_OUTPUT: see the man page. 
+</li></ul>
+
+<tt>Cmnd_List</tt> is a list of command names, directories, and/or Cmnd_Alias names. 
+A simple file name allows the user to run the command with any arguments; 
+specific command line arguments (including wildcards) can be included, or 
+you can specify the empty string <cite>""</cite> to indicate that the command may only 
+be run without command line arguments. A directory is a fully qualified path 
+name ending with <cite>/</cite> . When you specify a directory, the user will be able to 
+run any file in that directory, but not in any sub-directories.
+
+<br><br>
+Some special characters:
+<br><br>
+<cite>#</cite> (pronounced "hash") starts a comment, except for the 
+<tt>#include</tt> and <tt>#includedir</tt> directives.
+<br><br>
+<cite>!</cite> (pronounced "bang") can be used as a logical <tt>not</tt> operator in an alias and in front of a command; but it has a different meaning in a Defaults directive.
+<br><br>
+Long lines can be continued with a backslash <cite>\</cite> as the last character on the line (Careful! <tt>LAST</tt> means no trailing whitespace!) 
+and <cite>\</cite> is also used to "escape" these characters in a command,  
+username or hostname: <cite>@&nbsp;!&nbsp;=&nbsp;:&nbsp;,&nbsp;(&nbsp;)&nbsp;\</cite>   
+<br><br>
+Whitespace between elements in a list and special characters is optional.
+<br><br>
+Certain configuration options may be changed from their compiled-in default values with Defaults lines. Defaults also use special characters:
+<pre>
+           Defaults @ Host_List 
+           Defaults : User_List 
+           Defaults &gt; Runas_List
+           Defaults ! Cmnd_List 
+</pre>
+Note that per-command entries may not include command line arguments. If you need to specify arguments, define a Cmnd_Alias and reference that instead.
+<br><br>
+Since the sudoers file is parsed in order, the most customized options should 
+go at the end of the file, as the later lines overrides the previous ones.
+The best place to put the Defaults lines is after the aliases but before the user specifications. Defaults are parsed in the following order: generic, host and user Defaults first, then runas Defaults and finally command Defaults.
+
+<br><br>
+<h3>Runas</h3>
+The <tt>Runas_Spec</tt> (run as specification) determines the user and/or 
+the group that a command may be run as using the -u (user) and -g (group) 
+command line flags. All or part of a Runas_Spec can be defined as a Runas_Alias. 
+The Runas_Spec is enclosed in <cite>(&nbsp;)</cite> in the user specifications.
+<br><br>
+A Runas_Spec can have two lists, where  
+the first list indicates which users the command may be run as with 
+<tt>sudo -u</tt>, and the second list (which starts with a <cite>:</cite>) 
+defines groups that can be specified with <tt>sudo -g</tt>.  
+ 
+<br><br>
+If no Runas_Spec is specified, the command will be run as root with the group listed in the target user's password database entry,  
+and a -g on the command line will cause an error.
+
+<br><br>
+If only the first list is specified, the command may be run as any user in the list with the group listed in the target user's password database entry. A -g 
+on the command line will cause an error.
+
+<br><br>
+If the first list is empty and the second is specified, the command will be run 
+as the invoking user with the group set to any one on the list. This permits but does not force the user to select a group. If no group is specified on the command line, the command will run with the group listed in the target user's password database entry. 
+
+<br><br>
+If both lists are specified, the command may be run with any combination of 
+user and group listed.  
+
+<br><br>
+<h3>Environment Variables</h3>
+
+The SETENV / NOSETENV tags control the setting of environment variables 
+on a per-command basis. The options <tt>env_reset</tt> (on by default) and 
+<tt>setenv</tt> (off by default) control the ability to set environment 
+variables more generally.
+<br><br>
+When <tt>env_reset</tt> is on, or the NOSETENV tag applies to a command, sudo runs the command with the environment variables TERM, (inherited from the old environment), PATH, HOME, MAIL, SHELL, LOGNAME, USER, USERNAME (set to default values) and SUDO_* (see the sudo(8) man page), plus any variables in the caller's environment that match the <tt>env_keep</tt> and <tt>env_check</tt> lists. 
+If <tt>env_reset</tt> is off, variables that are not explicitly denied by 
+<tt>env_check</tt> and <tt>env_delete</tt> are are inherited from the invoking process. 
+<br><br>
+When <tt>setenv</tt> is on, or when the SETENV tag applies to a command, the 
+user can disable <tt>env_reset</tt> from the command line using <tt>sudo -E</tt>. As a special case, <tt>sudo -i</tt> (initial login) will ignore the value of 
+<tt>env_reset</tt> and use values for DISPLAY, PATH and TERM inherited from 
+the invoking process; HOME, MAIL, SHELL, USER, and LOGNAME are set based on 
+the target user.  
+<br><br>
+Run <tt>sudo -V</tt> as root to see the list of environment variables that 
+sudo allows or denies.
+
+
+<br><br>
+<h3>Logging</h3>
+By default, sudo logs via syslog. A line like the following in sudoers 
+corresponds to the default values for syslog facility, priority to use when the user authenticates unsuccessfully, and priority to use when 
+the user authenticates successfully.
+
+<pre>Defaults syslog=authpriv, syslog_badpri=alert, syslog_goodpri=notice</pre>
+
+Run <code>sudo -V |less</code> as root to see the current settings. 
+<br><br>
+Make sure you have an entry in your syslog.conf file to save the 
+sudo messages, and don't forget to send a <tt>SIGHUP</tt> to your syslogd 
+so that it re-reads its conf file. Also, remember that syslogd 
+does *not* create log files, you need to create the file before 
+syslogd can write to it.
+<br><br>
+This line stops logging via syslog and turns on logging to a file 
+
+<pre>Defaults !syslog, logfile=/root/admin/sudo.log</pre>
+
+<br><br>
+<h3>Some notes</h3>
+<ul>
+<li> As a general rule, <tt>SIGTSTP</tt> should be used instead of <tt>SIGSTOP</tt> 
+when you wish to suspend a command being run by sudo. 
+<br><br>
+<li> Sudo must be setuid root to do its work:   
+<code>chmod&nbsp;4111&nbsp;/usr/local/bin/sudo</code>
+
+<br><br>
+<li> Unlike files included via <tt>#include</tt>, visudo will not edit the files in a <tt>#includedir</tt> directory unless one of them contains a syntax error. It is still possible to run visudo with the -f flag to edit these files directly.
+
+<br><br>
+<li> If your changes to  <tt>/etc/sudoers</tt> don't seem to have any effect, check that they are not trying to use aliases that are not defined yet and that no other user specifications later in the file are overriding what you are trying to accomplish.
+
+<br><br>
+<li>This example from the man page shows how  
+to make a usage listing of the directories in <tt>/home</tt>. Note that this runs the commands in a root sub-shell to make the cd and file redirection work.
+<br><br>
+<code>sudo sh -c "cd /home; du -s * | sort -rn > USAGE"</code>
+
+<br><br>
+<li> When <tt>requiretty</tt> is set in <tt>/etc/sudoers</tt>, sudo can only be run 
+from a login session ("tty" is the name for a screen or "terminal" in the Unix 
+tradition, usually held to be short for Teletype). By default, when you ssh 
+without a command to execute (just to log in), a "pseudo tty" is allocated 
+automatically. When you specify a command to execute that is not just plain text 
+output, you need to tell ssh specifically to open a tty for you, like this:
+<br><br>
+<code>ssh -t user@host.name htop</code>.
+<br><br>
+We need to do the same thing when sudo requires a tty:
+<br><br>
+<code>ssh -t user@box.example.com "sudo -n -u user -c runcommand"</code>
+<br><br>
+The -n option to sudo will prevent sudo from prompting for a password, 
+but if the command requires a password you'll get an error. See the 
+<em>Smoother SSH</em> page under <em>SSL and SSH</em> on the menu for 
+some ways around this.
+</ul>
+
+<br><br>
+
+<br><br>
+
+<hr><hr>
+<br>
+
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>
+
+

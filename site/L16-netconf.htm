@@ -1,0 +1,356 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::ifconfig</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<br>
+
+<h2>Manual Network Configuration</h2>
+
+<hr>
+<br>
+
+Now that we have created our virtual machines, we can connect them. This is 
+an optional exercise: when we assign Roles to the TinyNet hosts this will be 
+done automatically by the startup scripts (see <em>Network Startup</em> in the 
+<em>TinyNet Notes</em> section of the menu), but it helps to understand how 
+it is done before trying to read or modify the script.
+
+<br><br>
+
+When we set up the ToClone VM we went to 
+<cite>Settings</cite>&nbsp;&gt;&nbsp;<cite>Network</cite> and 
+changed first network adapter to <cite>Host-Only</cite>, 
+so this should be the setting now for all 4 VMs: 
+Gateway, WebServer, MailHost, and LDAPhost. 
+
+<br><br>
+If you have not done this already, 
+at the VirtualBox main screen, highlight the Gateway VM, 
+use the big orange icon for 
+<cite>Settings</cite>&nbsp;&gt;&nbsp;<cite>Network</cite> and 
+change <cite>adapter&nbsp;1</cite> to <cite>Bridged</cite> 
+and enable <cite>adapters&nbsp;2,&nbsp;3,&nbsp;and&nbsp;4</cite> 
+as <cite>Host-Only</cite>. 
+
+<br><br>
+Now, get in the habit of starting the Gateway FIRST <br>
+DO NOT START OTHER VMs UNTIL THE Gateway HAS FINISHED BOOTING<br>
+The WebServer, MailHost, and LDAPhost can all boot at the same time.
+
+<br><br>
+Get all 4 VMs started, and log in as root on each one.
+<br><br>
+
+<hr>
+<br>
+
+Our goal is to have the WebServer, MailHost, and LDAPhost on different subnets, 
+and have a Gateway interface to serve each one. It's really fairly easy. 
+There is a quick review of the concepts at the bottom of this page.
+
+<br><br>
+<blockquote>
+<blockquote>
+<blockquote>
+<img src="logos/lab2.jpg" width="450" height="340">
+</blockquote>
+</blockquote>
+</blockquote>
+
+<pre>
+Quick Review: IPv4 Private Network Address Ranges
+   10.0.0.0 - 10.255.255.255	    10.0.0.0/8
+ 172.16.0.0 - 172.31.255.255	    172.16.0.0/12
+192.168.0.0 - 192.168.255.255	    192.168.0.0/16
+</pre>
+
+Use <code>ifconfig</code> on each machine to see the network hardware 
+configuration <br> (Use <code>ifconfig&nbsp;|less</code>
+for the Gateway because it usually goes off the screen at the top).
+<br><br>
+You should notice that interface <tt>lo</tt> shows an <tt>inet&nbsp;addr:</tt> 
+and <tt>mask:</tt> while none of the others have his except <tt>eth0</tt> 
+on the Gateway, which is the Bridged adapter.  
+
+<br><br>
+Let's make our Gateway a real Gateway.
+<br><br>
+
+A good shortcut to know is that you can use the <cite>[Up&nbsp;Arrow]</cite> 
+key to get the last command you typed on the screen, and the 
+<cite>[Left&nbsp;Arrow]</cite> 
+to move along that command and change it with <cite>[Delete]</cite> or 
+<cite>[BackSpace]</cite> which means a lot less typing. 
+<br><br>
+
+<u>Note that the number after <tt>eth</tt> on your VMs is probably 
+different than the one in the examples below!</u> <br>
+You can use <code>mytyip</code> to see the summary (<code>mytyip</code> is 
+not a standard Linux command)
+<br><br>
+<table cellpadding="6">
+<tr><td>1.</td><td colspan="2">The Gateway 
+<tt>eth0</tt>
+address is assigned by our ISP, so we don't touch it.
+</td></tr>
+
+<tr><td colspan=3>&nbsp;</td></tr><tr>
+<td rowspan="2" valign="top">2.</td>
+<td>
+Lets change the WebServer like this
+</td><td>
+<code>ifconfig eth0 192.168.56.104</code>
+</td></tr>
+<tr><td>
+and the Gateway like this
+</td><td>
+<code>ifconfig eth1 192.168.56.101</code>
+</td></tr>
+
+
+<tr><td colspan=3>&nbsp;</td></tr><tr>
+<td rowspan="2" valign="top">3.</td>
+<td>
+Lets change the LDAPhost like this
+</td><td>
+<code>ifconfig eth0 192.168.66.104</code>
+</td></tr>
+<tr><td>
+and the Gateway like this
+</td><td>
+<code>ifconfig eth2 192.168.66.101</code>
+</td></tr>
+
+<tr><td colspan=3>&nbsp;</td></tr><tr>
+<td rowspan="2" valign="top">4.</td><td>
+Lets change the MailHost like this
+</td><td>
+<code>ifconfig eth0 192.168.76.104</code>
+</td></tr>
+<tr><td>
+and the Gateway like this
+</td><td>
+<code>ifconfig eth3 192.168.76.101</code>
+</td></tr><tr><td colspan=3>&nbsp;</td></tr>
+
+<tr>
+<td rowspan="4" valign="top">5.</td>
+<td colspan=2>Now we need to tell them how to get to the Gateway</td></tr>
+<tr><td>On the WebServer</td><td><code>route add default gw 192.168.56.101</code></td></tr>
+<tr><td>On the LDAPhost</td><td><code>route add default gw 192.168.66.101</code></td></tr>
+<tr><td>On the MailHost</td><td><code>route add default gw 192.168.76.101</code></td></tr>
+<tr><td colspan=3>&nbsp;</td></tr>
+<td rowspan="4" valign="top">6.</td>
+<tr><td colspan=2>Now we set up the Gateway to let all traffic go to all interfaces</td></tr>
+<tr><td>On the Gateway</td><td><code>/sbin/sysctl -w net.ipv4.ip_forward=1</code></td></tr>
+<tr><td><i>or, if that looks too cryptic, try</i></td><td><code>/etc/rc.d/rc.forward</code></td></tr>
+
+<tr><td colspan=3>&nbsp;</td></tr><tr>
+<tr><td valign="top">7.</td><td colspan="2">Check the configuration with 
+<code>ifconfig</code> and the routing tables with <code>route</code><br>
+on each machine. Note that the subnet mask was automatically assigned.
+</td></tr><tr><tr><td>8.</td><td colspan="2">
+Use <code>ping</code>
+to demonstrate connectivity.
+</td></tr>
+</table>
+<br>
+Congratulations! You have a Real Network!
+<br><br>
+Sadly, all of this will disappear when the VMs are restarted - that's why 
+we need <tt>/etc/rc.d/rc.inet1</tt> to be executed every time we boot the 
+system.
+<br><br>
+<hr><hr>
+
+<h3>Quick Review of Subnets</h3>
+
+Ethernet is by far the most common data link, or "layer 2",
+protocol in typical LANs.  Ethernets work by passing "frames" on a
+shared medium according to an algorithm that attempts to be
+fair. While TCP/IP packets are addressed by port and IP address,
+Ethernet packets are addressed by a MAC (Media Access
+Control) address. Every Ethernet card has a unique,
+manufacturer-assigned MAC address that is included in the header of an
+Ethernet frame. This address allows Ethernet frames to be addressed to
+and recognized by the interface that is meant to receive it. 
+
+<br><br> 
+Even though most network traffic these days uses TCP/IP or
+UDP/IP, those packets are still encapsulated in Ethernet frames for
+transport on the local network segment. 
+
+<br><br> 
+Address
+Resolution Protocol, or ARP, is used to to resolve a network layer
+address (e.g., IP address) to a link layer address (e.g., MAC
+address). When a host wishes to send a TCP/IP packet to a remote host,
+it first creates the TCP/IP packet. However, the hardware in the
+network interface must encapsulate the packet in a link layer frame
+before sending the data out on the wire. In order to assign the frame
+to the correct destination address, the local host uses ARP to
+determine which hardware address corresponds to the IP address in
+question. This involves sending special ARP messages called <em>ARP
+Requests</em> on the local Ethernet and receiving replies from hosts
+that have the answer.
+
+<br><br> 
+For example, an application on the host <tt>192.168.6.1</tt> 
+(ssh for example) wants to to send data to another host, and 
+a DNS lookup of the target hostname returned the IP address 
+<tt>192.168.6.101</tt>. The sending host <tt>192.168.6.1</tt>
+needs to know what Ethernet address <tt>192.168.6.101</tt> has 
+in order to put the correct MAC address in the frame header. 
+To discover this, <tt>192.168.0.101</tt> needs to broadcast 
+an ARP request to all Ethernet nodes: if it can't get that address, 
+it CANNOT send.
+<br><br>
+<table border cellpadding="8"><tr><td>
+<img src="logos/arp-req.jpg" width="375" height="195">
+</td><td>&nbsp;</td><td>
+<img src="logos/arp-reply.jpg" width="375" height="195">
+</td></tr></table>
+<br>
+In fact, every time someone needs to talk, be it to a router or another host, 
+they have to send an ARP request. ARP requests are not sent using ports, 
+they are sent to the MAC broadcast address because ARP is used by 
+IP protocol to discover the 
+relationship between MAC address (data link layer) and 
+IP address (network layer); ports are a TCP/UDP concept (transport layer).
+
+<br><br>
+This is where the subnet mask (<tt>netmask</tt>) comes in: <b>a subnet 
+is a set of machines that should respond directly to ARP requests</b>.
+The host that wants to transmit checks the destination address to see 
+which bits match its own address and the netmask:
+<br><br>
+<center>
+<table>
+<tr><td align="right">My IP:&nbsp;&nbsp;</td>
+<td>192</td><td>.</td><td>168</td><td>.</td><td>6</td><td>.</td><td>1</td></tr>
+
+<tr><td align="right">Netmask:&nbsp;&nbsp;</td>
+<td>255</td><td>.</td><td>255</td><td>.</td><td>255</td><td>.</td><td>0</td></tr>
+
+<tr><td align="right"><i>(rule)</i>&nbsp;&nbsp;</td>
+<td><i>(same)</i></td><td>.</td><td><i>(same)</i></td><td>.</td><td><i>(same)</i></td><td>.</td><td><i>(any)</i></td></tr>
+
+<tr><td align="right">dest IP:&nbsp;&nbsp;</td>
+<td>192</td><td>.</td><td>168</td><td>.</td><td>6</td><td>.</td><td>101</td></tr>
+
+</table>
+</center>
+<br>
+If the bits of the source and destination addresses match for all of the 
+<b><i>(same)</i></b> rules, the source broadcasts an ARP Request if there 
+is no MAC entry for the destination IP address in the ARP Table. If the 
+destination 
+is on a different subnet, the source checks its Routing Table for a 
+<tt>gw</tt> entry for the network (or the default <tt>gw</tt>), and again, 
+sends an ARP Request if there is no MAC address in the ARP Table for the 
+<tt>gw</tt> IP address in the Routing Table.
+
+<br><br>
+A subnet is also known as a <b>broadcast domain</b>, because 
+it limits the number of broadcast messages that will be generated. 
+The layer 2 counterpart of a layer 3 subnet is known as a VLAN.
+
+<br><br>
+It is important to keep the size of a broadcast domain reasonably small, because 
+every time a packet destined for a specific host or a broadcast address is seen, 
+the host must handle the packet. A hardware interrupt is created, and the kernel 
+of the operating system must read enough of the packet to determine whether or not 
+it cares about it. Broadcast storms happen at times, when thousands of packets hit 
+a computer every second. The kernel spends so much time handling interrupts that 
+it doesn't have much left for dealing with "trivial" things like making sure your 
+web server process gets a chance to run. This is the basic idea behind "Denial of 
+Service" attacks.
+
+<br><br>
+So, subnets are very important because they limit the size of the broadcast domain. 
+Subnets are determined by the <tt>netmask</tt>. Routers can be configured to pretend 
+they are the host (called Proxy Arp), but normally the result is unreachable hosts.
+
+<br><br>
+<pre>
+If you are interested in layer 2, here are a couple of good references:
+      Understanding-the-Data-Link-Layer
+<a href="http://www.enterprisenetworkingplanet.com/netsp/article.php/3577261/Networking-101-Understanding-the-Data-Link-Layer.htm">http://www.enterprisenetworkingplanet.com/netsp/article.php/3577261/Networking-101-Understanding-the-Data-Link-Layer.htm</a>
+      Spanning Tree
+<a href="http://www.linuxplanet.com/linuxplanet/tutorials/6520/1/">http://www.linuxplanet.com/linuxplanet/tutorials/6520/1/</a>
+</pre>
+
+<br><br>
+<h3>Layer 2: Promiscuous Mode</h2>
+
+While we're thinking about Layer 2, it is quite common for a network segment 
+to carry the traffic of many hosts. CSMA/CD means everything that 
+goes through the hub comes to every interface connected to it. Network cards 
+are typically configured to only process frames that are destined for their host. 
+This means that network applications can normally only view the traffic addressed 
+to that host, even though most of the time there is traffic belonging to other
+hosts on the same wire. If you are testing the behaviour of a network
+application sending or receiving data to your host, this is appropriate.
+
+<br><br>
+Ethernet interfaces can be put into so-called <i>promiscuous mode</i>, 
+where the network card passes all traffic for other layer 2 destinations
+on the segment to the CPU, and subsequently applications can see
+all layer 2 traffic on the interface. If a user wishes to sniff the
+network for more than their own traffic, the interface must be put
+into promiscuous mode, either by the application or by a network
+configuration utility. The command is <code>ifconfig&nbsp;eth1&nbsp;promisc</code> 
+on Linux, where <tt>eth1</tt> designates a configured interface.
+
+<br><br>
+
+<hr><hr>
+<br>
+
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>
+
+

@@ -1,0 +1,64 @@
+
+body{
+margin:0;
+padding:0;
+line-height: 1.5em;
+}
+
+b{font-size: 110%;}
+em{color: red;}
+
+#topsection{
+background: #E6E6FA;
+height: 70px; /*Height of top section*/
+border: 5px solid #ccc;
+}
+
+#topsection h1{
+margin: 0;
+padding-top: 15px;
+}
+
+#contentwrapper{
+float: left;
+width: 100%;
+}
+
+#contentcolumn{
+font: 14px Verdana;
+/*Margins for content column should be "0 RightColumnWidth 0 LeftColumnWidth*/
+margin: 0 2% 0 20%; 
+}
+
+#leftcolumn{
+float: left;
+width: 20%; /*Width of left column in percentage*/
+margin-left: -100%;
+background: #7B68EE;
+}
+
+#rightcolumn{
+float: left;
+width: 2%; /*Width of right column in pixels*/
+margin-left: -2%; /*Set margin to that of -(RightColumnWidth)*/
+background: #9932CC;
+}
+
+#footer{
+clear: left;
+width: 100%;
+background: #9932CC;
+color: #FFF;
+text-align: center;
+padding: 4px 0;
+}
+
+#footer a{
+color: #FFFF80;
+}
+
+.innertube{
+margin: 10px; /*Margins for inner DIV inside each column (to provide padding)*/
+margin-top: 0;
+}
+

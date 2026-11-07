@@ -1,0 +1,230 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Using LDAP</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<!-- -->
+
+<br>
+
+<h2>Configuring Services to use LDAP</h2>
+<hr>
+
+<br>
+The last step in this process is to 
+configure Dovecot and SquirrelMail to use LDAP 
+for looking up user mailboxes. 
+<br>
+
+
+<h3>Configuring Dovecot to use LDAP</h3>
+One of the reasons we use Dovecot LDA for local delivery is that it 
+will automatically create an inbox for a new user (which postfix does not). 
+So, once we set up the LDAP and configure Dovecot to use it, all we have 
+to do is use interactive PLA to add a new user to the directory, and they 
+can send and receive mail instantly (very nice for webmail and 
+enterprise mail systems!). 
+<br><br>
+This requires changes to three configuration files: 
+two for Dovecot on the MailHost and one for Squirrelmail 
+on the WebServer.
+
+<br><br>
+<b>[&nbsp;1&nbsp;]</b>&nbsp;&nbsp;First, we need to tell Dovecot to 
+look up usernames and passwords in the 
+LDAP directory. Dovecot does not like to search from the rootDSE, so we 
+need to create a <tt>passdb ldap</tt> and <tt>userdb ldap</tt> section 
+and a configuration file for each <tt>search base</tt>. 
+
+<br><br>
+Start by uncommenting <cite>these lines</cite> in the section at the bottom of 
+<tt>/etc/dovecot/dovecot-auth.conf</tt>:
+<br><br>
+<pre>
+#---%<---------------------------------------------------------------
+## Authentication databases
+# fallback works only with the PLAIN authentication mechanism 
+#    (tried in order)
+# args = Path to passwd-file or LDAP configuration file  
+<font color="blue">
+passdb {
+  driver = ldap
+  args = /etc/dovecot/ldap-dn_o.dbconf
+}
+</font>
+#passdb {
+#  driver = ldap
+#  args = /etc/dovecot/ldap-dn_dc.dbconf
+#}
+
+passdb {
+  driver = passwd-file
+  args = /home/vmail/mail-pwd
+}
+<font color="blue">
+userdb {
+  driver = ldap
+  args = /etc/dovecot/ldap-dn_o.dbconf
+}
+</font>
+#userdb {
+#  driver = ldap
+#  args = /etc/dovecot/ldap-dn_dc.dbconf
+#}
+
+userdb {
+  driver = static
+  args = uid=vmail gid=vmail 
+}
+#---%<---------------------------------------------------------------
+</pre>
+
+The key LDAP parameters are defined in the file specified with 
+<tt>args =</tt> which points to the next configuration step. 
+The one that needs to stay commented out is for a second DIT: see 
+<em>Configure LDAP&nbsp;::&nbsp;Adding a DIT</em> on the menu.
+
+<br><br><br>
+<b>[&nbsp;2&nbsp;]</b>&nbsp;&nbsp;We have <tt>/etc/dovecot/ldap-dn_o.dbconf</tt> 
+ready for the <cite>o=tinynet.edu</cite> directory, with one important change
+to tell Dovecot which LDAP attributes it needs to 
+match when it queries the LDAP database. 
+<br><br>
+Password and mail user attributes
+are specified down near the bottom of the file, along with a search filter. 
+These are specified using a combination of dovecot configuration variables, and 
+attribute names from the file <tt>/etc/openldap/topclass.ldif</tt> that was 
+used to set up the database. 
+<br><br>
+
+The <tt>pass_attrs</tt> and <tt>user_attrs</tt> are specified correctly, 
+but there is a problem with the filters: if we use <cite>(%u)</cite> 
+Dovecot tries to match the <i>sender</i> as the user 
+(mailadmin@mailhost.tinynet.edu for example) rather than the <i>recipient</i> 
+name and domain <cite>(%n@%d)</cite> which is what we want.  
+
+<br><br>
+<pre>
+# passdb lookup: tell dovecot
+# which LDAP attributes are associated with the user's password
+# and the search filter, e.g., (&(objectClass=posixAccount) (uid=%u))
+pass_attrs = userPassword=password
+pass_filter = (<font color="red">mail=%n@%d</font>)
+
+# userdb lookup: tell dovecot
+# which LDAP attributes map to uid, gid, home and mail 
+#   (note the use of static text for mail - see the documentation)
+# and the search filter, possibly with extra fields to return
+user_attrs = uid=user,=mail=mbox:/home/vmail/%d/%n
+user_filter = (<font color="red">mail=%n@%d</font>)
+</pre>
+
+After making that change, save the file. 
+Now restart dovecot, and we're ready to go!
+Test it out by using telnet to connect to the server and check the mailbox 
+for someone in the LDAP DIT (See <em>Configure&nbsp;Mail&nbsp;::&nbsp;Testing</em>): 
+<br><br>
+<blockquote>
+<code>telnet localhost 143</code>
+<br><br>
+<code>11 login "b.jensen@net-a.tinynet.edu" "LetMeIn"</code>
+</blockquote>
+<br>
+<h3>Configuring SquirrelMail to use LDAP</h3>
+
+<b>[&nbsp;3&nbsp;]</b>&nbsp;&nbsp; Now it's time to need to edit 
+<tt>/var/www/squirrelmail/config/svr_ldap</tt> on the WebServer.
+<br><br>
+All we need to change is the <cite>host</cite> to contact our LDAP 
+server - we can change this back to <tt>localhost</tt> later when 
+we set up <tt>stunnel</tt> to secure our communications with SSL 
+(see <em>SSL&nbsp;&amp;&nbsp;SSH&nbsp;::&nbsp;stunnel</em> on the menu). 
+<br><br>
+<pre>
+    $ldap_server[0] = Array(
+        'host' => '<font color="red">ldap.tinynet.edu</font>',
+        'name' => 'ldap o=tinynet.edu',
+        'base' => 'o=tinynet.edu'
+    ); 
+</pre>
+
+Then stop and restart the webserver, and check the default capabilities: 
+Login to Squirrelmail as <cite>mailadmin</cite> with your host browser, 
+click Compose, then the Addresses button, and then the List All button 
+in the Address Book Search page. Pick one to use in the To: address, and 
+send a test email. Logout as mailadmin and login as your test user (check 
+<tt>userdata.ldif</tt> for the password), or just check <tt>/home/vmail</tt> 
+on the Mailserver for the new mailbox folder.
+
+<br><br><hr><br>
+Squirrelmail has a plugin to do more interesting LDAP queries. To activate 
+it, the first step is to find this section in <tt>plugins.php</tt> 
+and uncomment one line:
+<pre>
+# 3rd party -
+# allows users to search the Directory Servers by name and
+# lookup phone numbers, addresses, and other data 
+<font color="blue">$plugins[8] = 'ldapquery';</font>
+</pre>
+
+The plugin will use the LDAP servers defined in the SquirrelMail configuration.
+The default plugin configuration is in 
+<tt>plugins/ldapquery/config_default.php</tt>,
+but it is better to copy it to <tt>config/ldapquery_config.php</tt> 
+and modify that. 
+
+There are only a few things you need to define, and the instructions 
+in the README file are clear. 
+
+<br><br>
+When you finish, stop and restart the webserver to check the new capabilities.
+
+<br><br>
+<hr><hr>
+
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

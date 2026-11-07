@@ -1,0 +1,200 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Resolving Issues</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br><br>
+
+<h2>Resolving Service Configuration Issues</h2>
+
+<hr><br>
+
+The quick list of Things To Do:
+<ol>
+<li><b>Look for what you recognise</b>, especially in the log files, 
+starting at the end
+<br><br>
+<li>Always <b>maintain a working configuration</b> as a backup 
+<br><br>
+<li><b>Do one thing at a time</b>, and then test it
+<br><br>
+<li><b>Do the simplest thing first</b>: pay attention to the "Four P's"
+</ol>
+<br>
+The most common causes of problems with service configuration come down to 
+<b>Permissions, Paths, Ports</b> and <b>Parsing</b>. 
+<ol>
+<li> <b>Permissions</b>: A common cause of errors is that the owner of 
+a file and the owner of the process that needs to use it do not match. 
+Check the configuration file for a <cite>Run As</cite> or <cite>uid</cite> 
+directive, and make sure this user can read (and write / execute where 
+appropriate) all of the files and directories it needs. If a directory 
+is the problem, you may want to make it world writeable with the sticky 
+bit set (1777, drwxrwxrwt) so anyone can write files, but files can only 
+be modified or deleted by the owner. 
+Copying files between systems (especially using SSH) may change the owner 
+of the file on the destination, so be sure to doublecheck.
+<br><br>
+<li> <b>Paths</b>: Sometimes a program will fail with a message like 
+<tt>Exiting - could not load shared library libres.so.0</tt>. It is quite 
+possible the file actually exists, but with a different path or name than 
+the one that existed when the source code was compiled. To display the 
+shared libraries required by a program run <cite>ldd</cite> 
+(List Dynamic Dependencies) like this:
+<br><br>
+<code>ldd&nbsp;</code><tt>/path/to/executable</tt>
+<br><br>
+If <cite>ldd</cite> reports missing libraries, search for the missing pieces with 
+<br><br>
+<code>find&nbsp;/&nbsp;<tt>libname*</tt></code>
+<br><br>
+where <i>libname</i> is the library name from the error message before any dots or numbers.
+<br><br>
+If it exists, fix it with a symlink to the path specified 
+in the error message, or a symlink in <cite>/usr/lib</cite> if it is not already there. 
+Lots of times there is an existing library with a name like <i>libxyz.so.2.0.0</i> 
+when the program wants <i>libxyz.so</i> so this is pretty easy. 
+<br><br>
+<li> <b>Ports</b>: If <cite>htop</cite> shows the service is running, use 
+<code>netstat -tulpn</code> to make sure it is listening on the port you 
+expect. If it is and your firewall is on, run appropriate 
+<code>iptables -I</code> INPUT and OUTPUT commands to temporarily 
+"poke a hole in the firewall", and fix your firewall rules after you get 
+it running. Connect to the server using <code>telnet</code> or 
+<code>netcat</code>, and try a few commands from the protocol. 
+<br><br>
+<li> <b>Parsing</b>: Check your typing and punctuation! Also remember that 
+some programs (bash and OpenLDAP for example) are sensitive to trailing 
+whitespace, so use the <cite>mc</cite> editor and look for those faint 
+blue markers that show spaces and tabs at the end of a line.
+</ol>
+<br><hr>
+<h3>Stopping stuff:</h3>
+In an interactive terminal session, <cite>Ctrl&nbsp;c</cite> means "stop whatever 
+you are doing". Technically, it sends the INT ("interrupt") signal, which by default 
+terminates an application.
+<br><br>
+<cite>Ctrl&nbsp;d</cite> on a line by itself means "flush the input I typed so far", 
+and since the line is empty, read() will return zero, which is interpreted as "end of file". 
+It has no effect if the program isn't reading input from the somewhere.
+<br><br>
+So, to stop something first try <code><b>q</b></code> to quit, then <code><b>x</b></code> 
+to exit, then <code><b>Ctrl&nbsp;d</b></code> to stop nicely, and finally 
+<code><b>Ctrl&nbsp;c</b></code> to just stop whatever the consequence. After a while you 
+will get used to which one works best for which program.
+<br><br><hr><br>
+The developers at freeradius.org offer useful advice that applies to every server, not just theirs ...
+<br><br>
+<blockquote>
+These steps outline the best known method for configuring the server. Following them lets you create complex configurations with a minimum of effort. Failure to follow them leads to days of frustration and wasted effort.
+<ol>
+<li> Start with a "known working" configuration, such as supplied by the default installation.
+<li> Find out where the server logs are, and set the log level 
+to <tt>info</tt> or <tt>debug</tt>
+<li> Make one small change to the configuration files.
+<li> Start the server - use debugging mode if there is one
+<li> Verify that the results are what you expect
+<ul>
+<li> The debug output shows any configuration changes you have made.
+<li> Databases (if used) are connected and operating.
+<li> Test packets are accepted by the server.
+<li> Packets are being processed as you expect.
+<li> The response packets contain the attributes you expect to see.
+</ul>
+<li> If everything is OK, save a copy of the configuration, stop the server, 
+and go back to step (3).
+</ol>
+
+When things go wrong,
+<ol>
+<li> Double-check the configuration changes, especially your typing and punctuation
+<li> Search the debug output for words like <b>error</b> or <b>warning</b>. These messages usually contain descriptions of what went wrong, and suggestions for how it can be fixed.
+<li> Sit back, relax and give the problem some thought 
+<li> Try to find an answer by
+<ul>
+<li> reading the man page and the "related" pages listed at the bottom 
+<li> reading whatever documentation you can find in 
+<tt>/usr/doc</tt>, <tt>/usr/share/doc</tt>, 
+<tt>/usr/local/doc</tt>, <tt>/usr/local/share/doc</tt>. 
+<li> using the error message as search terms in Google
+</ul>
+<li> Try replace your configuration with a saved copy of a "known working" configuration, and start again. This process can clean up errors caused by temporary edits, or edits that you have forgotten about. Compare these log files to the problem ones - this will highlight the point where the problem arises.
+</ol>
+</blockquote>
+<hr><br>
+One of the things you will notice is that in dialogs between developers 
+and users, people frequently refer to log files and configuration files. 
+When you ask for help, include a description of what you are trying to do, 
+and the entire debugging output, especially output showing the server 
+receiving and processing test packets. If you do not, you are making 
+it impossible for anyone to help you. However, be sure to scrub shared 
+secrets, passwords, etc. from the output before posting it.
+
+<br><br>
+Many people find that when they start writing down the things they have 
+done to try and solve a problem with a view to submitting a request 
+for help or bug report that they end up solving the problem. So, get 
+in the habit of taking detailed notes, and keeping copies of working 
+configuration files so you can "back up" if something breaks.
+
+<br><br>
+Collaboration is a very useful way of increasing your experience and 
+problem solving ability. Helping each other to diagnose problems, evaluate 
+solutions, and learn from mistakes is being an active member of our local 
+community. Giving direct answers to assessment questions is cheating. 
+
+<br><ul><li>
+Read Eric S. Raymond&apos;s "How To Ask Questions The Smart Way"<br>
+<a href="http://catb.org/~esr/faqs/smart-questions.html">
+http://catb.org/~esr/faqs/smart-questions.html</a><br>
+</li><li>
+and Simon Tatham&apos;s "How to Report Bugs Effectively".<br>
+<a href="http://www.chiark.greenend.org.uk/~sgtatham/bugs.html">
+http://www.chiark.greenend.org.uk/~sgtatham/bugs.html</a>
+</li></ul>
+
+
+<br><hr><hr>
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

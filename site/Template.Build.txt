@@ -1,0 +1,177 @@
+#!/bin/sh
+
+# Template build script 
+# Suggested use: 
+# ./progname.Build 2>&1 | tee build.log
+# 
+# ---------------------------------------------------------------------------
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR 
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
+#  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, 
+#  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+#  NOT LIMITED TO,PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+#  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
+#  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+#  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
+#  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# ---------------------------------------------------------------------------
+
+# MUST edit these, and the build options below
+
+PRGNAM=appname               # replace with name of the application
+VERSION=1.4.1                # replace with version of the application
+SRCFN=.tar.gz                # replace with source archive type 
+
+# No changes required from here down to the actual build options
+
+CWD=$(pwd)                   # Current Working Directory
+TMP=${TMP:-/tmp}	         # Place to build (TMP) the package (PKG) 
+PKG=$TMP/package-$PRGNAM     
+BUILD=${BUILD:-1}            # default build number
+
+set -e                       # Exit the script on errors
+# A SIGNAL_SPEC of ERR means to execute ARG each time a failure 
+# would cause the shell to exit when the -e option is enabled.
+trap 'echo "$0 FAILED at line ${LINENO}"; exit' ERR
+
+rm -rf $PKG                  # remove any previous build
+mkdir -p $TMP $PKG           # make parent directories as needed
+cd $TMP
+rm -rf $PRGNAM-$VERSION      # remove the remnants of previous build
+tar xvf $CWD/$PRGNAM-$VERSION$SRCFN
+
+cd $PRGNAM-$VERSION
+chown -R root:root .         # set some sane permissions
+find . \
+ \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+ -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+ -exec chmod 644 {} \;
+
+# Determine the architecture we're building on ...
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+    # Unless $ARCH is already set, use uname -m for all other archs:
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+# ... to set the proper compiler flags
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+# -- Build Options ----------------------------------------------------------
+#
+# If you are just using a makefile, don't uncomment anything here, otherwise 
+# uncomment the directives for your build system, and add flags as necessary.
+# The flags here are sane and generally useful.
+# If you can find an existing SlackBuild, you can copy the proper section in.
+#
+# ---------------------------------------------------------------------------
+#     automake Build Options: run
+#        ./configure --help |less 
+#     and look for Optional Features\Optional Packages  
+# ---------------------------------------------------------------------------
+#CFLAGS="$SLKCFLAGS" \
+#CXXFLAGS="$SLKCFLAGS" \
+#./configure \
+#  --prefix=/usr \
+#  --libdir=/usr/lib${LIBDIRSUFFIX} \
+#  --sysconfdir=/etc \
+#  --localstatedir=/var \
+#  --mandir=/usr/man \
+#  --docdir=/usr/doc/$PRGNAM-$VERSION \
+#  --build=$ARCH
+# ---------------------------------------------------------------------------
+# or
+# ---------------------------------------------------------------------------
+#    cmake Build Options: 
+#    check CMakeLists.txt for package specific options
+#    or create a subdirectory, cd into it, and run 
+#       cmake .. -LH |less
+# ---------------------------------------------------------------------------
+#mkdir -p build
+#cd build
+#  cmake \
+#    -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+#    -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+#    -DCMAKE_INSTALL_PREFIX=/usr \
+#    -DLIB_SUFFIX=${LIBDIRSUFFIX} \
+#    -DCMAKE_BUILD_TYPE=Release ..
+# ---------------------------------------------------------------------------
+
+## Here we go ... ##
+
+make  
+make install DESTDIR=$PKG 
+
+## The compiled application is now in $PKG (=$TMP/package-$PRGNAM) ##
+
+# Strip binaries:
+find $PKG | xargs file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+
+# ---------------------------------------------------------------------------
+# Copy documentation into the package - verbose but safe
+# ---------------------------------------------------------------------------
+cd $TMP/$PRGNAM-$VERSION
+
+if [ ! -d $PKG/usr/doc/$PRGNAM-$VERSION ]; then
+   mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+# *** you probably want to to adjust this list ***
+   for i in AUTHORS THANKS COPYING LICENSE INSTALL; do 
+      if [ -r $i ]; then
+         cp -a $i $PKG/usr/doc/$PRGNAM-$VERSION
+      fi
+   done 
+   for i in $(ls -1 README*); do
+      cp -a $i $PKG/usr/doc/$PRGNAM-$VERSION
+   done
+   if [ -d doc ]; then
+      cp doc/* $i $PKG/usr/doc/$PRGNAM-$VERSION
+   fi
+   if [ -r CHANGELOG ]; then
+      cat CHANGELOG | head -n 100 >$PKG/usr/doc/$PRGNAM-$VERSION/CHANGELOG
+   fi
+fi
+if [[ $0 == ./* ]]; then
+   cd $CWD
+   cat $(echo $0 |cut -c 3-) > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.Build
+else
+   cat $0 > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.Build
+fi
+
+# add specific actions here - for example
+# ettercap -- don't clobber the config files
+#  for i in conf dns mdns nbns; do 
+#     mv etter.$i etter.$i.new
+#  done
+
+# ---------------------------------------------------------------------------
+# Make the package and put it in $CWD
+#   comment this out if you want to review permissions, symlinks, etc, 
+#   make corrections in $PKG and finish up at the command line
+cd $PKG
+tar -czf $CWD/$PRGNAM-$VERSION-$ARCH-$BUILD.tgz ./*
+
+# Install the application to the local system
+# cd $TMP/$PRGNAM-$VERSION
+# make install
+
+cd $CWD
+# rm -rf $TMP/$PRGNAM-$VERSION      # remove the source code and object files
+# rm -rf $PKG                  # remove the temporary copy of the application
+# ---------------------------------------------------------------------------

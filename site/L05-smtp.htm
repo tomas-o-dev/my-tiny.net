@@ -1,0 +1,318 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::SMTP-IMAP</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<!--  -->
+
+<br>
+
+<h2>Testing the eMail service with SMTP and IMAP</h2>
+
+
+<hr>
+Previous Lab Exercises covered base configuration for our virtual machines 
+and adding the necessary software. In this Lab Exercise 
+we configure the Gateway and the MailServer to get the mail moving, and 
+in upcoming Lab Exercises we will finish the configuration with the WebServer 
+and the LDAPhost.
+<br><br>
+<blockquote>
+<blockquote>
+<blockquote>
+<img src="logos/lab4.jpg" width="450" height="340">
+</blockquote>
+</blockquote>
+</blockquote>
+
+<hr><br>
+
+We use the same font conventions here:
+<br><br>
+<code>This</code> is a command you type in a virtual machine 
+<br><br>
+<cite>This</cite> is a menu option you choose or a keyboard shortcut
+<br><br>
+<tt>This</tt> is used for emphasis - something to look for or remember
+<br><br>
+<em>Menu Item</em>::<em>Page</em> is short for "this <em>Page</em> under 
+<em>Menu Item</em> on the Menu"
+<br><br>
+<hr>
+<br>
+
+<blockquote>
+<table border="4" cellpadding="6"><tr><td>
+<font color="red"><b>EXTREMELY IMPORTANT</b></font><i>(are you tired of seeing this yet?)</i><br>
+<OL>
+<li> Make sure the VirtualBox DCHP is <i>turned off</i> for Host-Only network interfaces
+<br><br>
+<li> If your VM is not shut down properly it will become corrupted and you will have to recreate it. <br>
+Use <code>poweroff</code> at the command prompt, or go the the VirtualBox menu at the top 
+of the VM window and select <cite>Machine</cite> then <cite>ACPI Shutdown</cite>
+<br>NEVER close your VM by simply closing the window (except in an emergency).
+<br><br>
+<li> <b>Always start the Gateway first</b>, and wait until the Gateway has finished
+booting before 
+starting the other VMs. The WebServer, MailHost, and LDAPhost can all boot at the same time.
+
+</ol>
+</td></tr></table>
+</blockquote>
+
+<hr><br>
+The install scripts set up the system accounts, directories, permissions, 
+and logfiles we need, so now it's time for testing. 
+
+<br><br>
+We could try to jump right in and use WebMail for testing, 
+but if something does not work it will be tough to figure 
+out exactly where the problem is (postfix? dovecot? monkey? 
+php? squirrelmail?). 
+
+<br><br>
+Much better to test things one at a time, 
+so we are sure one component is working properly before we add 
+another one. Put another way, this strategy means we are always 
+working with new problems, not problems that could have been 
+solved earlier.  
+
+<br><br>
+Our testing tool for postfix and dovecot will be the old reliable telnet.
+Now that xinetd will start every time the system boots up and manage 
+our telnet connections, we can test the Postfix and Dovecot configurations 
+by speaking their language. 
+
+<br><br>
+<hr>
+<br>
+<b>Let's send some mail:</b> 
+
+First, use <code>netstat -tulp</code> and <code>netstat -tulpn</code>
+on both the Gateway and the MailHost to see the listening services. 
+Check for xinetd and postfix on the Gateway, and xinetd, postfix, and 
+dovecot on the MailHost. If these are not running, start them with the 
+appropriate commands in <tt>/etc/rc.d</tt>
+
+<pre>
+Useful references: 
+<a href="http://www.thegeekstuff.com/2010/03/netstat-command-examples/">http://www.thegeekstuff.com/2010/03/netstat-command-examples/</a>
+<a href="http://www.linuxhowtos.org/Network/netstat.htm">http://www.linuxhowtos.org/Network/netstat.htm</a>
+</pre>
+
+
+Our test strategy is to do one thing at a time, so we start by speaking SMTP with the MailHost to make sure the local delivery is working (Test 1), then make sure mail can be retrieved by speaking IMAP (Test 2). After that we will try the Gateway to make sure mail is forwarded and then delivered (Test 3). 
+
+<br><br>
+<b>Test 1:</b> On the MailHost, enter these commands one by one at the command prompt, using <tt>zzz.xxx.ccc</tt> for the <i>sending.host.name</i> 
+<br><br>
+<blockquote>
+<code>telnet localhost 25</code><br><br>
+<code>HELO <i>sending.host.name</i></code><br><br>
+<code>MAIL From: TheBoss@example.com</code><br><br>
+<code>RCPT To: mailadmin@mailhost.tinynet.edu</code><br><br>
+<code>DATA</code><br><br>
+<code>Subject: System Upgrade</code><br><br>
+<code>We are upgrading the system. Please send me your password.</code><br><br>
+<code>.</code>&nbsp;&nbsp;&nbsp;(yes, that's just a dot)<br><br>
+<code>QUIT</code><br><br>
+</blockquote>
+
+How can you tell if this mail has been delivered? <b>Check the log files.</b>
+Note that there may be some delay, but not too much. 
+<ul>
+<li>/var/log/maillog</li>
+<li>/var/log/dovecot.IMAP</li>
+<li>/var/log/dovecot.LDA</li>
+</ul>
+
+<tt>/var/log/maillog</tt> 
+shows some problems, so let's fix them: open the <em>Debugging</em>
+page under <em>Configure Mail</em> in a new tab in your browser.
+
+<br><br>
+
+<table border cellpadding="4"><tr><td>
+Try sending mail again, to a recipient like 
+<code>helpdesk@net-a.tinynet.edu</code> 
+and look at the logs to see how postfix changed the address. The key configuration file for postfix is <tt>/etc/postfix/main.cf</tt> (there 
+are versions here for both the gateway and the mailhost, the configuration 
+script copies and renames the proper one for the role). The name switching 
+magic is controlled by <tt>/etc/postfix/virtual_alias</tt> where standard 
+system users <tt>root  postmaster  abuse  bounced  helpdesk</tt> for all 
+subnets are aliased to a single name so all of this mail will conveniently 
+end up in one place. 
+</td></tr></table>
+
+<br><br>
+<b>Test 2:</b> Make sure mail can be retrieved by speaking IMAP. 
+
+<br><br>
+For this test we use telnet on the MailHost to act like a mail client. 
+The dovecot imap service is listening on port 143. For clarity here, 
+sample output is also shown.
+
+<br><br>
+<blockquote>
+<code>telnet localhost 143</code><br><br>
+<pre>
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+* OK Dovecot ready.
+</pre>
+</blockquote>
+
+IMAP commands always start with a unique <i>token</i> and replies to that 
+command finish with the same token. Here, the token is a number, so be sure 
+to enter the following commands with the number at the beginning of each 
+line. Hint: it doesn't matter what the number is as long as it is unique for 
+the session, so lazy sysadmins (you can be one) 
+use 11, 12, 21, 22, 23, 32, 33, 34, 43, etc. 
+
+<br><br>
+Login with username and password. <i>Note: the documentation is a little 
+unclear - you may or may not need to use double quotes <code>""</code> around 
+the username and password.</i>
+
+The password is <tt>admin</tt> (but you knew that because you saw it in 
+<tt>/home/vmail/mail-pwd</tt> on the MailHost already) ...
+
+<br><br>
+<blockquote>
+<code>11 login "mailadmin@mailhost.tinynet.edu" "admin"</code><br><br>
+<pre>
+11 OK Logged in.
+</pre>
+</blockquote>
+
+Ask for a list of folders:
+
+<br><br>
+<blockquote>
+<code>21 list "" "*"</code><br><br>
+<pre>
+* LIST (\HasNoChildren) "." "INBOX"
+21 OK List completed.
+</pre>
+</blockquote>
+
+Select your inbox, and Dovecot will give you all kinds of information about that folder:
+
+<br><br>
+<blockquote>
+<code>23 select "INBOX"</code><br><br>
+<pre>
+* FLAGS (\Answered \Flagged \Deleted \Seen \Draft)
+* OK [PERMANENTFLAGS (\Answered \Flagged \Deleted \Seen \Draft \*)] Flags permitted.
+* 1 EXISTS
+* 0 RECENT
+* OK [UIDVALIDITY 1180039205] UIDs valid
+* OK [UIDNEXT 3] Predicted next UID
+23 OK [READ-WRITE] Select completed.
+</pre>
+</blockquote>
+
+<tt>EXISTS</tt> and <tt>RECENT</tt> refer to incoming messages. 
+You can <code>FETCH <tt>message_number</tt> All</code> to see just basic information on the email, or 
+<code>FETCH <tt>message_number</tt> body[]</code> to read the actual mail.
+<br><br>
+In the example below some actual data is replaced with where it came from during the SMTP exchange.
+
+<br><br>
+<blockquote>
+<code>32 FETCH 1 BODY[]</code><br><br>
+<pre>
+* 1 FETCH (BODY[] {<i>bytes</i>}
+Return-Path: &lt;<i>SMTP MAIL From:</i>&gt;
+X-Original-To: &lt;<i>SMTP RCPT to:</i>&gt;
+Delivered-To: &lt;<i>aliased mailbox</i>&gt;
+Received: from [<i>SMTP HELO</i>] ...
+        by ... (Postfix) with ESMTP id ...
+        for &lt;<i>SMTP RCPT to:</i>&gt;; {timestamp}
+Message-Id: &lt;<i> ... </i>&gt;
+Date: {timestamp}
+From: &lt;<i>SMTP MAIL From:</i>&gt;
+To: &lt;<i>SMTP RCPT to:</i>&gt;
+Subject: System Upgrade
+
+We are upgrading the system. Please send me your password.
+)
+32 OK Fetch completed.
+</pre>
+</blockquote>
+
+Looks fine, so disconnect from the server:
+
+<br><br>
+<blockquote>
+<code>34 logout</code><br><br>
+<pre>
+* BYE Logging out
+34 OK Logout completed.
+Connection closed by foreign host.
+</pre>
+</blockquote>
+
+<b>Test 3:</b> Check that mail from the Gateway is properly received and delivered by the MailHost. 
+
+<br><br>
+Now repeat Test 1 at the command prompt on the Gateway, using <tt>gateway.tinynet.edu</tt> for the <i>sending.host.name</i> 
+
+<br><br>
+Sending the message should create a record of activity in <tt>/var/log/maillog</tt> on the Gateway, and new data in the relevant log files on the MailHost. 
+
+<br><br>
+Finally, repeat Test 2 at the command prompt on the MailHost, to check the new message and note the differences.
+
+<br><br>
+
+<hr><hr>
+<br>
+
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>
+
+

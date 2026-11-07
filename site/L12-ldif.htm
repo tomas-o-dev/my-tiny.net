@@ -1,0 +1,409 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::LDIF</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net :: Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<!-- -->
+
+
+<br>
+
+<h2>Adding a new DIT to the LDAP Directory</h2>
+
+<hr>
+<br>
+<cite>DIT</cite> stands for Directory Information Tree. 
+The entire LDAP database is called the DIT, and OpenLDAP will manage 
+several databases (DITs) for us. Attributes <cite>o</cite> ("organisation") 
+and <cite>dc</cite> ("domain component" ) are commonly used to define the 
+base or root of the DIT. 
+Our <tt>slapd.conf</tt> is already configured for to handle the 
+<cite>o=tinynet.edu</cite> DIT, 
+and a second <cite>dc=tinynet,dc=edu</cite> DIT is easy to add.
+
+<br><br>
+Be sure to check 
+the <em>LDIF and the DIT</em> section in the 
+<em>LDAP Concepts</em> page under <em>Configure LDAP</em> on the menu for an 
+explanation of LDAP concepts and terms!
+
+<br><br>
+Before we start configuring, let's take a side-by-side look at the top levels of our two DITs:
+<table width="100%"><tr><td width="70%">
+<pre>
+<b>DIT 1: topclass-o.ldif</b>		<b>DIT 2: topclass-dc.ldif</b>
+dn: <font color="red">o=tinynet.edu</font>			dn: <font color="red">dc=tinynet,dc=edu</font>
+objectClass: top			objectClass: top
+					<font color="red">objectClass: dcObject</font>
+objectClass: organization		objectClass: organization
+o: <font color="red">tinynet.edu</font>				o: <font color="red">MyTinyNet</font>
+					<font color="red">dc: tinynet</font>
+description: LDAP Root			description: LDAP Root
+
+   ...					   ...
+ 
+dn: ou=UserNetC,<font color="red">o=tinynet.edu</font>		dn: ou=UserNetC,<font color="red">dc=tinynet,dc=edu</font>
+ou: UserNetC				ou: UserNetC
+objectClass: top			objectClass: top
+objectClass: organizationalUnit		objectClass: organizationalUnit
+description: User on Net-C		description: User on Net-C
+</pre></td>
+<td><img src="logos/ldap-rootdse.jpg" width="223" height="143"></td></tr></table>
+
+
+<cite>objectClass: dcObject</cite> permits the <tt>dc</tt> attribute to be present in an entry. 
+It is typically used in conjunction with another one such as organization
+or organizationalUnit (we'll skip the "why" for now, since it has to do with 
+how object classes are defined as <i>structural</i> or <i>auxiliary</i>). 
+Since the <b>topclass-dc.ldif</b> is ready, all we need to do is define the 
+new DIT and change the DNs for our user entries before we add them to the new database - Simple!
+
+<br><br>
+
+phpLDAPadmin (PLA) is a good way to manage users, but it has problems 
+putting fields in a sensible order in the template that require some 
+"code surgery" to fix. An easy way to use our sample data is 
+to get <tt>/etc/openldap</tt> on both sides in <code>mc</code>, 
+use <cite>[F5]</cite> to make a copy 
+of <cite>userdata-o.ldif</cite> called <code>userdata-dc.ldif</code>, 
+and then use <cite>[F4]</cite> to edit the new file and change the 
+<tt>dn</tt> <u>for each user</u>:
+<br><br>
+<pre>
+dn: cn=Barbara Jensen,ou=UserNetB,<font color="red"><b>dc</b></font>=tinynet<font color="red"><b>,dc=</b></font>edu
+ou: UserNetB
+cn: Barbara Jensen
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+mail: b.jensen<font color="red"><b>.dc</b></font>@net-b.tinynet.edu
+givenname: Barbara
+sn: Jensen
+uid: bjensen<font color="red"><b>.dc</b></font>
+title: Account Executive
+userPassword: {PLAIN}LetMeIn
+</pre>
+
+Another good change is to add <code><b>.dc</b></code> before the <cite>@</cite> in the 
+<tt>mail:</tt> address. If you also add <code><b>.dc</b></code> to the <tt>uid:</tt> 
+then mail for this address will be put into a new mailbox, otherwise there will be one 
+mailbox for both <tt>o=tinynet</tt> and <tt>dc=tinynet,dc=edu</tt> messages, since 
+Dovecot uses the <tt>uid:</tt> to deliver, not the email address. 
+
+<br><br>
+<h4>IMPORTANT notes about editing LDIF</h4>
+OpenLDAP is <u>obnoxiously unforgiving</u> about whitespace, 
+and the error messages from slapd are typically vague and almost useless.
+
+<ul>
+<li> Parent entries must be listed before their children 
+in the file, so that when the server process the LDIF text, 
+it will create the parent entries before the children entries.
+<br><br>
+<li> There must be AT LEAST ONE blank line before each line starting with 
+<cite>dn:</cite> 
+<i>except</i>&nbsp;-&nbsp;there MUST NOT be ANY blank lines before the 
+FIRST entry in the .ldif file.
+This is VERY important - strange errors will result otherwise. 
+<br><br>
+<li> Comments are indicated by a <b>#</b> as the FIRST character of the line ONLY, 
+otherwise # is taken as content
+<br><br>
+<li> The space following the <b>&nbsp;:&nbsp;</b> on each line is VITAL
+<br><br>
+<li> An LDIF line can be split over two lines if there is NO TRAILING 
+WHITESPACE at the end of the first line and the next line starts with 
+EXACTLY ONE SPACE.
+</ul>
+In general, you want to make sure there is no whitespace at the end of ANY line!<br>
+(watch for the faint blue dots in the mc editor)
+
+<br><br><hr>
+<h3>Configuring the new DIT in slapd</h3>
+
+<tt>slapd</tt> will not start if any of the databases in <tt>slapd.conf</tt> 
+are not properly configured, so the first step is to stop the <tt>slapd</tt> 
+service on the LDAPserver. 
+<center>
+<br>
+<table border cellpadding="6"><tr><td>
+USE ONLY THIS COMMAND TO STOP LDAP&nbsp;&nbsp;&nbsp;<code>/etc/rc.d/rc.slapd stop</code><br>
+DON'T USE KILL PROCESS IN HTOP since it can damage your database<br>
+</td></tr></table>
+</center>
+<br>
+
+<b>[&nbsp;1&nbsp;]</b>&nbsp;&nbsp;Now we can add the database definition 
+for our new <cite>dc=</cite> DIT by 
+adding <tt>/etc/openldap/slapd-db2.conf</tt> to the end of <tt>slapd.conf</tt>. 
+We could do this by copy/paste with the mc editor, but it is soooo much easier 
+to do it at the command line. To be safe, copy <tt>/etc/openldap/slapd.conf</tt> 
+to <tt>/temp</tt> as a backup, then enter this command: 
+
+<br><br>
+<code>cd&nbsp;/etc/openldap;&nbsp;cat&nbsp;slapd-db2.conf&nbsp;&gt;&gt;slapd.conf</code>
+<br><br>
+
+Briefly, here we use <cite>&nbsp;;&nbsp;</cite> to string together two 
+separate commands, and <cite>&nbsp;&gt;&gt;&nbsp;</cite> to write the 
+output of the <tt>cat</tt> command to the end of <tt>slapd.conf</tt>
+(see the pages under <em>Standard I/O</em> on the menu 
+for more details).
+<br><br>
+
+<br><br>
+<b>[&nbsp;2&nbsp;]</b>&nbsp;&nbsp;
+
+To accommodate PLA we need to configure anonymous access.
+Just like before, make the same change in the 
+<cite>dn = "cn=LDAPAdmin,dc=tinynet,dc=edu"</cite> section 
+at the bottom of <tt>slapd.conf</tt>
+<pre>
+#---%<---------------------------------------------------------------
+# Next backend database definition
+        <i>bla bla bla</i>
+access to *
+       by dn="cn=LDAPAdmin,dc=tinynet,dc=edu" write
+       by self   write
+       <font color="red">by *      read</font>
+</pre>
+
+Now test the configuration <i>without</i> testing the database configurations:
+<br><br>
+<code>slapd -Tt -u</code>
+<br><br>
+<br><br>
+<b>[&nbsp;3&nbsp;]</b>&nbsp;&nbsp;Next step is to add the database structure. 
+There are two sets of utilities for doing this, a set of <tt>ldap</tt> commands 
+to use when <tt>slapd</tt> is running, and a set of <tt>slap</tt> commands 
+to use when is is stopped. Let's keep it stopped:
+<br><br>
+<code>slapadd -n 2 -l /etc/openldap/topclass-dc.ldif</code>
+<br><br>
+Just for reference, <cite>-n 2</cite> says "add to our second database" and 
+<cite>-l</cite> (Careful - use lowercase L not one!) says "using this LDIF file".
+<br><br>
+<br><br>
+<b>[&nbsp;4&nbsp;]</b>&nbsp;&nbsp;To make sure everything goes smoothly, 
+enter this command to change the owner and group of all of the newly created database files to the proper system account (we could do this one-by-one 
+with mc - but why?)
+<br><br>
+<code>chown ldap:ldap /var/ldapdata/dc_tinynet/*</code>
+<br><br>
+Now use <cite>[Up-Arrow]</cite> to get the command back, and change it to 
+(Careful - use lowercase L not one!):
+<br><br>
+<code>ls -l</code><cite>/var/ldapdata/dc_tinynet/*</cite>
+<br><br>
+Note that if you miss this and the database files have the wrong owner, 
+you will get a (typically cryptic) error message like this when slapd 
+refuses to start:
+<pre>
+hdb_db_open: database <i>[...]</i> alock package is unstable
+</pre>
+Now test the configuration <i>including</i> the database configurations:
+<br><br>
+<code>slapd -Tt</code>
+<br><br>
+
+
+<br><br>
+<b>[&nbsp;5&nbsp;]</b>&nbsp;&nbsp;Now we can add the data. 
+Use <cite>[Up-Arrow]</cite> to get the <tt>slapadd</tt> command back, 
+and change it to:
+<br><br>
+<cite>slapadd -n 2 -l /etc/openldap/<font color="red">userdata</font>-dc.ldif</cite>
+<br><br>
+
+** For reference, the <tt>ldapadd</tt> version of this command that we would 
+use when the server is running is at the bottom of the page.
+<br><br>
+
+<br><br>
+<b>[&nbsp;6&nbsp;]</b>&nbsp;&nbsp;All Done! Start the server
+<br><br>
+<code>/etc/rc.d/rc.slapd start</code>
+<br><br>
+
+and try some "anonymous bind" queries like these - type in all of the first one, 
+then just use <cite>[Up-Arrow]</cite> to get the command back and edit it.  
+<br><br>
+
+<code>ldapsearch&nbsp;-LLL&nbsp;-x&nbsp;-b&nbsp;"dc=tinynet,dc=edu"&nbsp;description</code>
+<br>
+<code>ldapsearch&nbsp;-LLL&nbsp;-x&nbsp;-b&nbsp;"dc=tinynet,dc=edu"&nbsp;<b>"(ou=UserNetA)"</b>&nbsp;description</code>
+<br>
+<code>ldapsearch&nbsp;-x&nbsp;-b&nbsp;"dc=tinynet,dc=edu"&nbsp;"(ou=UserNetA)"&nbsp;<b>cn&nbsp;uid&nbsp;mail</b></code>
+<br>
+<code>ldapsearch&nbsp;-x&nbsp;-b&nbsp;"dc=tinynet,dc=edu"&nbsp;"(ou=UserNet<b>B</b>)"&nbsp;cn&nbsp;uid&nbsp;mail</code>
+<br>
+<code>ldapsearch&nbsp;-x&nbsp;-b&nbsp;"dc=tinynet,dc=edu"&nbsp;"(ou=UserNet<b>C</b>)"&nbsp;cn&nbsp;uid&nbsp;mail</code>
+
+<br><br>
+
+<pre>
+The basic syntax is <b>ldapsearch <i>-flags filter attrs</i></b>
+  -x    means use simple authentication instead of SASL 
+          openLDAP defaults to SASL authentication - but it takes a lot of configuration
+          this is required even for anonymous bind
+  -b    specifies the the start point of the search (base-dn)
+  -LLL  means to use the simplest LDIF format for output
+
+The basic syntax for a (optional) search <i>filter</i> is "()" or '()' 
+<i>attrs</i> is a space separated list of attributes to be returned (also optional).
+</pre>
+Normally we will use dovecot, squirrelMail and PLA to search the directory,  
+but command line <cite>ldapsearch</cite> is good for testing and debugging, 
+and it can be 
+important to understand basic search filter syntax to configure some 
+applications to use LDAP.
+
+<br><br><hr><br>
+<h3>Configuring our Applications to use the new DIT</h3>
+We have to make changes to the same two configuration files as before for Dovecot on the MailHost, 
+and change two on the WebServer: one for Squirrelmail and one for phpLDAPadmin (PLA).
+
+<br><br>
+<b>On the MailHost,</b><br><br> 
+Get <tt>/etc/dovecot</tt>
+on both sides of <cite>mc</cite> and use <cite>[F5]</cite> 
+to copy and rename <cite>ldap-dn_<font color="red">o</font>.dbconf</cite> 
+to <code>ldap-dn_<font color="blue">dc</font>.dbconf</code> (just type the 
+new filename in the destination field).
+<br><br> 
+Use <cite>[F4]</cite> to edit the file, and make these two small changes:
+<br><br>
+<pre># Tell Dovecot to bind to the LDAP directory using these credentials
+# Make sure this matches something in the directory or slapd.conf
+dn = cn=LDAPAdmin,<font color="red">dc=tinynet,dc=edu</font>
+dnpass = slapmesilly
+
+# LDAP search base: where to start searching through the directory
+base = <font color="red">dc=tinynet,dc=edu</font>
+scope = subtree
+</pre>
+
+Save that file, and open <tt>/etc/dovecot/dovecot-auth.conf</tt>; <br>
+uncomment the <cite>passdb {</cite> and <cite>userdb {</cite> blocks 
+for <cite>ldap-dn_dc.dbconf</cite> in the section at the bottom. 
+<br><br>
+Finally, stop and restart Dovecot to get the new configuration in place.
+
+
+<br><br>
+<br><br>
+<b>On the WebServer,</b><br><br>
+Edit <tt>/var/www/squirrelmail/config/svr_ldap.php</tt> 
+to use the new DIT (look for the helpful comment you added!)
+<pre>
+// This is a sample block to edit when we add another DIT
+// Be sure to increment (add one to) the $ldap_server[ ] array index!
+
+    $ldap_server[<font color="red">1</font>] = Array(
+        'host' => <font color="red">'ldap.tinynet.edu',</font>
+        'name' => <font color="red">'ldap dc=tinynet,dc=edu',</font>
+        'base' => <font color="red">'dc=tinynet,dc=edu'</font>
+    ); 
+</pre>
+
+<br><br>
+Then edit <tt>/var/www/ldapadmin/config/config.php</tt> 
+to use the new DIT by uncommenting the relevant lines in the 
+<cite>*  Next Server</cite> section. 
+<br><br>
+In this case ALL of the lines starting with <b>#</b> are relevant EXCEPT  
+<pre>
+# $servers->setValue('server','host','127.0.0.1');
+</pre>
+which should remain commented out until you get <tt>stunnel</tt> ready.<br> 
+All of the lines starting with <b>/*</b> are documentation comments, so leave them as they are ...
+<br><br>
+When you finish, stop and restart the WebServer to get the new configurations 
+in place, and test it out in your Windows browser.
+
+<br><br>
+<hr><hr>
+
+<h3>If something goes wrong</h3>
+
+If you accidentally corrupt your dc= database, just 
+<ol>
+<li> Stop slapd <i>(this first step is most important)</i> </li>
+<li> Use <code>mc</code> to go to <tt>/var/ldapdata</tt> and </li> 
+<li> Delete all of the files in the <b>dc</b> data directory 
+<i>except</i> DB_CONFIG </li>
+</ol>
+Then 
+<ol>
+<li> Copy the backup <tt>slapd.conf</tt> from <tt>/temp</tt> to 
+<tt>/etc/openldap</tt>
+<li> Add the database definition for the dc= DIT to slapd.conf
+<li> Continue with steps 2-6
+</ol> 
+<i>Careful: if you delete the files before you stop <tt>slapd</tt> 
+you will never get LDAP to start again!</i>
+<br><br>
+<hr><hr>
+
+** For reference, when the server is running we use this command to add data: 
+<br><br>
+<code>ldapadd&nbsp;-x&nbsp;-D&nbsp;"cn=LDAPAdmin,dc=tinynet,dc=edu"&nbsp;-w&nbsp;slapmesilly&nbsp;-f&nbsp;/etc/openldap/userdata.ldif </code>
+
+<pre>
+-x  means use simple authentication instead of SASL 
+      openLDAP defaults to SASL authentication - but it takes a lot of configuration.
+-D  specifies the distinguished name with which to authenticate to the server,
+-w  specifies the associated password (use -W to prompt for the password)
+      -- these are the rootdn and rootpw we specified in slapd.conf --
+-f  specifies the full path to the LDIF file (not -l like slapadd!)
+</pre>
+
+<hr><hr>
+
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

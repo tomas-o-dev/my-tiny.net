@@ -1,0 +1,100 @@
+
+
+# essence of a script to change a user password automatically after login
+
+
+
+# passwd -n 
+# will set the minimum password lifetime, in days. Available to root only. 
+# zero is change anytime
+# before startting this routine, as root do 
+#     passwd -n1 thisuser
+# to keep the user from immediately changing their new password
+
+
+
+# don't let the password be changed until tomorrow
+#     if we could run this as root, we could read /etc/shadow 
+#        or use passwd -S or passwd -n0
+#     regular users can use chage -l for themslves
+#        which gives this in the output
+#
+# Last password change					: May 21, 2012
+#
+    lastchg = `chage -l $LOGNAME |grep "Last password change" |cut -f 2 -d :`
+
+# Single quotes will prevent variables from being translated into 
+# their corresponding values. Double quotes will work though.
+    lastchginseconds = `date -d "$lastchg" +%s`
+
+# http://www.epochconverter.com/
+# one day = 86400 seconds
+
+    nowinseconds=`date +%s`
+
+    nextchg = $(( $lastchginseconds + 86400 ))
+
+# This will be safe rather than exact, since chage does not give us the hour 
+# password expiry (max time before change) should be set to at least two days
+
+    if [ $nextchg -le $nowinseconds ]; then
+
+# Usage: pwgen [ OPTIONS ] [ pw_length ] [ num_pw ]
+# OPTIONS: Include at least one number, Include at least one capital letter
+
+       NEWPASSWORD = `pwgen -nc 12 1`
+
+# now change the password using one of the commands below
+# Be sure to catch the return value:-
+# On successful completion of its task, passwd will complete with exit code 0. 
+# An exit code of 1 indicates an error occurred. 
+# Textual errors are written to the standard error stream. 
+
+       echo "Use this password the next time you log in" $NEWPASSWORD
+    else
+       echo "Not ready for a new password yet"  
+    fi
+
+
+
+# CENTOS/RHEL support passwd --stdin   
+# reports are that Debian and it's variants like Ubuntu do not.
+# so here are 3 possibilities (echo -e allows using \n in the string)
+
+# echo $NEWPASSWORD | passwd --stdin linuxuser
+# or
+# echo -e $NEWPASSWORD\n$NEWPASSWORD | passwd linuxuser
+# or
+# (echo $NEWPASSWORD ; echo $NEWPASSWORD) | passwd linuxuser
+
+
+# If we could run this as root, there is another way - the chpasswd command, 
+# meant for batch updates. chpasswd reads a list of user name and password 
+# pairs from standard input and uses this information to update a group of 
+# existing users. It is normally used like this
+#     chpasswd < $FILE
+# but can be used like this for a single entry
+#     echo "password:name" | chpasswd
+
+
+# via ssh 
+# change the password of linuxuser on a batch of servers (10.1.0.1 to 10.1.0.10)
+
+# for ((i=1;i&<=10;i++)); do ssh 10.1.0.$i 'echo -e "linuxpassword\nlinuxpassword" | passwd linuxuser'; done;
+
+# create one user and set the initial password remotely 
+
+# ssh remoteserver 'useradd newuser; echo -e "passwdofuser\npasswdofuser" | passwd newuser'
+
+
+
+
+
+
+
+
+
+
+
+
+

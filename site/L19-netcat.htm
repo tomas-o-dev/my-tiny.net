@@ -1,0 +1,339 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Netcat</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+<br>
+
+<h2>Netcat</h2>
+
+<hr>
+
+<table cellpadding="4"><tr><td>
+<pre>
+#!/bin/bash
+cat&nbsp;&lt;&lt;'EOF'&nbsp;|nc&nbsp;$1&nbsp;$2 
+:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:
+:&nbsp;&nbsp;&nbsp;&nbsp;/\_/\&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:
+:&nbsp;&nbsp;&nbsp;/&nbsp;0&nbsp;0&nbsp;\&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:
+:&nbsp;&nbsp;====v====&nbsp;Netcat&nbsp;:
+:&nbsp;&nbsp;&nbsp;\&nbsp;&nbsp;W&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;____&nbsp;&nbsp;:
+:&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:
+:&nbsp;&nbsp;&nbsp;/&nbsp;___&nbsp;\&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:
+:&nbsp;&nbsp;/&nbsp;/&nbsp;&nbsp;&nbsp;\&nbsp;\-'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:
+:&nbsp;(((-----)))&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:
+:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:
+EOF
+</pre>
+</td><td valign="center">
+The developer says ( http://nc110.sourceforge.net/ )
+<blockquote>
+Netcat is a simple Unix utility which reads and writes data 
+across network connections, using TCP or UDP protocol.
+It is designed to be a reliable "back-end" tool that can
+be used directly or easily driven by other programs and 
+scripts.  At the same time, it is a feature-rich network
+debugging and exploration tool, since it can create almost 
+any kind of connection you would need and has several 
+interesting built-in capabilities.  Netcat, or "nc" as the 
+actual program is named, should have been supplied long ago
+as another one of those cryptic but standard Unix tools.
+<br><br> 
+Netcat tries its best to behave just like "cat".  It does nothing to
+terminal input modes, and does no end-of-line conversion.  Standard input from
+a terminal is read line by line with normal editing characters, and sent to the 
+target host. Anything that comes back across the connection is sent to your 
+standard output. This continues indefinitely, until the network side of the 
+connection shuts down.
+<br><br>
+Note how this behaviour is different from most other applications which shut 
+everything down and exit after an end-of-file on the standard input.
+</blockquote>
+</td></tr></table>
+
+In the simplest usage, <code>nc <i>host port</i></code> creates a TCP connection to the given
+port on the given target host. 
+
+The host argument can be a name or IP address. A port argument is required for 
+outbound connections, and can be numeric or a name as listed in /etc/services. 
+Netcat can bind to any local port, subject to privilege restrictions and ports 
+that are already in use. 
+<br><br>
+Netcat can also function as a server, by listening for an
+inbound connection on an arbitrary port and then doing the same reading and writing. 
+<br><br>
+<cite>Ctrl c</cite> will make netcat close the network connection and exit.
+
+<br><br><font color="red">
+Netcat is a core component of some backdoors, so many sysadmins keep a sharp
+eye on who it is available to and how it is used.</font> But hey - we display the 
+root password for every login, so never mind!
+
+<br><br>
+One important thing to know is that there are three versions out there: Classic, 
+GNU, and BSD. Tinynet hosts have Classic (<cite>nc</cite>) and 
+BSD (<cite>bsdnc</cite>) available. 
+GNU has pretty much the same capabilities as Classic netcat, but the BSD 
+variant has some useful additions. The BSD version is also the one most people 
+document, without saying so. The main differences are in the command arguments:
+<ul>
+<li>Listening for connections: With the Classic version, you have to specify the 
+port using <cite>-p</cite>, where the <cite>-p</cite> modifier in the BSD version changes the source port.
+<li>Run as a background process: the BSD version has the <cite>-d</cite> option for this, where 
+the Classic version requires some tricks to keep netcat from exiting if it cannot 
+read immediately from stdin. 
+<li>Keep the connection listening after a client quits: The BSD version has the <cite>-k</cite> option for this, where using the Classic version you have to try something like<br>
+<tt>
+echo&nbsp;-n&nbsp;|&nbsp;nc&nbsp;-l&nbsp;-v&nbsp;-p&nbsp;23434&nbsp;|&nbsp;bash&nbsp;mklist.sh&nbsp;&amp;</tt> <br>or<br> 
+<tt>tail&nbsp;-f&nbsp;/dev/null&nbsp;|&nbsp;nc&nbsp;-l&nbsp;-v&nbsp;-p&nbsp;23434&nbsp;|&nbsp;bash&nbsp;mklist.sh&nbsp;&amp;</tt>
+</ul>
+
+Outside of this, some versions (but never BSD) will have a <cite>-c</cite> 
+or <cite>-e</cite> switch to 
+execute a command after connecting - in the Classic netcat source, written by *Hobbit*, 
+this is the GAPING_SECURITY_HOLE compile option. It is easy to do this with any 
+version using a named pipe, so we'll come back to it later.  
+
+<br><br>
+Bottom line is: <b>be sure to use <cite>-h</cite> to see what switches 
+you have available</b>.
+
+<br><br>
+Check <tt>man&nbsp;nc</tt> and <tt>man&nbsp;bsdnc</tt> for more;  
+<a href="https://www.sans.org/security-resources/sec560/netcat_cheat_sheet_v1.pdf">
+the NetCat Cheat Sheet from www.sans.org</a> is also quite good.
+
+<br><br>
+<h3>Put a message in a log file</h3>
+
+A "UNIX-domain socket" is an internal interprocess communication mechanism that  
+uses the same system call libraries as the network stack. In simple terms, 
+a TCP/IP socket allows communication between processes over the network: 
+a listening TCP socket is identified by a local port and possibly local IP.  
+A unix domain socket (or just "unix socket")  allows communication between 
+processes running on the same machine. Lots of listening sockets live in the 
+filesystem hierarchy and access to them can be controlled by filesystem permissions.
+
+<br><br>
+We can list our listening network ports with <code>netstat -tulp</code>
+<br>
+and list our unix sockets with <code>netstat -ap --unix</code> or <code>lsof -U</code>
+<br>
+where type <tt>STREAM</tt> is equivalent to a TCP network socket and type 
+<tt>DGRAM</tt> is equivalent to a UDP network socket.
+<br>
+In a file listing, <code>ls -l /run</code> for example, the unix sockets have 
+<cite>&nbsp;s&nbsp;</cite> a the beginning of their permissions list. 
+<br>
+To see all of the unix sockets in the filesystem: 
+<code>find / -type s |grep -v 'postfix'</code>
+(leave the postfix ones off the list - is uses a lot!)
+
+<br><br>
+Classic netcat can only connect to network sockets, but the BSD version has 
+<cite> -U </cite> for connecting to a <tt>STREAM</tt> socket and <cite> -uU </cite> 
+for connecting to a <tt>DGRAM</tt> socket. 
+
+<br><br>
+The <tt>syslog</tt> daemon listens on the UNIX-domain datagram socket <tt>/dev/log</tt> 
+to collect messages from other processes and write them to the proper log file based on 
+the <tt>facility</tt> and <tt>priority</tt> included in the message. Long story short, 
+the command to add a line to the file for messages with facility 
+<tt>kern</tt> and priority <tt>error</tt> (<tt>/var/log/messages</tt> by default) is
+<br><br>
+<code>&nbsp;&nbsp; echo "&lt;3&gt;$0[$$]: --- IM IN UR BASE PLUTIN UR LAWGZ ---" | bsdnc -uU -w 1 /dev/log&nbsp;&nbsp;</code>
+<br><br>
+where <cite>$0</cite> is the name of the shell or shell script
+and <cite>$$</cite> is the process id (pid) of the current shell. The number  
+between the angle brackets <cite>&lt;  &gt;</cite> is the syslog Facility and 
+Priority encoded into a single number - see the <em>Quick Reference :: Syslog Codes</em>
+page on the menu for a handy table. Or even better, 
+use <tt>/usr/local/bin/msg2syslog</tt> with 
+<cite>facility priority "message"</cite><br>(facility and priority must be names 
+in UPPERCASE).
+
+<br><br>
+<h3>Netcat Listener</h3>
+
+Start with two hosts, a <tt>listener [endpoint]</tt> and a <tt>source [sender]</tt>. 
+
+<br><br>
+Netcat expects to have ports connected and active so it can immediately 
+send its <tt>stdin</tt> across the socket. That means we need to get netcat listening 
+on the <tt>[endpoint]</tt> first. We use <cite>bsdnc</cite> because <cite>-lk</cite> 
+makes it easy to reconnect, with <cite>-v</cite> to show a "Connection 
+Accepted" message:&nbsp;&nbsp;&nbsp;&nbsp;<code>bsdnc&nbsp;-lkv&nbsp;23432</code>
+<br><br>
+Now switch to your <tt>[sender]</tt> host, have the name or ip of your 
+<i>end.point.host</i> handy, and type in <br>
+<code>echo "logged in as: $(whoami)" |nc&nbsp;<i>end.point.host</i>&nbsp;23432</code><br><br>
+then use <cite>Up Arrow</cite> and change it to <br> 
+<code>echo "current directory: $PWD" |nc&nbsp;<i>end.point.host</i>&nbsp;23432</code><br><br>
+then use <cite>Up Arrow</cite> and cycle through these two commands once more. Switch to 
+your <tt>[endpoint]</tt> to see the outcome. 
+<br><br>
+Use <cite>Ctrl&nbsp;c</cite> on the <tt>[endpoint]</tt> to exit netcat. 
+<br><br>
+
+<h3>Netcat and Named Pipes</h3>
+"Round tripping" named pipes is where things get interesting. We will do this exercise 
+in two virtual terminals on the TinyNet Gateway or MailHost, but it works the same on 
+two different hosts, as long as the named pipes are created on the 
+<tt>listener&nbsp;[endpoint]</tt> host.
+<br><br>
+If you did not do this before (see the <em>Named Pipes</em> section 
+in the <em>Redirection</em> page under <em>Standard I/O</em> on the 
+menu), make the named pipe we will use with the command 
+<code>mkfifo&nbsp;/tmp/piper</code>
+
+<br><br>
+In one virtual terminal (VT): 
+<br><br>
+<code>
+nc&nbsp;-l&nbsp;-p&nbsp;23432&nbsp;&lt;&nbsp;/tmp/piper&nbsp;|&nbsp;tee&nbsp;/dev/stderr&nbsp;|&nbsp;nc&nbsp;localhost&nbsp;587&nbsp;|tee&nbsp;/tmp/piper
+</code>
+<br><br>
+and in another VT: <cite>nc&nbsp;127.0.0.1&nbsp;23432</cite>
+<br><br>
+Type the "telnet mail" commands (from <em>Configure Mail::Testing</em> on the menu)
+in the VT with the short <tt>nc</tt> command. Then switch to the listener VT to see both sides of the connection there too!! The first trick is <tt>tee</tt> sends output to both the screen (stderr) and nc (stdout), and the second is using the named pipe to catch input from both sides of the conversation. 
+<br><br>
+Use <cite>Ctrl&nbsp;c</cite> in the listener VT to exit netcat. If you want to do this across the network, just make sure the named pipes are created on the <tt>listener&nbsp;[endpoint]</tt> host, use the name or IP of a mailserver instead of <tt>localhost</tt> in the middle of the listener command, and use the name or IP of the listener host instead of <tt>127.0.0.1</tt> 
+to connect. 
+<br><br>
+While this exercise does not seem too sensible with just two VTs, you have to remember that 
+you see your own interactive session in one VT, while other is eavesdropping on the conversation and recording it - quite useful for debugging! 
+
+<br><br>
+The script below enhances this idea by using two background processes to modify the data 
+in the pipes. <tt>sed</tt> is the "stream editor", a powerful tool that uses regular 
+expressions to filter input: in this case we have a simple regular expression to change 
+the beginning of each line, adding directional arrows for each message. It also uses 
+<tt>mktemp</tt> and <tt>trap</tt> to clean up the FIFOs when it ends (be sure to take a 
+look at the man pages!)
+<br><br>
+This script is /usr/local/sbin/piper.sh
+<pre>
+     #!/bin/sh -e
+     if [ $# != 3 ]; then
+        echo "usage: $0 [src-port] [dst-host] [dst-port]"
+        exit 0
+     fi
+
+     TMP=$(mktemp -d)                # safely create a temporary directory
+     BACK=$TMP/pipe.back
+     SENT=$TMP/pipe.sent             # make the fifo names
+     RCVD=$TMP/pipe.rcvd
+
+     mkfifo -m 0600 $BACK $SENT $RCVD     # make the fifos 
+     trap 'rm -rf "$TMP"' EXIT            # clean up at exit
+
+     sed 's/^/ =&gt; /' &lt;$SENT &amp;             # edit the streams
+     sed 's/^/ &lt;= /' &lt;$RCVD &amp;
+
+     nc -l -p $1 &lt;$BACK | tee $SENT | nc $2 $3 | tee $RCVD &gt;$BACK
+
+# run this script in one VT with (for example)    ./piper 23432 localhost 25
+# and in another one run    nc 127.0.0.1 23432    and type your email dialog
+
+# thanks to:
+# <a href="https://notes.tweakblogs.net/blog/7955/using-netcat-to-build-a-simple-tcp-proxy-in-linux.html">https://notes.tweakblogs.net/blog/7955/using-netcat-to-build-a-simple-tcp-proxy-in-linux.html</a>
+</pre>
+
+<br><br>
+<h3>Final Note</h3>
+
+Windows also has "named pipes", but they behave differently. On Windows 
+the thing called a named pipe is an interprocess communication (IPC) 
+object where things can flow both ways and there is some metadata (you 
+can obtain the credentials of the thing on the other end, etc.). They 
+need to be opened with a special system call, after which they behave 
+mostly like a normal win32 handle. Unix has a thing called a "Unix socket" 
+or AF_UNIX socket which, being bidirectional, works more like (but not 
+exactly like) a win32 "named pipe".
+<br><br>
+<hr>
+<pre>
+Special Parameters in the Bash shell
+    $0        the name of the shell or shell script
+    $1 $2 $3  ... the positional parameters
+    $#        the number of positional parameters
+    "$@"      an array of the positional parameters, {$1, $2, $3 ...}
+    $IFS      the (input) field separator.
+    "$*"      the IFS expansion of the positional parameters, $1 $2 $3 ...
+
+    $$        PID of the current shell (not subshell)
+    $!        PID of the most recent background command
+    $?        most recent foreground pipeline exit status
+</pre>
+<hr>
+<pre>
+<b>trap</b> is a function built into the shell that defines and activates handlers
+      to be run when the shell receives signals or other special conditions.
+
+From the man page:
+
+ARG is a command to be read and executed when the shell receives the signal(s) SIGNAL_SPEC.
+If ARG is absent (and a single SIGNAL_SPEC is supplied) or ARG is a dash ("-"), 
+   each specified signal is reset to its original value. 
+If ARG is the null string, each SIGNAL_SPEC is ignored by the shell and by the commands it invokes.
+
+If a SIGNAL_SPEC is EXIT (0), ARG is executed upon exit from the shell.
+If a SIGNAL_SPEC is DEBUG, ARG is executed before every simple command.
+If a SIGNAL_SPEC is RETURN, ARG is executed each time a shell function or a script 
+   run by the "." or source built-in commands finishes executing.
+A SIGNAL_SPEC of ERR means to execute ARG each time a command's failure 
+   would cause the shell to exit when the -e option is enabled.
+
+If no arguments are supplied, trap prints the list of commands associated with each signal. 
+
+EXAMPLE
+       trap 'rm -f /tmp/xyz$$; exit' ERR EXIT
+Set a trap which, on shell error or shell exit, deletes a temporary file xyz$$.
+</pre>
+
+
+<hr><hr>
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

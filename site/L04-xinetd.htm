@@ -1,0 +1,300 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::xinetd</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<br>
+
+<h2>xinetd: the eXtended InterNET Daemon</h2>
+<hr><br>
+
+The idea of a &quot;super service&quot; daemon goes back to the ancient times 
+of the Internet (i.e., before 1992 when the WWW came on the scene). The original 
+<tt>inetd</tt> is still around, but back then system administrators were not so 
+worried about security (they were happy enough that it just worked). 
+<br><br>
+<tt>xinetd</tt> is a secure replacement for <tt>inetd</tt>. It controls access 
+to network services including with service-specific configuration options for 
+access control, enhanced logging, binding, redirection, and resource 
+utilization control. 
+<br><br>
+When a client attempts to connect to a network 
+service controlled by xinetd, the super service receives the request and 
+verifies the connection is allowed under its access rules for that service 
+and that the service is not consuming more than its allotted amount of 
+resources or in breach of any defined rules. It then starts an instance 
+of the requested service and passes control of the connection to it. Once 
+the connection is established, xinetd does not interfere further with 
+communication between the client and the server.
+
+
+<br><br>
+Telnet is the original Internet interactive communication protocol, with 
+ftp for exchanging files - even mail was layered over ftp in those days. 
+Since telnet and ftp transmit passwords over the network in cleartext, 
+their use has been mostly superseded by the use of ssh and sftp. Running sshd 
+in daemon mode is much preferred to running in inetd mode, because SSL needs 
+to be initialized for every connection.
+
+<br><br>
+<hr>
+<br><br>
+
+<h3>xinetd and telnet</h3>
+
+Telnet is still a very handy tool in network environments that are 
+known to be secure. Another service that is usefully managed with xinetd is 
+Trivial File Transfer Protocol (TFTP), which is used for booting 
+diskless workstations, and for backing up 
+and restoring configuration files on Cisco switches and routers.
+
+<br><br>
+It bears repeating that Telnet and TFTP provide very little security, and 
+should not be enabled unless they are needed.
+
+<br><br>
+The global xinetd configuration file is <cite>/etc/xinetd.conf</cite> and 
+<cite>/etc/xinetd.d/</cite> is the directory of service-specific configuration 
+files. Start <code>mc</code> 
+on either the Gateway or the MailHost (you need to do both, so pick one to start) 
+and use <cite>[F4]</cite> to make two changes to <cite>/etc/xinetd.d/telnet</cite> 
+<ol>
+<li> Uncomment (delete the <tt>#</tt> from) the <tt>only_from</tt> directive, 
+and change the IP address to <tt>127.0.0.1</tt>
+<li> Change the <tt>disable</tt> directive to <tt>no</tt>
+</ol>
+then save the file with <cite>[F2]</cite> and exit the editor with <cite>[F10]</cite>.
+<br><br>
+
+After editing the service configuration, we need to start <tt>xinetd</tt>. If you 
+look at <cite>/etc/rc.d/rc.inet2</cite> you will find the following code:
+<br><br>
+<pre>
+   # Start the inetd server:
+   if [ -x /etc/rc.d/rc.inetd ]; then
+      /etc/rc.d/rc.inetd start
+   fi
+</pre>
+which means we need a script named <tt>rc.inetd</tt> with the execute bit set 
+(<tt>-x</tt>).
+<br><br>
+We don't have one yet, so use <tt>mc</tt> to
+<ol>
+<li>Change the permissions on <cite>/etc/rc.d/rc.xinetd</cite> so that only the owner can write, but everyone can read and execute<br><br>
+<li>Use <cite>[F9]</cite> and choose <cite>File</cite> and then choose <cite>Symlink</cite> 
+to create a <tt>symbolic link</tt> ("shortcut") called <code>rc.inetd</code><br> 
+(just delete the path in the box and then type in the new name). 
+</ol>
+
+With this, xinetd will start every time the system boots up - but it is not started yet, so you need to do that now. Switch to your plain shell virtual terminal, and type the path and the filename at the command prompt. 
+<br><br>
+<code>/etc/rc.d/rc.inetd start</code>
+
+<br><br>
+<hr>
+<br><br>
+
+<h3>xinetd and Arbitrary Services</h3>
+
+We can actually use xinetd to run any script we prepare for it. 
+All we need to do is 
+put a configuration file for the service in <tt>/etc/xinetd.d</tt> and 
+create a simple executable script in <tt>/usr/local/sbin/</tt>. In this 
+example, we use the <cite>showlog</cite> script.
+
+<br><br>
+First, get 
+<cite>/etc/xinetd.d/</cite> on both sides in <tt>mc</tt>. 
+Use <cite>[F5]</cite> 
+to copy and rename <tt>telnet</tt> to 
+<tt>laplink</tt> or <tt>showlog</tt> (just type the 
+new filename in the destination field).
+The name needs to match the service configuration, so have a look at 
+the boxes below before you do this.
+
+<br><br>
+Set up the service in one of two ways:
+<br><br>
+<table border cellpadding="8"><tr><td valign="top">
+Find a service in <tt>/etc/services</tt> <br>
+that we won't be using on the server. <br>
+This example uses the laplink port&nbsp;1547
+<br><br>
+<pre>
+service <font color="blue">laplink</font>
+{
+
+<font color="blue">    id            = showlog </font>	
+    socket_type   = stream
+    protocol      = tcp
+    wait          = no
+    user          = nobody
+    server        = /usr/local/sbin/showlog
+    disable       = no
+}
+</pre>
+some other good candidates for TinyNet are <br> 
+epec&nbsp;3031, 
+ccmail&nbsp;3264,
+dec-notes&nbsp;3333, <br>
+softcm&nbsp;6110,
+spc&nbsp;6111
+
+</td><td valign="top">
+The type <cite>UNLISTED</cite> will skip the lookup in <br>
+<tt>/etc/services</tt>, we just need to specify <br> the port.
+<br><br> 
+<pre>
+service <font color="blue">showlog</font>
+{ 
+<font color="blue">    type          = UNLISTED
+    port          = 23435</font>
+    socket_type   = stream
+    protocol      = tcp
+    wait          = no
+    user          = nobody
+    server        = /usr/local/sbin/showlog
+    disable       = no
+}
+</pre></td></tr></table>
+
+<font size="-2">
+Note: The xinetd man page says "When 
+wait is yes and socket_type is stream, 
+the socket passed to the server can only accept connections." 
+</font>
+
+<br><br>
+It is tempting to think a <tt>server_args</tt> line in the xinetd configuration 
+could be used to pass information to the script, but it is not good for this. 
+xinetd simply connects <tt>stdin</tt> and <tt>stdout</tt> of the script 
+(see the <em>Redirection</em> page under <em>Standard I/O</em> on the menu) 
+to the stream of the source host. Input received over the socket is not interpreted 
+by xinetd so it cannot pass command line arguments to the script.
+
+<br><br>
+The Bash built-in <tt>read</tt> command is the counterpart of the <tt>echo</tt> command. 
+One line is read from the standard input, and processed according to 
+the options. Here is an example (see the man page for details).
+<br><br>
+<pre>
+    #!/bin/bash
+    read FILE theRest
+    /usr/bin/tail -f /var/log/$FILE 
+</pre>
+
+In this form the first word of the line is assigned to variable HOST, 
+and all leftover words to the last name, theRest. 
+<br><br>
+To create an empty script, use the command: 
+<code>echo&nbsp;'#!/bin/bash'&nbsp;&gt;/usr/local/sbin/showlog</code><br>
+(use single quote) and then open the file in your editor and type in 
+the other two lines. Save it, and then set the executable bits on the file. 
+<br><br>
+It needs to work before the listener is started, so test it with any  
+file that exists in /var/log: for example, <br>
+<code>echo "stunnel.log" |/usr/local/sbin/showlog</code>
+<br><br>
+Finally, restart <tt>xinetd</tt> to get it listening on the new port: 
+<code>/etc/rc.d/rc.xinetd restart</code><br>
+and check that the service is ready with <code>netstat -tulp</code>
+
+<br><br>
+Now you can use <tt>netcat</tt> (See <em>Utilities&nbsp;::&nbsp;Netcat</em> on the menu) 
+to connect to the service. For example,   
+<br><br>
+
+<code>echo "acpid.log" |nc -w 300 mail.tinynet.edu laplink</code>
+<br>or<br>
+<code>echo "acpid.log" |nc -w 300 192.168.56.252 23435</code>
+
+<br><br>
+The <cite>-w</cite> switch for netcat closes the connection after 
+a given number of seconds, so you probably want to adjust that. 
+Note that xinetd can "get tired" of launching the shell script after 
+several rounds of fast experimentation, so just restart xinetd if the command suddenly stops working. 
+<br><br>
+
+
+
+<hr><hr>
+<br>
+
+
+Some things to know about the mc editor:
+<ul>
+<li> Spaces may appear as light blue dots and tabs as <cite>&lt;---&gt;</cite> 
+because some programs (like OpenLDAP) are sensitive to whitespace at the beginning 
+and the end of lines. &quot;That's a feature, not a bug!&quot;
+<br><br>
+<li> To Copy&nbsp;/&nbsp;Delete&nbsp;/&nbsp;Move a block of text you need to start 
+by pressing <cite>[F3]</cite> at the beginning of the text you want to work with,
+and look for <cite>[B---]</cite> in the top status 
+bar which means you are marking a block. Use the arrow keys to highlight to the 
+end of the text block, and press <cite>[F3]</cite> again (top status bar will 
+show <cite>[BM--]</cite>).
+<br><br>
+Now you can 
+use the labelled <cite>[Fkey]</cite> to Copy&nbsp;/&nbsp;Delete&nbsp;/&nbsp;Move 
+within the file. After that, press <cite>[F3]</cite> until the top status bar 
+just shows <cite>[-M--]</cite> (twice is usually enough), which means 
+you have stopped marking blocks of text.
+
+<br><br>
+<li> If you want to paste into another file, press <cite>[F9]</cite> 
+and choose <cite>Copy to Clipfile</cite> from the menu. Close the source file, 
+open the destination file and move to where you want the new text, 
+press <cite>[F9]</cite>, and choose 
+<cite>Paste from Clipfile</cite> from the menu.
+</ul>
+<br>
+
+<hr><hr>
+<br>
+
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>
+
+

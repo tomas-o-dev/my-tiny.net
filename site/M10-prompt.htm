@@ -1,0 +1,158 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Prompt</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<!--  -->
+
+<br>
+
+<h2>Change the Prompt Color</h2>
+
+<hr>
+<br>
+
+This is a great idea, whether or not you use <tt>sudo</tt>: 
+use <i>ANSI escape sequences</i> 
+to make the prompt green for a normal user login or red for a root login. 
+
+<br><br>
+ANSI escape sequences are non-printed text that is interpreted to change 
+the format of some text. Their support depends on the terminal, but the 
+color control sequences are commonly supported - see the <em>Escape Codes</em> 
+page under <em>Quick Reference</em> on the menu for details.
+
+<br><br>
+The current prompt setting is the value of the PS1 environment variable, 
+which is usually made of bash escape codes. <br>
+To see the current value, type:
+<code>
+echo $PS1
+</code>
+<br><br>
+Try a quick experiment:
+<code>
+export PS1='\e[34m\u@\h:\e[00m\w\$&nbsp;'
+</code>
+<br><br>
+Using single quotes instead of double quotes when exporting your PS variables is recommended, it makes the prompt a tiny bit faster to evaluate. 
+Leave one space at the end before the <cite>&nbsp;'&nbsp;</cite> to make 
+the command line easier to read.
+
+<br><br>
+The PS2 environment variable is a secondary prompt, displayed when the shell waits for user input, (for example you ended a command with <cite>&nbsp;\&nbsp;</cite> or forgot to close your quotes). You can do the same with it, if you like.
+
+<br><br>
+It is important to know that all environment variables have a lifetime equal to the terminal session. In other words, when the session is closed all 
+of the environment variables are discarded and must be redefined when a new 
+session is started. 
+
+<br><br>
+At login time, user environment variables are initialized from various global system files and files in the user home directory: exactly which one depends on your system, so use <tt>man bash</tt> to see the details - while you are there, look for <tt>export</tt> too. To make this easier, you can type <tt>/search&nbsp;term</tt> to find words in a man page.
+
+<br><br>
+Our system uses the global file <tt>/etc/profile</tt> when the user logs in, 
+and a file in the user's home directory usually referred to as <tt>~/.bashrc</tt>
+when we start an interactive shell that is not a login shell (a terminal in 
+the X-windows gui, for example, or using <cite>[Ctrl] o</cite> in <tt>mc</tt>). 
+So, if we <i>Always</i> want color prompts, we need to make the change in 
+<i>Both</i> files, <i>And</i> in <tt>/etc/skel/.bashrc</tt> so every new user 
+we create will get the proper file in their home directory.  
+
+<h4>Make it Permanent</h4>
+In your root login VT, open <tt>/etc/profile</tt> in your editor. 
+<br>Go down to the comment 
+<tt># Set a default shell prompt:</tt> - after all of the shells like ksh, zsh, ash it says 
+<br><br>
+<pre>
+    else
+      if [ $(id -u) -ne 0 ]; then
+         # non-root user
+         PS1='\u@\h:\w\$&nbsp;'
+      else
+         # root user
+         PS1='\u@\h:\w\$&nbsp;'
+      fi
+</pre>
+
+Change that part like this:
+<br><br>
+<pre>
+    else
+      if [ $(id -u) -ne 0 ]; then
+         # non-root user
+         <font color="red"># </font>PS1='\u@\h:\w\$&nbsp;'
+         PS1='<font color="red">\[\033[01;</font><font color="blue">32m</font><font color="red">\]</font>\u@\h:<font color="red">\[\033[00m\]</font>\w\$&nbsp;'
+      else
+         # root user
+         <font color="red"># </font>PS1='\u@\h:\w\$&nbsp;'
+         PS1='<font color="red">\[\033[01;</font><font color="blue">31m</font><font color="red">\]</font>\u@\h:<font color="red">\[\033[00m\]</font>\w\$&nbsp;'
+      fi
+</pre>
+All done! Now make the same change to <tt>/etc/skel/.bashrc</tt> 
+so every new user we create will get the proper file in their home directory.
+
+<h4>Test</h4>
+For your root login, type <code>exit</code> at the command prompt to get a new 
+login screen. Login and start <cite>mc</cite>, then copy 
+<tt>/etc/skel/.bashrc</tt> to <tt>/root</tt> so you will always have 
+color prompts.
+<br><br>
+Create a new user with <tt>adduser</tt> (see the <em>User Accounts</em> 
+page under <em>Host Management</em> on the menu for details), or if you 
+created new users already, copy <tt>/etc/skel/.bashrc</tt> to their 
+home directories. Open a new virtual terminal and login as this user - 
+having a second VT means you can easily login/out to view results as 
+a normal user and then switch over to your root shell to make any 
+changes to the files in <tt>/etc</tt>. 
+
+<br><br>
+<hr><hr>
+<br>
+
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>
+
+

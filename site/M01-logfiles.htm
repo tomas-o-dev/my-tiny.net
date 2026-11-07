@@ -1,0 +1,257 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Logfiles</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<br>
+
+<h2>Logfile Locations</h2>
+
+<hr>
+
+<br>
+The two key configuration files for logging are <cite>/etc/syslog.conf</cite> and 
+<cite>/etc/logrotate.conf</cite>. Both of these have a lot of embedded documentation 
+now to explain how they work; our application configurations have also been changed 
+to be consistent with this scheme.
+<br><br>
+The important thing is where to look for log messages from various applications. Most of this summary is from the bottom of <cite>/etc/syslog.conf</cite>, but some comes from the configuration files for applications:
+<br><br>
+<blockquote>
+<table border cellpadding = 6>
+<tr><td align="center">Application</td><td align="center">Logs to</td><td align="center">See</td></tr>
+<tr><td>DHCP Server &amp; DNS</td><td>/var/log/dnsmasq.log</td><td>syslog.conf</td></tr>
+<tr><td>DHCP Client</td><td>/var/log/dhcpcd-log</td><td>dhcpcd.conf</td></tr>
+
+<tr><td>Mail Transport</td><td>/var/log/maillog</td><td>syslog.conf</td></tr>
+<tr><td>Mailbox Delivery</td><td>/var/log/dovecot.LDA</td><td>dovecot.conf</td></tr>
+<tr><td>Mailbox Access</td><td>/var/log/dovecot.IMAP</td><td>dovecot.conf</td></tr>
+
+<tr><td>Webserver (Errors)</td><td>/var/log/httpd.ERRORS&nbsp;&nbsp;</td><td>monkey.conf</td></tr>
+<tr><td>Webserver (PHP)</td><td>/var/log/httpd.PHP</td><td>php.ini<br>config_squirrel_logger.php</td></tr>
+
+<tr><td>LDAP Server</td><td>/var/log/slapd.log</td><td>syslog.conf</td></tr>
+
+<tr><td>stunnel</td><td>/var/log/tunnels.log</td><td>syslog.conf</td></tr>
+<tr><td>xinetd, OpenVPN</td><td>/var/log/acpid.log</td><td>syslog.conf</td></tr>
+<tr><td>ssh, scp, sftp</td><td>/var/log/authinfo.log</td><td>syslog.conf</td></tr>
+<tr><td>sudo, adduser</td><td>/var/log/secure</td><td>syslog.conf</td></tr>
+
+<tr><td>iptables</td><td>/var/log/syslog&nbsp;&nbsp;&nbsp;<i>or</i><br>/var/log/messages</td><td>syslog.conf</td></tr>
+<tr><td align="center">Other and less important <br>messages</td><td align="center">
+<i>... various ...</i>
+</td><td>syslog.conf</td></tr>
+</table>
+</blockquote>
+
+Perhaps it goes without saying, but let's say it anyway: not all of 
+these will be used on all of the hosts. For example, only the Gateway 
+and MailHost will have anything meaningful in 
+<cite>maillog</cite>; the important one for DHCP on the Gateway is
+<cite>dnsmasq.log</cite>, but on all of the other hosts the important 
+file is <cite>dhcpcd-log</cite> since they are clients and the Gateway 
+is the server. 
+<br><br>
+Be Patient: when you get more familiar with the roles, you will know 
+where to look.
+<br><br> 
+It is important to understand log levels and facilities if you want 
+to get detailed information for debugging - but the default settings 
+should be adequate for our purposes.
+
+<br><br>
+<h3>logrotate</h3>
+The purpose of <cite>/etc/logrotate.conf</cite> is to keep logfiles 
+from getting too big; when the file gets to a certain size 
+(20k for a TinyNet) a new one is created 
+and up to 2 (for a TinyNet) old files are kept. 
+The older logfiles will have names ending with <tt>.1</tt>, <tt>.2</tt>, etc.
+which can safely be deleted.
+
+<br><br>
+On TinyNet hosts, <tt>logrotate</tt> is called from a script in 
+<tt>/etc/cron.hourly</tt> to check for files that have grown too big, 
+and by <tt>/etc/rc.d/rc.local_shutdown</tt> to create new logfiles for 
+kernel messages when the system starts up. 
+
+<br><br>
+A helpful reference here is the Logrotate Cheat Sheet
+at <a href="https://www.jamescoyle.net/category/cheat-sheets">
+https://www.jamescoyle.net/category/cheat-sheets/676-logrotate-cheat-sheet</a>
+
+
+<br><br>
+<h3>Centralized syslog Server</h3>
+A centralized log server that receives and processes log messages 
+from multiple sources can be of great value to a system administrator.
+When a hacker breaks into a system, the first thing she will want to do 
+is to hide and stay hidden. To do this, most hackers will modify system 
+logs to remove evidence of their existence.  If a break-in occurs and 
+you want to track the cracker down, the system administrator will first 
+check the log files for evidence. With a machine on the network that 
+collects logs from other machines on the network, we can be sure log files 
+haven't been tampered with. Even if a hacker breaks into one system 
+(the MailServer for example) and tampers with the logs, we still 
+have another set of log files that have not been altered.
+
+<br><br>
+You can have the syslog daemon accept remote 
+messages with two steps:
+<br><br>
+<blockquote><blockquote>
+<code>/etc/rc.d/rc.syslog stop</code>
+<br> <br>
+<code>/etc/rc.d/rc.syslog listen</code> 
+</blockquote></blockquote>
+
+When you check the output of <code>netstat -tulpn</code> you should 
+see it listening on udp-port 514.
+
+<br><br>
+To make it permanent, put those two commands in 
+<tt>/etc/rc.d/rc.local</tt> just above the comment line <br> 
+<cite># start monkey httpd</cite> 
+
+<br><br>
+To have a client system send log entries to the syslog server,  
+you need to edit <cite>/etc/syslog.conf</cite> and change the 
+log target from the name of a file to <cite>@server.host.name</cite> 
+(using the name of your syslog server, of course). 
+
+<br><br>
+One syslog configuration line can normally specify only a single 
+destination.*<br>To keep the local logfile and add the syslog server we have to 
+duplicate the line for the extra destination.<br>
+<font size="-2">* Oddly enough, "a comma-separated list of users" 
+is considered a single destination, but list of files is not.</font> 
+
+<br><br>
+On the server side, messages are 
+processed according to the facility&nbsp;+&nbsp;priority 
+selectors without regard to origin. The full domain 
+name will be logged as part of each message received: to
+shorten it, check the <cite>-h</cite> and the <cite>-s</cite> 
+switches in the <tt>syslogd</tt> man page, and make the appropriate 
+changes in <tt>/etc/rc.d/rc.syslog</tt>. Or we can use 
+<tt>multitail</tt> with a simple regex, as in the example below ...
+
+<br><br>
+Final Note: 
+One feature of <tt>syslog</tt> is that it condenses repeated messages into a single message:
+<pre>Last message repeated <i>n</i> times</pre> 
+With the standard linux version there is no way to control this, BUT Slackware uses the FreeBSD version where this CAN be controlled by uncommenting one line at the top of <tt>/etc/rc.d/rc.syslog</tt>
+<pre>
+# Uncomment the following line to use the -c option to syslogd.  This will
+# disable suppressing repeated messages, which may be useful with tools that
+# parse the logs, such as fail2ban:
+SYSLOGD_OPTIONS="-c "  
+</pre>
+Do this on both the server and the client to see all messages.
+
+<br><br>
+<h4>Simple Example</h4>
+First, get <tt>syslog</tt> on the Gateway to listen for messages. 
+(Be sure to check it is running!)
+
+<br><br>
+Then on the MailHost add a line in <tt>/etc/syslog.conf</tt> 
+so messages will be saved locally AND sent to the Gateway
+<pre>
+    # root login, adduser
+    authpriv.info   -/var/log/secure
+    <font color="red">authpriv.info   @gw.tinynet.edu</font>
+</pre>
+
+Restart syslog, and then login on new VT 
+a couple of times with <cite>[Alt]&nbsp;F2</cite> and 
+<cite>[Alt]&nbsp;F3</cite>.
+
+<br><br>
+Now check <tt>/var/log/secure</tt> on the 
+Gateway - it should have entries like these
+<pre>
+Oct 27 21:32:17 gw-abc login[1242]: invalid password for 'root'  on '/dev/tty1'
+Oct 27 21:33:58 gw-abc login[1242]: ROOT LOGIN  on '/dev/tty1'
+Oct 28 01:17:23 gw-abc login[1243]: ROOT LOGIN  on '/dev/tty2'
+Oct 28 01:31:35 mail-nc.net-c.tinynet.edu login[1484]: ROOT LOGIN  on '/dev/tty2'
+Oct 28 01:31:44 mail-nc.net-c.tinynet.edu login[1445]: ROOT LOGIN  on '/dev/tty3'
+</pre>
+Let's clean it up! With <tt>multitail</tt> we can use 
+<cite>-ke</cite> with a 
+regular expression to omit parts of lines from the output.  
+<br>This example shows how to drop the domain 
+part if it is <tt>net-a</tt> or <tt>net-b</tt> or <tt>net-c</tt> 
+<br><br>
+<code>multitail -ke ".net-[abc].tinynet.edu" /var/log/secure</code>
+
+<br><br>
+Using <tt>multitail</tt> twice on on a single file, we can separate 
+one set of entries from the others <br>using <cite>-e</cite> to select 
+some lines in the first window and <cite>-ev</cite> to leave them 
+out of the other window:
+
+<br><br>
+<code>multitail -ev "gw-abc" /var/log/secure
+-e "gw-abc" /var/log/secure</code>
+
+<br><br>
+You can find all the details in the <em>Logfile Analysis with 
+Regular Expressions</em> section of the 
+<em>Utilities&nbsp;::&nbsp;Multitail</em> page on the menu.
+
+
+<br><br>
+<hr><hr>
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,114 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Virtual ethIF</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<!--  -->
+
+<br>
+
+<h2>Virtual Ethernet Interfaces</h2>
+
+<hr>
+<br>
+
+While we're on the subject of kernel capabilities,  
+virtual ethernet interfaces (<tt>Veth</tt> here, some refer to these as 
+Virtual IP addresses or VIPs) allow you to use multiple IP addresses  
+on a single physical network interface. 
+The main advantage of this is that you don't need to have a physical 
+adapter attached to each IP, but instead you can create multiple or 
+many virtual interfaces (aliases) to a single physical card.
+This is commonly done to allow webservers to host multiple SSL 
+encrypted web sites on a single webserver, or to allow VPNs to 
+communicate on a dedicated IP address
+
+<br><br>
+There are two ways to create Veth on Linux hosts. 
+The first method is to use <tt>ifconfig</tt>, which most everyone is familiar with. 
+This command will create a Veth named eth1:0 
+<code>&nbsp;&nbsp;ifconfig&nbsp;eth1:0&nbsp;192.168.1.28&nbsp;&nbsp;</code>
+This creates an apparently separate device from eth1 with 
+it's own IP address, netmask, and broadcast address. 
+Notice there is no gateway - usually you can only have one gateway per machine.
+<br><br>
+After creating the Veth, update the routing table with arping, using the real interface to bind 
+this Veth to and the IP address which was assigned in the ifconfig statement
+<code>&nbsp;&nbsp;arping&nbsp;-q&nbsp;-U&nbsp;-c&nbsp;3&nbsp;-I&nbsp;eth1&nbsp;192.168.1.28&nbsp;&nbsp;</code>
+<br><br>
+This Veth can now be used to host services and servers, 
+fielding connections to clients or other hosts.
+To remove the Veth, simply execute ifconfig with the down option for the device:
+<code>&nbsp;&nbsp;ifconfig&nbsp;eth1:0&nbsp;down&nbsp;&nbsp;</code>
+
+<br><br>
+The second method is to use <tt>iproute2</tt>, a tremendously powerful 
+tool set used to administer many advanced IP routing features in the kernel.  
+Since its power is its great flexibility, and with great flexibility 
+comes great complexity ... however, it has particular advantages 
+for managing Veth. 
+<br><br>
+To {create or delete} a Veth using the <tt>ip</tt> command: 
+<code>&nbsp;&nbsp;ip&nbsp;addr&nbsp;{add&nbsp;|&nbsp;del}&nbsp;192.168.1.28&nbsp;dev&nbsp;eth1&nbsp;&nbsp;</code>
+<br><br>
+To see all IP addresses that are assigned to an interface: 
+<code>&nbsp;&nbsp;ip&nbsp;addr&nbsp;show&nbsp;dev&nbsp;eth1&nbsp;&nbsp;</code>
+Leave off <cite>dev eth<i>N</i></cite> to get the information for all interfaces on the system. 
+This alone makes it worth installing, 
+it is not possible to do this with <tt>ifconfig</tt>.
+<br><br>
+Changes made as we did here will be lost when the machine is rebooted.
+Add the commands to the network up and down script <tt>/etc/rc.d/rc.inet1</tt>
+or to <tt>/etc/rc.d/rc.local</tt> 
+when you are satisfied with the outcomes of your experiments.
+
+<br><br>
+<hr><hr>
+
+
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

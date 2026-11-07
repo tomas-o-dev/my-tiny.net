@@ -1,0 +1,415 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::bashScript</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+<br>
+
+<h2>bash Script I/O by Example</h2>
+
+<hr>
+
+<br>
+This is a simple bash script to demonstrate redirection, command line parameters, 
+and using ANSI escape codes to change text colors. For background, see 
+<em>Standard I/O::Redirection</em> on the menu
+<br><br>
+A few things to know about bash:
+<ul>
+<li> We can execute multiple commands on a single line by 
+using <cite>;</cite> (semicolon) to separate them.
+<br><br>
+<li> Shell variables are declared as we might expect. Putting a <cite>$</cite> in 
+front of the variable name means use the value of the variable. 
+<br><br>
+<li> Anything enclosed in double quotes <cite>" "</cite> is passed on exactly as presented except that the values of shell variables are substituted. 
+<br><br>
+<li> Within single quotes <cite>' '</cite> the values of shell variables are not substituted. 
+<br><br>
+<li> <cite>$(  )</cite> or backticks <cite>` `</cite> are used to enclose commands: shell variable values are substituted and the item is replaced by the standard output of the command.
+<br><br>
+<li> The <code>read</code> built-in command is the counterpart of the <code>echo</code> command. One line is read from the standard input, and processed according to the options.
+<br><br>
+<li> Text on the command line after the command is read as <i>positional parameters</i> starting with the name of the command itself in position zero.
+<br><br>
+<li> The <cite>-e</cite> option of the echo command enables parsing of the escape sequences. Check <em>Quick Reference&nbsp;::&nbsp;Escape Codes</em> on the menu 
+for a list of possibilities.
+<br><br>
+<li> By default, the echo command prints everything on a line by itself; the <cite>-n</cite> option lets us have several outputs on the same line.
+<br><br>
+<li> Use <cite>${#var}</cite> to get the length of variable <tt>var</tt>, or
+<cite>${#num}</cite> to get the length of positional parameter <tt>num</tt>
+</ul>
+
+
+<br><br>
+
+Since we need some short text, here is a quickstart list of switches 
+for the <cite>date</cite> command:
+<ul>
+<li><cite>+%x</cite> local date representation (e.g., 12/31/99)
+<li><cite>+%X</cite> local time representation (e.g., 23:13:48)
+<li><cite>+%r</cite> 12-hour clock time (e.g., 11:11:04 PM)
+<li><cite>+%R</cite> 24-hour hour and minute; same as %H:%M 
+<li><cite>+%A</cite> full weekday name (e.g., Sunday)
+<li><cite>+%B</cite> full month name (e.g., January)
+<li><cite>+%n</cite> a newline
+</ul>
+
+</blockquote></blockquote>
+
+<br><br>
+And here's the script! The suggestions assume you named it <cite>showparams.sh</cite> 
+and are running it from the current directory.<br>
+Check for it in <tt>usr/local/bin</tt>
+
+<pre>
+#!/bin/bash
+    echo "Read from stdin"
+    read HOST PORT FILE therest
+
+    echo -n -e "\e[01;3<font color="red">2</font>m"; echo -n $<font color="red">HOST</font>; echo -e "\e[00m" 
+    echo -n -e "\e[01;3<font color="red">1</font>m"; echo -n $<font color="red">PORT</font>; echo -e "\e[00m" 
+    echo -n -e "\e[01;3<font color="red">4</font>m"; echo -n $<font color="red">FILE</font>; echo -e "\e[00m" 
+    echo "anything else: $therest" 
+    echo 
+    echo "$0 command line positional parameters"
+    echo -n -e "\e[01;3<font color="red">2</font>m"; echo -n $<font color="red">1</font>; echo -e "\e[00m" 
+    echo -n -e "\e[01;3<font color="red">1</font>m"; echo -n $<font color="red">2</font>; echo -e "\e[00m" 
+    echo -n -e "\e[01;3<font color="red">4</font>m"; echo -n $<font color="red">3</font>; echo -e "\e[00m" 
+    echo
+
+    # suggestions:
+    # echo "$(date +%A) $(date +%x) $(date +%R)" |./showparams.sh 1 2 3 4
+    # echo "1 2 3 4" |./showparams.sh $(date +%A) $(date +%x) $(date +%R)
+</pre>
+
+In this form the <cite>read</cite> command assigns the first word of the line to the variable HOST, the second word to PORT, and so on, with all leftover words assigned to the last name, theRest. If there are fewer words read from the input stream than there are names, the remaining names are assigned empty values. If no names are supplied, the whole line is assigned to the variable REPLY. 
+
+<br><br>
+The values of the variables read from <tt>stdin</tt> are printed first, then the values 
+of the positional parameters.
+
+<h3>"Here Documents"</h3>
+In bash and some other shells, a "Here Document" is a type of redirection that 
+allows you to pass multiple lines of input to a command. This technique is not used 
+too often, but it saves some typing when you write the script. 
+<br><br>
+The first line starts with an optional command followed by the special redirection 
+operator <cite>&nbsp;&lt;&lt;&nbsp;</cite> and the endpoint identifier. You can use any 
+string for this, the most commonly used are EOF or END. If the endpoint identifier 
+is in single quotes, the lines of the Here Document are passed along 'as-is'; if it is in double quotes
+the shell will substitute all variables, commands and special 
+characters before passing the lines to <tt>stdout</tt>. 
+<br><br>
+The here-document block can contain strings, variables, commands and any other type 
+of input. However, <b>leading whitespace characters are not allowed</b> (there is a 
+way to use a leading <cite>Tab</cite> in the source, but it will not get passed along to the listener, which is very bad for our ascii art!).  
+<br><br>
+The last line ends with the endpoint identifier. Again, white space in front is not 
+allowed.
+<br><br>
+Here are three scripts that process a Here Document and redirect the output. Note that the 
+middle one assumes the named pipe already exists, so be sure it does! (see the 
+<em>Named Pipes</em> section in the <em>Redirection</em> page under <em>Standard&nbsp;I/O</em> 
+on the menu). The script names <tt>ccat, pcat, ncat</tt> are just suggestions, call them whatever you like ...
+<br><br>
+<table border cellpadding="6">
+<tr><td>
+Local<br>
+Just to the screen
+</td><td>
+Named Pipe<br>
+Listener on another VT
+</td><td>
+Netcat<br>
+Listener across the Network
+</td></tr>
+
+<tr><td>
+&nbsp;
+</td><td>
+<code>cat /tmp/piper</code>
+</td><td>
+<code>nc -l -p 23432</code>
+</td></tr>
+
+<tr><td colspan="3" align="center">Run from the current directory as</td></tr>
+
+<tr><td align="center">
+<cite>./ccat</cite>
+</td><td align="center">
+<cite>./pcat /tmp/piper</cite>
+</td><td align="center">
+<cite>./ncat <font color="red"><i>hostIP</i></font> 23432</cite>
+</td></tr>
+
+<tr><td>
+<pre>
+#!/bin/bash
+echo 
+cat&nbsp;&lt;&lt;'END' 
+:                   :
+:    /\_/\          :
+:   / 0 0 \         :
+:  ====v==== Seecat :
+:   \  W  /   ____  :
+:    |   |   /      :
+:   / ___ \ _|      :
+:  / /   \ \        :
+: (((-----)))       :
+:                   :
+END
+echo 
+</pre>
+</td><td>
+<pre>
+#!/bin/bash
+exec 6&lt;&gt;$1
+cat&nbsp;&lt;&lt;'END'&nbsp;&gt;&amp;6
+:                   :
+:    /\_/\          :
+:   / 0 0 \         :
+:  ====v==== Catcat :   
+:   \  W  /   ____  :
+:    |   |   /      :
+:   / ___ \  |      :
+:  / /   \ \-'      :
+: (((-----)))       :
+:                   :
+END
+exec&nbsp;6&gt;&amp;-
+</pre>
+</td><td>
+<pre>
+#!/bin/bash
+
+cat&nbsp;&lt;&lt;'END'&nbsp;|nc&nbsp;$1&nbsp;$2
+:                   :
+:    /\_/\          :
+:   / 0 0 \         :
+:  ====v==== Netcat :   
+:   \  W  /   ____  :
+:    |   |   /      :
+:   / ___ \  |      :
+:  / /   \ \-'      :
+: (((-----)))       :
+:                   :
+END
+
+</pre>
+</td></tr>
+</table>
+
+<br><br>
+To grab these off this site, get an editor that will save the file with "Unix End-of-Line" 
+on your host system: 
+<a href="https://portableapps.com/apps/development/notepadpp_portable">
+Notepad++ from portableapps.com</a> is recommended. Copy the script from the webpage 
+and paste it into a blank document, making sure there is NO WHITESPACE BEFORE 
+<tt>#!/bin/bash</tt> (no spaces, tabs or empty lines!). Then check <em>Edit::EOL Conversion</em> on the Notepad++ menu to make sure it says <cite>UNIX (LF)</cite> before you save it. 
+<br><br>
+To put the script on your TinyNet VM, check the <em>Shared Folders</em> page under 
+<em>Orientation</em> on the menu. Using a SSH Client on the Host is easy and reliable: 
+<a href="https://portableapps.com/apps/internet/winscp_portable">
+get WinSCP from PortableApps.com</a> and install it on your host machine, then 
+connect to the ssh server running on your TinyNet Gateway or Webserver VM (same subnet!).
+<br><br>
+
+<h3>Web CGI Scripts With bash</h3>
+
+Whenever we see a form on a webpage, there is a "CGI script" in the background to 
+process process the data when the browser sends it back to the server. 
+Web CGI programs can be written in any language which can process standard input (stdin), environment variables and write to standard output (stdout). The web server will interact with all CGI programs using the "Common Gateway Interface" (CGI) standard as set by RFC 3875.
+While bash is definitely not the first choice for web programming, it does illustrate the essential simplicity of html. 
+<br><br> 
+
+CGI programs typically process some input: a URL or form data. This is done with 
+environment variables set by the web server, and the "Form Method" used by the browser 
+to return data to the server. 
+
+<ul>
+<li>With <cite>form method=GET</cite> all of the data in the form is passed 
+back in the URL (some like to call this <tt>REST</tt> or <tt>restful</tt>). 
+The CGI script processes the environment variable <cite>QUERY_STRING</cite>, 
+which is set by the server. With this method, all of the form data is clearly 
+visible in the part of the URL after the filename, where <cite>?</cite> marks 
+the start of the data, and each name=value pair starts with <cite>&</cite> 
+
+<br><br>
+<li>With <cite>form method=POST</cite> the script gets the form data as its 
+<tt>stdin</tt> (not visible in the URL). The CGI script processes the environment 
+variable <cite>CONTENT_LENGTH</cite>, which is set by the server, and reads this 
+much data from <tt>stdin</tt>. The data itself is in the same format as with the 
+GET method: each name=value pair starts with <cite>&</cite> 
+
+</ul>
+Aside from processing the data, all CGI scripts must write out a properly 
+formatted web page that the webserver can pass along to the browser. This 
+includes a header used by the browser to identify the content (which MUST be 
+followed by a blank line), and the HTML content to be viewed. The content 
+typically has the structure of the "head" which contains non-viewable content 
+and "body" which provides the viewable content.
+
+<br><br>
+Grab this off this site and replace the 
+<tt>test.sh</tt> in <tt>/var/monkey/htdocs</tt> to give it a try.
+
+<br><br>
+<pre>
+#!/bin/bash
+# yolinux.com/tutorials/BashShellCGI.html
+# super sed: Greg Ippolito, 2010
+
+echo "Content-type: text/html"
+echo ""
+
+echo '&lt;html&gt;&lt;head&gt;'
+echo '&lt;meta http-equiv="Content-Type" content="text/html; charset=UTF-8"&gt;'
+echo '&lt;title&gt;Form Example&lt;/title&gt;'
+echo '&lt;/head&gt;&lt;body&gt;'
+
+### uncomment *only one* of these two
+# echo "&lt;form method=GET action=\"${SCRIPT_NAME}\"&gt;"
+  echo "&lt;form method=POST action=\"${SCRIPT_NAME}\"&gt;"
+###
+
+cat &lt;&lt;EOF
+&lt;h3&gt;Simple CGI Form with bash&lt;/h3&gt;
+&lt;table cellpadding="4" nowrap&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;Username&lt;/td&gt;&lt;td&gt;
+&lt;input type="text" name="nom" size=12&gt;
+&lt;/td&gt;&lt;td&gt;&amp;nbsp;&lt;/td&gt;
+&lt;/tr&gt;&lt;tr&gt;
+&lt;td align="right"&gt;Password&lt;/td&gt;&lt;td&gt;
+&lt;input type="password" name="pwd" size=12 value=""&gt;
+&lt;/td&gt;&lt;td&gt;&amp;nbsp;&lt;/td&gt;
+&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;
+&lt;input type="radio" name="opt" value="1" checked&gt; Option 1
+&lt;/td&gt;&lt;td align="center"&gt;
+&lt;input type="radio" name="opt" value="2"&gt; Option 2
+&lt;/td&gt;&lt;td&gt;
+&lt;input type="radio" name="opt" value="3"&gt; Option 3
+&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;
+&lt;td&gt;&amp;nbsp;&lt;/td&gt;&lt;td align="right"&gt;
+&lt;input type="checkbox" name="chk"&gt; Show&lt;br&gt;Extra&lt;br&gt;Info?
+&lt;/td&gt;&lt;td&gt;&amp;nbsp;&lt;/td&gt;
+&lt;/tr&gt;&lt;tr&gt;
+&lt;td&gt;&amp;nbsp;&lt;/td&gt;&lt;td&gt;
+&lt;input type="submit" value="Process Form"&gt;
+&lt;/td&gt;&lt;td&gt;
+&lt;input type="reset" value="Reset"&gt;
+&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/form&gt;
+EOF
+
+# ---Process Form---
+# when method==GET the server supplies a value for QUERY_STRING
+  if [ "$REQUEST_METHOD" != "GET" ]; then
+     QUERY_STRING=""
+     if [ "$REQUEST_METHOD" != "POST" ]; then
+        echo "&lt;hr&gt;Script Error:"\
+             "&lt;br&gt;Cannot complete request, REQUEST_METHOD != GET or POST."\
+             "&lt;br&gt;Check the METHOD= in your FORM declaration.&lt;hr&gt;"
+     else
+        if [ "$CONTENT_LENGTH" -gt 0 ]; then
+           read -n $CONTENT_LENGTH POST_DATA &lt;&0
+           QUERY_STRING=$POST_DATA
+        fi
+     fi
+  fi
+#---
+
+# If no form data to process, exit gracefully now.
+  if [ -z "$QUERY_STRING" ]; then
+     exit 0
+  else
+  # extract the data we are looking for with sed:
+     NN=`echo "$QUERY_STRING" | sed -n 's/^.*nom=\([^&]*\).*$/\1/p' | sed "s/%20/ /g"`
+     PW=`echo "$QUERY_STRING" | sed -n 's/^.*pwd=\([^&]*\).*$/\1/p' | sed "s/%20/ /g"`
+     ZZ=`echo "$QUERY_STRING" | sed -n 's/^.*opt=\([^&]*\).*$/\1/p' | sed "s/%20/ /g"`
+     CB=`echo "$QUERY_STRING" | sed -n 's/^.*chk=\([^&]*\).*$/\1/p' | sed "s/%20/ /g"`
+
+     if [ -z "$NN" ]; then XX='&lt;i&gt;(empty)&lt;/i&gt;'; fi
+     if [ -z "$PW" ]; then YY='&lt;i&gt;(empty)&lt;/i&gt;'; fi
+     if [ -z "$CB" ]; then UU='&lt;i&gt;(off)&lt;/i&gt;'; fi
+
+     echo "Username was: " $NN
+     echo '&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;'
+     echo "Password was: " $PW
+     echo '&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;'
+     echo "Option was: " $ZZ
+     echo '&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;'
+     echo "Check status: " $CB
+
+     if [ "$CB" == "on" ]; then 
+        echo '&lt;br&gt;&lt;br&gt;&lt;b&gt;Environment Variables:&lt;/b&gt;'
+        echo '&lt;pre&gt;'
+        /usr/bin/env
+        echo '&lt;/pre&gt;'
+     fi
+  fi
+
+echo '&lt;/body&gt;'
+echo '&lt;/html&gt;'
+exit 0
+</pre>
+<b>Warning</b>: The <tt>sed</tt> commands here simply parse the variable names 
+and values, and replace the html escaped space <cite>%20</cite> with a normal space 
+character. It is important to remember that <b>user input always must be 
+pre-processed</b> to avoid trouble from hackers. For web pages, it is critical to 
+filter the input to avoid cross site scripting: don't allow <cite>/</cite> changed 
+to space, and filter out <cite> &lt; &gt; &amp; * ? . / \ </cite>
+
+<br><br>
+
+<hr><hr>
+<br>
+
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>
+
+

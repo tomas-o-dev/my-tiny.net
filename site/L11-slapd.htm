@@ -1,0 +1,357 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::slapd</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<!-- -->
+
+
+<br>
+
+<h2>Setting Up the LDAP Directory</h2>
+
+<hr>
+
+In the last Lab Exercise we finished  
+configuration of the WebServer and got WebMail running.
+Here we will configure the LDAP server enough to get it on the network, 
+and follow up with the configuration of the other servers so we 
+can use it to manage mail accounts.
+
+<br><br>
+<blockquote>
+<blockquote>
+<blockquote>
+<img src="logos/lab6.jpg" width="450" height="340">
+</blockquote>
+</blockquote>
+</blockquote>
+
+<hr><br>
+
+Our WebServer is now set up to use an interpreter for a 
+programming language called PHP, and offer two PHP applications: 
+SquirrelMail ("WebMail for Nuts", whatever that might mean) and phpLDAPadmin 
+(referred to as "PLA" in their documentation). 
+
+<br><br>
+LDAP stands for Lightweight Directory Access Protocol. This is used to make  
+a centralised directory of information about people, so we can do a single  
+update when people join or leave our organisation. One of the reasons we 
+use Dovecot LDA for local delivery is that it will automatically create 
+an inbox for a new user (which Postfix does not). So, once we set up the 
+LDAP and configure Dovecot to use it, all we have to do is use PLA to add 
+a new user to the directory, and they can send and receive mail instantly 
+(very nice for webmail and enterprise mail systems!).
+
+<br><br>
+Even though the L in LDAP stands for  
+"lightweight" it still can seem pretty heavy. Nonetheless, it is a 
+very popular way to provide common logins across corporate networks. That 
+makes it worth the time and effort required to get familiar with the basic 
+concepts and terminology - these apply equally to the tiny system we set up 
+here and Microsoft Active Directory, which is probably the most popular 
+application of LDAP in the real world.
+
+<br><br>
+See <em>LDAP Concepts</em> under <em>Configure LDAP</em> on the menu 
+for an explanation of LDAP concepts and terms. 
+
+<br><br>
+We have one LDAP database set up already as an example, and the raw data 
+for another one that you can use to enhance your understanding 
+(<tt>topclass.ldif</tt> 
+to populate the top levels of the DIT, and <tt>userdata.ldif</tt> to create 
+some entries for testing). Before we do that though, we need to make some 
+minor refinements to the configuration.
+
+<br><br>
+Get all four of your VMs running, doublecheck that your Windows 
+host VirtualBox interface is on the same subnet as the WebServer VM, and 
+make sure mail can be delivered (see the previous lab exercises).
+
+<br><br>
+<h3>Essential Configuration</h3>
+
+<i>Note: While there are a zillion kilometres of OpenLDAP documentation 
+dating back 10 years, none of it seems completely accurate or absolutely 
+complete, especially because of version incompatibilities (OpenLDAP's 
+main rival in this dubious area is MySQL</i> - You Have Been Warned). 
+
+<br><br>
+There is actually little to learn that is transferable from OpenLDAP to other 
+systems except for access control and LDIF, so that's where we will focus.
+
+<br><br>
+OpenLDAP can use a Run-Time Configuration DIT 
+with a hardcoded suffix of <tt>cn=config</tt> and attributes that start with 
+<tt>olc</tt>, also known 
+"slapd.d configuration". This allows most changes to be made without starting and 
+stopping the LDAP server. While this is increasingly popular, 
+it is NOT supported by PLA, so we need to stop and restart the 
+server every time we make changes to <tt>/etc/openldap/slapd.conf</tt>
+
+<br><br>
+OpenLDAP ALWAYS needs a directory for data files. 
+In our case the setup script created <tt>/var/ldapdata/</tt>   
+for this, and the database files for each dn (suffix) go in a new 
+directory under here. Each of these directories needs a <tt>DB_CONFIG</tt> 
+file; we have the necessary database configuration directives in slapd.conf
+so it gets created automatically.
+
+<br><br>
+The data directories and files must be owned by 
+the user that slapd runs as (check the <tt>-u</tt> flag in the startup script).
+
+<br><br>
+Default port is 389 for ldap:// and 636 for ldaps:// (LDAP secured with TLS) 
+
+<br><br>
+openLDAP logging can be very fine-grained - a good reference is 
+<a href="http://www.zytrax.com/books/ldap/ch6/">
+http://www.zytrax.com/books/ldap/ch6/</a>
+
+<br><br>
+What we will do here is make the changes necessary to get the server running, 
+so we can directly access the LDAP data using PLA. Extra steps are required to 
+get Dovecot and Squirrelmail to use LDAP to manage the mail users and mailboxes, 
+which are detailed in the <em>Using LDAP</em> page under <em>Configure LDAP</em>
+on the menu. Most of these steps should be familiar.
+
+<br><br>
+<b>First step:</b> Fix the logging
+<ol>
+<li> Change <tt>/var/log/slapd.log</tt> owner:group to <cite>ldap:ldap<cite>
+<br><br>
+<li> Edit <tt>/etc/syslog.conf</tt> and change <code>local4.info</code> 
+to <cite>&nbsp;local4.*&nbsp;</cite><br>
+(changes the log level for facility local4 from info to all)
+<br><br>
+<li> Stop and Start 
+syslog:&nbsp;&nbsp;&nbsp;<code>/etc/rc.d/rc.syslog stop;&nbsp;/etc/rc.d/rc.syslog start</code>
+</ol>
+
+<b>Next step:</b> Fix the LDAP startup file
+<ol>
+<li> Set the execute bits for everyone on <tt>/etc/rc.d/rc.slapd</tt>
+<br><br>
+<li> Symlink <tt>/etc/rc.d/rc.slapd</tt> as <cite>/etc/rc.d/rc.openldap</cite>
+so it matches <tt>/etc/rc.d/rc.inet2</tt>
+</ol>
+
+<b>Final step:</b> Edit <tt>/etc/openldap/slapd.conf</tt>
+<blockquote>
+There are two things to do here - the first one is simple
+</blockquote>
+<ol>
+<li> Comment out (put <code>&nbsp;#&nbsp;</code> in front of) 
+the first <cite>loglevel</cite> directive, and
+uncomment <cite>loglevel&nbsp;stats</cite>
+<br><br>
+<li> Configure anonymous access: this is easy once you understand the concept ...
+</ol>
+
+<h4>Configure Anonymous Access</h4>
+
+To populate initial entries we can configure a <tt>rootdn</tt> and 
+<tt>rootpw</tt> which define the DN of a superuser for each DIT that 
+bypasses normal directory access rules. These can be commented out once 
+we create an entry for administration in the DIT, which is better because 
+it gives us better control (see the ACL section below).  
+
+<br><br>
+phpLDAPadmin (referred to as "PLA" in their documentation and here) 
+relies heavily on being able to read the LDAP server schema as anonymous. 
+LDAP servers with ACLs (Access Control Lists) must ensure that anonymous 
+READ access to the schema is available. Anonymous read will also make 
+SquirrelMail address books easier to manage. Dovecot does things a little 
+bit differently and needs access to the userPassword (which our PHP 
+applications do not) so we need to get this set up properly in our ACL 
+for each DIT. 
+
+<br><br>
+The relevant parts of <tt>/etc/openldap/slapd.conf</tt> on the LDAPhost are
+<pre>
+#---%<---------------------------------------------------------------
+# done with the gnarly part - what follows IS IMPORTANT
+#---%<---------------------------------------------------------------
+
+rootdn "cn=LDAPAdmin,o=tinynet.edu"
+rootpw slapmesilly
+
+access to attrs=userPassword
+       by dn="cn=LDAPAdmin,o=tinynet.edu" write
+       by self   write
+       by *      auth
+
+access to *
+       by dn="cn=LDAPAdmin,o=tinynet.edu" write
+       by self   write
+       by users  read
+       by *      auth
+</pre>
+
+ACL directives are processed each time a directory access is made 
+starting with the first one defined - order is very important - and 
+are additive. The second adds to the functionality of the first and 
+so on. Each directive is implicitly terminated with <u>by * none</u> 
+which means that anything not covered by a previous clause is not 
+permitted.
+
+<br><br>
+Note that each new line within the directive must be indented by at least 
+one space. More importantly, while the layout of the directive is very 
+flexible <i>you <u>cannot</u> put comments</i> (lines beginning with #) 
+<b><i>anywhere</i></b> in an <tt>access to</tt> directive. 
+
+<br><br>
+The policy expressed above is to (a) allow only the root & owner to 
+write to (update) the password, while allowing anyone else access only 
+for authentication and (b) allow only the root & owner to update any 
+other attribute, while allowing any authenticated user to read any 
+attribute (except the password, which was restricted previously), and 
+allowing access to any attribute for the purposes of authentication. 
+<br><br>
+Step by step:
+<ol>
+<li><u>access to attrs=</u> means this policy applies only to this attribute.</li>
+<li><u>by dn="..." write</u> is a placeholder to give write permission 
+on this attribute to an administrator (we'll set this up later).</li>
+<li><u>by self write</u> grants write permission on this attribute only 
+to the owner of the entry 
+(whoever authenticated with the <i>userPassword</i> of this entry) 
+.</li>
+<li><u>by * auth</u> grants anonymous access to this attribute 
+only for authentication purposes. This is used internally by OpenLDAP.</li>
+</ol>
+The directive is implicitly terminated with <u>by * none</u>
+which means that any non-owner cannot write to <i>userPassword</i> 
+and even authenticated users cannot read the attribute (no read 
+access is granted).
+<ol>
+<li><u>access to *</u> means this policy applies to all attributes 
+except <i>userPassword</i> because it was previously defined to have 
+its own rules. Note that since directives are additive (but not 
+"subtractive"), the more restrictive rule had to come <u>before</u> 
+this one to have any effect.</li>
+<li><u>by dn="..." write</u> is a placeholder to give write permission 
+on these attributes to an administrator (we'll set this up later).</li>
+<li><u>by self  write</u> grants only the owner of the entry write 
+permission on the attributes covered by this directive. </li>
+<li><u>by users  read</u> grants any authenticated user read permission 
+to all the attributes covered by this directive </li>
+<li><u>by * auth</u> grants anonymous access to any attribute 
+for authentication purposes only </li>
+</ol>
+The implicit <u>by * none</u> in this case means that any non-owner cannot 
+write to any attribute and non-authenticated users cannot read, search or 
+perform any operations on any entry or attribute.
+
+<br><br>
+To accommodate PLA we need to change the second directive to 
+<pre>
+access to *
+       by dn="cn=LDAPAdmin,o=tinynet.edu" write
+       by self   write
+       <font color="red">by *      read</font>
+</pre>
+which seems pretty simple now that we know what we are doing. 
+
+
+<br><br><hr>
+
+<h3>First steps are finished</h3>
+Start openLDAP on the LDAPserver with&nbsp;&nbsp;&nbsp;<code>/etc/rc.d/rc.openldap start</code>
+<br><br>
+When the service starts correctly, it will show <tt>pid=xxx</tt>
+<br><br>
+If it does not start, it will say "check the log file and run slapd -Tt"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Do Not Ignore This Message! <br>
+If &nbsp;&nbsp;<code>slapd -Tt</code>&nbsp;&nbsp; reports "unclean shutdown detected" the most likely cause is that permissions are not set correctly on <tt>/var/run</tt> - fix it quickly with &nbsp;&nbsp;<code>chmod&nbsp;1777&nbsp;/var/run</code>
+<br>
+If the database really is corrupted, the best thing to do is clone and configure a new VM.
+<br><br>
+
+<table border cellpadding=6><tr><td>
+<font color="red">IMPORTANT</font><br>
+USE ONLY THIS COMMAND TO STOP LDAP&nbsp;&nbsp;&nbsp;<code>/etc/rc.d/rc.openldap stop</code><br>
+DON'T USE KILL PROCESS IN HTOP since it can damage your database<br>
+</td></tr></table>
+
+<ul>
+<li> Try out PLA to get a feel for how the queries work
+<li> Then configure Dovecot and SquirrelMail to use LDAP for looking up user mailboxes 
+<li> Finally, move on to adding a new DIT to the LDAP directory 
+</ul>
+<br><hr>
+<br>
+Some Useful References:
+<br><br>
+<blockquote>
+phpLDAPadmin FAQ: 
+<a href="
+http://phpldapadmin.sourceforge.net/wiki/index.php/FAQ">
+http://phpldapadmin.sourceforge.net/wiki/index.php/FAQ</a>
+<br><br>
+OpenLDAP: Common Errors
+<a href="
+http://www.openldap.org/doc/admin24/appendix-common-errors.html">
+http://www.openldap.org/doc/admin24/appendix-common-errors.html</a>
+<br><br>
+Nice Ubuntu walkthru
+<a href="
+https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-openldap-and-phpldapadmin-on-an-ubuntu-14-04-server">
+https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-openldap-and-phpldapadmin-on-an-ubuntu-14-04-server</a>
+<br><br>
+Excellent Demo site!!
+<a href="
+http://demo.phpldapadmin.org/RELEASE">
+http://demo.phpldapadmin.org/RELEASE</a>
+</blockquote>
+<hr>
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

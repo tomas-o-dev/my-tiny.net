@@ -1,0 +1,681 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::OpenVPN</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<!-- -->
+
+<br>
+
+<h2>Virtual Private Networks</h2>
+
+<hr>
+<br>
+
+Stunnel and native capabilities are fine for per-service security, 
+but what if we want to secure all communications between clients and servers? 
+(Not everyone will remember <tt>https://</tt>). 
+What if we need to provide secure remote access to a lot of different applications?
+<br><br>
+Best answer: a "Virtual Private Network" (VPN)
+<br><br>
+VPNs can be used as building blocks to construct anything from a small 
+secure telecommuting solution to a large-scale secure WAN.
+VPNs tie together concepts from cryptography, networking, and firewalls.
+OpenVPN is a SSL VPN which can accommodate a wide range of configurations, 
+including remote access, site-to-site VPNs, WiFi security, and remote access 
+with load balancing, failover, and fine-grained access-controls. 
+
+<br><br>
+In a VPN, the computers at each end of the tunnel encrypt the data 
+entering the tunnel and decrypt it when it arrives. In this sense it is very 
+much like stunnel. The big difference is that stunnel does this at layer 4 
+(port forwarding), while the VPN works at either layer 3 or layer 2.
+
+<br><br>
+A "kernel space" VPN uses the secure version of IP <cite>(IPSec)</cite>
+to encrypt the data in every packet before it is sent. This works for 
+both IPv4 and IPv6 networks. IPSec actually consists of three main protocols:
+<ul>
+<li>IPsec Authentication Header (AH), 
+<li>IPsec Encapsulating Security Payload (ESP), and the 
+<li>IPsec Internet Key Exchange (IKE). 
+</ul>
+which are described in RFC4301 to RFC4309, plus 27 additional RFCs to clarify 
+and update. <br>For an excellent explanation of the basics (from the older RFCs) see 
+<a href="https://cdn.ttgtmedia.com/searchEnterpriseLinux/downloads/Kozierok_Ch29.pdf">
+https://cdn.ttgtmedia.com/searchEnterpriseLinux/downloads/Kozierok_Ch29.pdf</a>
+
+<br><br>
+A "user-space" application like OpenVPN essentially links a local 
+TUN or TAP virtual network adapter with a remote one of the same type. 
+IP packets are encrypted and then encapsulated in UDP, and sent over 
+the internet to the corresponding device on the remote host, which 
+receives, decrypts, authenticates, and de-encapsulates the packets.
+
+<br><br>
+A program uses a TUN or TAP device to read and write packets,   
+similar to a named pipe (see <em>Standard I/O::Redirection</em>). When a 
+program opens <tt>/dev/net/tun</tt>, the driver creates and registers 
+a new virtual device with the kernel. When the program closes the device, 
+the driver will automatically delete it and all routes 
+corresponding to it. For background on how this works, see 
+<em>Device Drivers</em> under <em>Linux Notes</em> on the menu.
+
+<br><br>
+So, the big question: What is the difference between a TUN device 
+and a TAP device? Simple: TUN works with IP datagrams (layer 3), 
+TAP works with Ethernet frames (layer 2). This makes 
+the two major techniques for making a VPN routing (TUN) and bridging (TAP).
+
+<br><br>
+Bridging is good for software that depends on LAN broadcasts such as 
+Windows NetBIOS file and printer sharing. However, bridging is less efficient 
+than routing and does not scale well. Generally people recommend using 
+routing unless there is a particular reason not to. 
+
+
+<br><br>
+<h3>OpenVPN: TLS vs. Static Key mode</h3>
+
+The big thing to watch out for with OpenVPN documentation is that the configuration 
+files use the directives <cite>server <i>network netmask</i></cite> (for TUN) and 
+<cite>server-bridge <i>gateway netmask pool-start pool-end</i></cite> (for TAP)
+to have the OpenVPN server manage its own IP address pool and allocate addresses 
+to connecting clients.
+<br><br>
+The tricky part is that about a meter into the man page it says
+<tt>SSL/TLS authentication must be used in this mode</tt> To use TLS, each peer that 
+runs OpenVPN must have its own local certificate/key pair 
+(<cite>cert</cite> and <cite>key</cite>), signed with a <cite>ca</cite> root certificate.
+That creates some extra key management work.
+<br><br>
+An alternative is to use a pre-shared static key. 
+Static key configurations are simple to set up <i>(good)</i>. There is no signature 
+or feature (such as a header or protocol handshake sequence) that marks the 
+ciphertext packets as being generated by OpenVPN <i>(good)</i>. However, the same secret 
+key must exist in plaintext form on each VPN peer, so if an attacker manages 
+to steal the key, everything that was ever encrypted with it is compromised <i>(bad)</i>. 
+Static key configurations also have limited scalability: one client, one server 
+<i>(never mind)</i>.
+
+<br><br>
+This means you need to be careful with configuration examples: <tt>server</tt> 
+and <tt>server-bridge</tt> cannot be used with static key mode, and 
+there is no need for the <tt>ca, cert, key</tt>, and <tt>dh</tt> parameters - in static key mode the 
+<cite>secret</cite> parameter is used to designate the shared key that must must 
+be in plaintext form on each VPN peer. 
+
+<br><br>
+<h3>Getting Started</h3>
+
+Static key mode fits the TinyNet philosophy of "Do one thing at a time: 
+focus on the essentials first, then build up and out with enhancements". 
+<br><br>
+In this example, we set up a VPN using Static Key mode between two hosts 
+named <tt>mon.tn</tt> and <tt>fri.tn</tt> - it is probably better to use names 
+that are in <tt>/etc/dnsmasq/cnames</tt> already, or the actual IP addresses 
+of the machines you are connecting. 
+
+<br><br>
+If there is not one already, make a directory to store OpenVPN keys and 
+configuration files - we will use <tt>/etc/openvpn</tt>  
+<br><br>
+The first step is to create the encryption key on one of our hosts with
+<code>openvpn --genkey --secret static.key</code><br> 
+and set proper permissions with <code>chmod 770 /etc/openvpn/*.key</code>
+(if necessary). OpenVPN reads the key when it is running as <tt>root</tt> 
+so the owner doesn't really matter.
+<br><br>
+Next, copy the <tt>.key</tt> file to the other host using <cite>[F9]</cite> and 
+<cite>Shell Link</cite> in <cite>mc</cite> (see the section 
+<em>VM to VM with mc and SSH</em> in the <em>Shared Folders</em> 
+page under <em>Orientation</em> on the menu. <u>This only needs to be done once</u>.
+
+<br><br>
+Every time we use OpenVPN we need to make sure the proper device driver 
+kernel module is loaded with  
+<br><br>
+<code>modprobe -v tun</code>
+<br><br>
+Normally we put this into a startup file like <tt>/etc/rc.d/ko.local</tt> 
+(called by <tt>rc.modules</tt>), or <tt>/etc/rc.d/rc.openvpn</tt>.
+The <tt>tun</tt> device driver kernel module handles both TUN and TAP devices, 
+and using <tt>modprobe</tt> when it is already loaded will not cause 
+any problems. 
+
+<br><br>
+After that, the essential configuration is actually quite simple. 
+There are only four required directives for using OpenVPN in Static Key mode, 
+shown below in configuration files for TUN and TAP on two hosts:
+<br><br>
+<blockquote><blockquote>
+<i>(Sample config files are in /usr/local/etc/openvpn on every Tinynet VM)</i>
+<table border cellpadding="4">
+<tr>
+<td align="center">VPN Host fri</td>
+<td>&nbsp;</td>
+<td align="center">VPN Host mon</td>
+</tr><tr><td>
+<pre>
+  # OpenVPN tun-fri-mon.conf
+    remote mon.tn
+    secret static.key
+    dev <font color="blue">tun</font>
+    ifconfig 192.168.86.<font color="red">81</font> 192.168.86.<font color="red">18</font>
+</pre>
+</td><td>&lt;TUN&gt;</td><td>
+<pre>
+  # OpenVPN tun-mon-fri.conf
+    remote fri.tn
+    secret static.key
+    dev <font color="blue">tun</font>
+    ifconfig 192.168.86.<font color="red">18</font> 192.168.86.<font color="red">81</font>
+</pre>
+</td></tr><tr><td>
+<pre>
+  # OpenVPN tap-fri-mon.conf
+    remote mon.tn
+    secret static.key
+    dev <font color="blue">tap</font>
+    ifconfig 192.168.86.<font color="red">81</font> <font color="blue">255.255.255.0</font>
+</pre>
+</td><td>&lt;TAP&gt;</td><td>
+<pre>
+  # OpenVPN tap-mon-fri.conf
+    remote fri.tn
+    secret static.key
+    dev <font color="blue">tap</font>
+    ifconfig 192.168.86.<font color="red">18</font> <font color="blue">255.255.255.0</font>
+</pre>
+</td></tr></table>
+</blockquote></blockquote>
+
+<ol>
+<li> The <cite>remote</cite> directive takes one parameter, the IP address 
+or DNS name of the remote VPN endpoint
+<li> The <cite>secret</cite> directive is the full path to the shared encryption key file
+<li> The <cite>dev</cite> directive is the device: <tt>tun</tt> or <tt>tap</tt> 
+<li> The <cite>ifconfig</cite> directive takes two parameters: 
+<br> 
+&nbsp;&nbsp;<b>*</b> first, the IP address 
+or DNS name of the local VPN endpoint 
+<br> 
+&nbsp;&nbsp;<b>*</b> then,
+<ul>
+<li> For TUN devices, the IP address of the remote VPN endpoint. 
+<li> For TAP devices, the subnet mask of the local VPN endpoint address.<br>
+(In a full setup, this is the subnet for the bridged ethernet segment 
+<br> defined in the <tt>bridge-setup</tt> script described below).
+</ul>
+</ol>
+<hr>
+<font color="red"><b>Important:&nbsp;</b></font>
+The addresses used in the configuration file should be private IP 
+<u>addresses which are not in any subnet being used</u>.
+(Simple, and so easy to get wrong ...)
+
+<br><hr><br>
+
+Since we only have to type it once in the configuration file, 
+add some additional directives to each one:
+<blockquote><blockquote>
+<pre>
+# Switch UID and GID to "nobody" after initialization for extra security.
+  user nobody
+  group nobody
+
+# Message detail ('verb'osity) - this may or may not be the syslog level ...
+# 0 = quiet except for fatal errors
+# 1 = mostly quiet, but display non-fatal network errors (default)
+# 3 or 4 = medium output, good for normal operation
+# 5 = output R or W for each packet read or write
+#     uppercase for TCP/UDP packets, lowercase for TUN/TAP packets
+# 6 to 9 = verbose, good for troubleshooting
+  verb 3
+</pre>
+</blockquote></blockquote>
+
+Now to start OpenVPN all we need to do is put the name of the configuration 
+file on the command line, along with the <b>cd</b> directive to tell OpenVPN to 
+<b>c</b>hange <b>d</b>irectory before reading any configuration files, 
+key files, and scripts. This way we can put all of the OpenVPN control files in one location.
+<b>cd</b> takes an absolute path with a leading <tt>/</tt> and without any 
+<tt>.</tt> or <tt>..</tt> references to the current directory. 
+
+<br><br>
+on fri:&nbsp;&nbsp;&nbsp; <code>openvpn --cd /etc/openvpn --config tun-fri-mon.conf</code><br>
+on mon: <code>openvpn --cd /etc/openvpn --config tun-mon-fri.conf</code>
+<br><br>
+This (properly modified for our <tt>cnames</tt>) will be just enough to verify 
+the tunnel is working: we should be able to ping the first IP in the 
+<tt>ifconfig</tt> directive from the other host. (Note: sometimes 
+it takes a little while for the connection to get settled, 
+especially the second or third time you connect. Check the log file,
+<code>htop</code>, <code>ifconfig</code>, and <code>netstat</code> 
+while you wait.)
+<br><br>
+The problem with this method is that we need to <i><u>do the command 
+very quickly on both hosts</u></i>. When OpenVPN starts from the command 
+line it tries to connect to the peer immediately and will time out if it 
+cannot. In this bare-bones mode it will also time out if 
+there is no traffic.
+<br><br>
+
+<h4>OpenVPN and xinetd</h4>
+
+The ideal tool to solve the race condition that comes from starting 
+two peers is a <tt>xinetd</tt> listener, just like the one in  
+<em>Utilities::Multitail</em> on the menu: 
+it will (patiently) listen and start the local side when it receives 
+a connection request from a remote host. 
+
+<br><br>
+The only thing we need to take care of is when we run multiple instances of  
+OpenVPN we need a separate (tun/tap) adapter 
+and a separate port for each connection. If we don't want them to talk to 
+each other we also need to ensure each adapter has a unique, 
+non-overlapping subnet.
+
+<br><br>
+Having a set of ports is no problem: looking in <tt>/etc/services</tt> 
+we find there is only one tcp+udp port for OpenVPN (1194), but there are a 
+couple of useful blocks of tcp+udp ports that are 
+assigned to services we are highly unlikely to use ...
+<table cellspacing="20">
+<tr><td valign="top"><pre>
+timbuktu-srv1 1417
+timbuktu-srv2 1418
+timbuktu-srv3 1419
+timbuktu-srv4 1420
+</pre></td>
+
+</td><td>
+<cite>timbuktu</cite> was a remote desktop<br> 
+(screen-sharing) client/server<br>
+application that was discontinued<br>
+ in 2015.
+<br><br>
+<cite>netview-aix</cite> is network monitoring<br> 
+software for the IBM version of Unix<br> (AIX), 
+that runs mainly on IBM hardware.
+
+ </td>
+<td valign="top"><pre>
+netview-aix-1  1661
+ ...2 through 8...
+netview-aix-9  1669
+netview-aix-10 1671
+netview-aix-11 1672
+netview-aix-12 1673
+</pre>
+</td></tr></table>
+Let's set up the xinetd listener for a <tt>tun</tt> connection on host 
+<tt>mon</tt> (<b><i>Do Not</i></b>  
+try this on the TinyNet Gateway - use two of the others or create new VMs 
+configured as NoRole).
+<br><br>
+Get <cite>/etc/xinetd.d/</cite> on both sides in <tt>mc</tt>. 
+Use <cite>[F5]</cite> to copy and rename <tt>telnet</tt> 
+(just type the new filename in the destination field).
+The filename needs to match the <cite>service</cite> and <cite>id</cite> 
+directives, so be sure to decide in advance.
+
+<br><br>
+Just a few quick edits and we're ready. Note that <tt>user</tt> is a 
+<u>required</u> directive, and we leave it as-is because OpenVPN 
+needs to access its privileged port before it switches to <tt>nobody</tt>.
+
+<pre>
+    service <font color="blue">timbuktu-srv1</font>
+    {
+        id            = <font color="blue">timbuktu-srv1</font>	
+    <font color="red">#</font>    flags         = NAMEINARGS
+        socket_type   = <font color="red">dgram</font>
+        protocol      = <font color="red">udp</font>
+        wait          = <font color="red">yes</font>
+        user          = root
+        server        = <font color="red">/usr/sbin/openvpn</font>
+        server_args   = <font color="red">--inetd --cd /etc/openvpn --config tun-mon-fri.conf</font>
+    <font color="red">#</font>    only_from     = 127.0.0.1
+        disable       = no
+    }
+</pre>
+The OpenVPN configuration file needs one small change: comment out the 
+<tt>remote</tt> directive, because it conflicts with the <tt>--inetd</tt>
+directive in the <tt>server_args</tt> line in the xinetd configuration file.
+
+<br><br>
+Now restart <tt>xinetd</tt> and check the new service with netstat.
+
+<br><br>
+On the remote system (<tt>fri</tt>), from the command line or a shell script:
+<br><br>
+<code>openvpn --port 1417 --daemon --cd /etc/openvpn --config tun-fri-mon.conf</code>
+<br><br>
+The <cite>daemon</cite> directive frees the terminal after all of the 
+initialization functions are completed, and sends all message and 
+error output to syslog using the <tt>daemon</tt> facility 
+(the level is undocumented, but <tt>notice</tt> works fine). 
+The <cite>port</cite> can be specified by number or its name in 
+<tt>/etc/services</tt> 
+
+<br><br>
+To check the connection, from host <tt>fri</tt>, ping the first IP in the 
+<tt>ifconfig</tt> directive in the config file on <tt>mon</tt> 
+(192.168.86.18 in the example). That's enough to show that our tun-to-tun 
+connection is ready to go! 
+
+<br><br>
+Use <cite>Ctrl c</cite> to stop <tt>ping</tt> and use <code>htop</code> 
+to kill the client-side OpenVPN process.
+
+<br><br>
+The steps are essentially the same to bring up a <tt>tap</tt> connection. 
+On host <tt>mon</tt>, 
+get <cite>/etc/xinetd.d/</cite> on both sides in <tt>mc</tt>,  
+and use <cite>[F5]</cite> to copy and rename <tt>timbuktu-srv1</tt> 
+to <code>netview-aix-1</code> (for example). Edit the new copy to change the 
+<cite>service</cite> and <cite>id</cite> to match the filename, and  
+change the name of the config file in <cite>server_args</cite> 
+to <code>tap</code>. 
+
+<br><br>
+In the configuration file you specified, comment out the <tt>remote</tt> 
+directive like before, and also comment out the last two lines because 
+we don't need a bridge until we start "Getting Real" (see below). 
+Now restart xinetd.
+
+<br><br>
+On host <tt>fri</tt>, be sure to use <code>htop</code> to kill the 
+OpenVPN <tt>tun</tt> process. Use <cite>[Up-Arrow]</cite> to get the OpenVPN connect command back, change the port, change the name of the config file to <code>tap</code>, and run it. Then ping the first IP in the 
+<tt>ifconfig</tt> directive in the config file on <tt>mon</tt> 
+(192.168.86.18 in the example).
+
+<br><br><hr>
+<font color="red"><b>Important:&nbsp;</b></font>
+To use both <tt>tun</tt> and <tt>tap</tt> connections at the same time,
+adjust the IP addresses in the server and client config files 
+to give the <tt>tun</tt> and <tt>tap</tt> tunnels different endpoints.
+<br><hr><br>
+
+To summarise, using UDP and Static Key mode you need a separate file in 
+<tt>/etc/xinetd.d</tt> for each connection, the filename must match the 
+service name, and you need to specify the port when 
+you connect from the remote system. Other configurations using 
+TLS mode and/or TCP are described in the OpenVPN documentation.
+
+<br><br>
+<h3>Getting Real</h3>
+
+So far we have covered the very basics - just enough to get a tun-to-tun or 
+tap-to-tap connection. But 
+that's not quite enough to be really practical - to really use the VPN 
+a bit more needs to be done with the startup files. 
+<ul>
+<li> For <cite>tun</cite>, start IP forwarding between interfaces and set a static route
+<li> For <cite>tap</cite>, create a virtual ethernet bridge on the server side
+</ul>
+
+<h4>Routed VPN (tun)</h4>
+To talk with the networks behind your VPN server, the first step is to add a static 
+route in the configuration file. 
+<pre>
+                xinetd                      script
+   +-------------+   +-------+       +-------+   +-------------+
+   | mon (net-b) |---| &lt;tun&gt;  [&lt;&lt; &gt;&gt;]  &lt;tun&gt; |---| fri (net-c) |
+   +-------------+   +-------+       +-------+   +-------------+
+   192.168.66.0/24       [192.168.86.0/24]       192.168.76.0/24
+</pre>
+The OpenVPN <tt>route</tt> directive adds a route to the routing table after 
+the connection is established. Multiple routes can be specified. There are 
+two keywords we can use to make things simple.
+<br><br>
+
+<table border cellpadding="4">
+<tr>
+<td align="center">On fri (client side), we derive the gateway from the <br>
+second parameter to <tt>ifconfig</tt> 
+</td>
+
+<td align="center">On mon (xinetd side) we do the same for the <br>
+fri subnet, and read the default gateway <br>
+from the routing table for other subnets</td>
+</tr><tr><td valign="top">
+<pre>
+  # OpenVPN tun-fri-mon.conf
+    remote mon.tn
+    secret static.key
+    dev <font color="blue">tun</font>
+    ifconfig 192.168.86.81 192.168.86.18
+<font color="red">route 192.168.66.0 netmask 255.255.255.0 vpn_gateway</font>
+
+</pre>
+</td><td>
+<pre>
+  # OpenVPN tun-mon-fri.conf
+    remote fri.tn
+    secret static.key
+    dev <font color="blue">tun</font>
+    ifconfig 192.168.86.18 192.168.86.81
+<font color="red">route 192.168.76.0 netmask 255.255.255.0 vpn_gateway
+route 192.168.56.0 netmask 255.255.255.0 net_gateway</font>
+</pre>
+</td></tr></table>
+
+<br>
+With those directives in our OpenVPN configuration files, the last step is to 
+turn on IP forwarding between the TUN interfaces and the regular ethernet interfaces. 
+The easiest way to do this is put <code>/etc/rc.d/rc.ip_forward start</code> 
+in your <tt>/etc/rc.d/rc.openvpn</tt>
+
+<br><br>
+<h4>Bridged VPN (tap)</h4>
+Bridging is not as easy to set up as routing, but the scripts in 
+<tt>/etc/openvpn/sample-scripts</tt> take care of the gnarly part. 
+
+<br><br>
+An ethernet bridge is essentially the software equivalent of a physical 
+ethernet switch. Each connected interface corresponds to one "switch port" 
+for the bridge. Network traffic coming in on any of these ports will be 
+forwarded to the other (layer 2) ports transparently, which is the same 
+thing that turning on IP forwarding does for our (layer 3) TUN configuration.
+
+<br><br>
+The ethernet bridge interface must be created, and the relevant ethernet 
+interfaces added to it, before OpenVPN is actually started. This requires 
+the Linux <tt>bridge-utils</tt> package, which is part of the mytyVM core. 
+The IP address and subnet of the bridge interface cannot be with an 
+<tt>ifconfig</tt> directive in the OpenVPN config file, like we can for 
+the TAP interface - they must be set in a separate script.
+
+<br><br>
+Usually the bridge is only configured on the server side, not the 
+client side. The clients will be "multi-homed" when they connect to the 
+server: they have their regular ethernet interface plus a TAP interface 
+that is bridged with the server's ethernet interface when the OpenVPN 
+connection is established.
+
+<br><br>
+This is the gnarly part: it takes several (executable, mode 755) 
+scripts to set up the bridge interface and add the interfaces to the bridge.
+<ol>
+<li> Set up the bridge interface (mkbr.sh)
+<li> Add a physical ethernet adapter to the bridge (ctlbr.sh)
+<li> Add each TAP adapter to the bridge (tap-server.up)
+</ol>
+<pre>
+#!/bin/bash
+# Bridging setup script 
+# ORDER IS IMPORTANT: run this BEFORE rc.xinetd
+  # load the ethernet bridging kernel module
+    modprobe -v bridge
+  # create a bridge interface named br0
+    brctl addbr br0
+  # set the 'bridge forward delay' to [n seconds]
+    brctl setfd br0 0
+
+  # bridge configuration - DO NOT use this IP in OpenVPN directives
+    ifconfig br0 <i>192.168.86.1</i> netmask 255.255.255.0 broadcast <i>192.168.86</i>.255
+</pre>
+
+The next step is to add a physical ethernet adapter to the bridge. 
+This means that all frames received on <tt>ifname</tt> will be processed 
+as if destined for the bridge, and <tt>ifname</tt> will be considered 
+as a potential output interface when sending frames on <tt>brname</tt>.
+<br><br>
+IMPORTANT: 
+<ul>
+<li> The address used in the <tt>remote</tt> directive 
+MUST be joined to the bridged interface but MUST NOT 
+be part of the bridged subnet - otherwise we would end up with a routing loop.
+<li> The physical adapter should have its IP address and netmask BEFORE it 
+is added to the bridge
+<li> Only add the physical adapter AFTER the IP address and netmask of the bridge interface is set
+</ul>
+
+<pre>
+#!/bin/bash
+# essential control of the ethernet bridge 
+# ORDER IS IMPORTANT: 'addif' AFTER bridge setup and BEFORE rc.xinetd
+  case "$1" in
+    'addif')
+       echo "Adding interface $2 to bridgeif $3"
+       brctl addif $3 $2
+    ;;
+    'showall')
+       echo "Status of all bridge instances"
+       brctl show
+    ;;
+    'showbr')
+       echo "Status of bridge instance $2"
+       brctl show $2
+    ;;
+    'delif')
+       echo "Removing interface $2 from bridgeif $3"
+       brctl delif $2 $3
+    ;;
+    'delbr')
+       echo "Stopping bridge instance $2"
+       ifconfig $2 down 
+       brctl delbr $2
+    ;;
+    *)
+       echo "Usage: $0 {addif if br|showall|showbr br|delif if br|delbr br}"
+  esac
+</pre>
+
+Finally, to join the tap interface to the bridge interface 
+we need to modify the <tt>ifconfig</tt> directive in the 
+TAP configuration file to call an <tt>up</tt> script. 
+OpenVPN requires a separate directive to allow an external script to be run: 
+the default for <tt>script-security</tt> is level one which only allows 
+OpenVPN internal hooks to operating system commands like <tt>ifconfig</tt>, 
+and it must be set at level two to allow our <tt>up</tt> script to run. 
+<br><br>
+So, using the diagram above, the config file on <tt>mon</tt> needs to be changed 
+like this:
+<pre>
+  # OpenVPN tap-mon-fri.conf
+    remote fri.tn
+    secret static.key
+    dev <font color="blue">tap</font>
+    ifconfig 192.168.86.18 255.255.255.0
+<font color="red">    script-security 2
+    ifconfig-noexec
+    up tap-server.up</font>
+</pre>
+
+The <cite>up</cite> script looks like this:<br>
+<pre>
+#!/bin/bash
+  # OpenVPN tap-server.up
+  # add interface to bridge and activate
+  #     Details of the positional parameters 
+  #     are hard to find in the documentation!
+    brctl addif br0 $1
+    ifconfig $1 up
+</pre>
+And that does it. Now we have a real VPN that can access hosts on the server subnet, not just the server itself.
+
+<br><br>
+<hr><hr>
+Details of the positional parameters are hard to find in the documentation!
+<pre>
+  # command line passed to the shell by ifconfig-noexec   
+  #     %0  script_name
+  #     %1  device (from dev directive)
+  #     %2  device_mtu 
+  #     %3  link_mtu
+  #     %4  local_ip (from ifconfig directive)
+  #     %5  remote_ip || netmask (from ifconfig directive)
+  #     %6  init || restart (default: init)
+</pre>
+<hr><hr>
+
+<h3>Useful Resources</h3>
+
+<pre>
+See the Examples section of the man page at 
+      <a href="https://linux.die.net/man/8/openvpn">https://linux.die.net/man/8/openvpn</a>
+      for a tunnel with full TLS-based security and IPtables firewall rules
+Some nice tricks
+      <a href="http://workaround.org/openvpn-faq">http://workaround.org/openvpn-faq</a>
+A very complete and extensively commented config file for multi-client server and for the clients too!
+      <a href="http://www.commentcamarche.net/forum/affich-5348139-open-vpn">http://www.commentcamarche.net/forum/affich-5348139-open-vpn</a>
+Three interesting scenarios
+      <a href="http://www.wains.be/index.php/2008/07/18/openvpn-routing-all-traffic-through-the-vpn-tunnel/">http://www.wains.be/index.php/2008/07/18/openvpn-routing-all-traffic-through-the-vpn-tunnel/</a>
+NICE discussion of openvpn push v. dhcp
+      <a href="http://hans.fugal.net/blog/2009/01/06/putting-openvpn-in-its-place/">http://hans.fugal.net/blog/2009/01/06/putting-openvpn-in-its-place/</a>
+</pre>
+</blockquote></blockquote>
+
+<hr><hr>
+
+
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,206 @@
+
+TinyNet Base system - For the impatient
+
+Create a generic server with all of the basic configuration
+Clone it and configure the clone with a role on the TinyNet
+
+
+MyTyVM: Prepare and Install
+=== VirtualBox ===
+
+Preferences - Network - Host-Only Interface
+* DISABLE DHCP SERVER
+* IPv4 Addess 192.168.56.1 netmask 255.255.255.0
+
+Create VM
+* OS Type linux 2,6/3.x/4.x 32 bit
+* RAM 128 mb
+* Disk: vdi, 220mb, fixed size
+
+Settings 
+= System: 
+* Boot order: HardDisk, CD, floppy
+
+= Network
+* Enable one Host-Only interface
+
+= Storage 
+* Put the Base.iso into the cdrom drive (IDE Secondary Master)
+
+
+=== mytyBase.iso ===
+
+Setup "factory fresh" hard disks:
+  a. cfdisk                      (Label Type=DOS: data 200M and swap rest) 
+  b. mkswap /dev/sda2            (create file system for swap)
+  c. swapon /dev/sda2            (activate swap - and forget about it)
+  d. mkfs.ext4 /dev/sda1         (create file system/format) 
+  e. mkdir /mnt/sda1             (make a mount point for the data partition)  
+  f. mount /dev/sda1 /mnt/sda1   (make it available to the OS)
+  g. Use mc to copy /boot and /mytyvm from /mnt/cdrom to /mnt/sda1 
+  h. Run /boot/SetupMBR.sh on /dev/sda1 to install the bootloader 
+     (automatic reboot takes a moment to start - be patient)
+
+
+=== Common Services (All Servers) ===
+
+  a. /etc/rc.d/rc.sshd - Set the execute bits
+
+  b. /var/run - set the sticky bit and set rwx for everyone  
+
+  c. /usr/local/sbin/banana - Symlink as /etc/rc.d/rc.monkey
+
+  d. /etc/rc.d/rc.xinetd - Set the execute bits and 
+                           Symlink as /etc/rc.d/rc.inetd 
+
+  e. /etc/xinetd.d/telnet - Edit:
+                              Enable=yes 
+                              Only From the localhost address
+
+  f. prepare the webserver logfile from the command line:
+           * keyboard
+     touch /var/log/httpd.ERRORS 
+           * use [up-arrow] and edit
+     chmod 664 /var/log/httpd.ERRORS
+     chown nobody:nobody /var/log/httpd.ERRORS
+           * keyboard
+     ls -l /var/log
+ 
+
+... Now poweroff and move to the next steps .... 
+
+
+
+MyTyVM: Tinynet Setup 
+
+=== VirtualBox ===
+
+ToClone :: Settings :: Storage
+* Remove the Boot.iso and Insert the Config.iso
+
+... Clone it as Gateway, Mailhost, Webserver, LDAPserver ...
+
+Machine :: Clone
+* Give it a name, reinitialise mac address
+
+... Gateway VM only ...
+
+Settings :: Network
+* Change first interface to Bridged, enable 2,3,4 as Host-Only
+  Note: if the bridged adapter does not get an IP address at boot it is OK
+
+... Start the Gateway only ...
+
+=== mytyConf.iso ===
+
+... load the specialised software ...
+
+* cd /media/cdrom
+* ./SetRole.sh
+    select the Gateway role for this server
+
+* Do not reboot yet, return to the command line
+
+* Start mc 
+  edit /etc/hosts 
+  add  gw.tinyet.edu       at the end of the first line 
+  add  gateway.tinyet.edu  at the end of the third line
+
+  edit /etc/dhcpcd.conf
+  change the final line of the file to
+		nohook resolv.conf, wpa_supplicant
+
+  delete /etc/resolv.conf if it exists
+
+* Exit mc and reboot to get the new configurations in place. 
+
+* after reboot, log in and start mc 
+  edit /etc/dnsmasq.d/cnames 
+  copy the cname=mailhost.tinynet.edu line and paste it back  
+		then change mailhost to mail so there is a second alias 
+
+* Stop and Start dnsmasq
+
+*********
+From now on, 
+  Be sure the Gateway is at the login screen
+     before starting any other servers
+       (no need to actually log in) 
+*********
+
+... Other Servers: Start each one and load the specialised software ...
+
+* cd /media/cdrom
+* ./SetRole.sh
+    select the proper role for each server
+* reboot
+
+
+=== Further configuration (no .iso required) ===
+
+... Mail Server ...
+
+*	chown dovecot:dovecot /var/log/dovecot.IMAP
+	chown vmail:vmail /var/log/dovecot.LDA
+
+*	usermod -G dovecot,vmail dovecot
+	usermod -G dovecot,vmail vmail
+
+*	edit /home/vmail/mail-pwd to have mailhost not mail.tinynet.edu  
+
+TEST!
+   telnet localhost 25     (Configure Mail::Testing)
+
+
+... Web Server ...
+
+edit /etc/monkey/monkey.conf 
+     * Change Server_root to /var/www 
+     * Swap comment on IndexFile
+     * Comment out UserDir
+     * Uncomment AddScript for php
+     * Change Server_ScriptAlias to /var/www/
+
+* Kill monkey process with htop and SIGTERM 
+* Restart process       /usr/sbin/monkey -D 
+
+* Windows Browser 
+  http://192.168.56.iii/squirrelmail/
+              where iii is the IP address of your TinyNet WebServer
+  (either one will work - one is assigned by DHCP, one in /etc/rc.local)
+
+
+... LDAP Server ...
+
+/etc/openldap/slapd.conf
+    comment out the first loglevel directive
+    uncomment loglevel stats 
+
+  in the section at the bottom for access to * 
+    delete the line 	by *   auth 
+    change	by users   read   -to-   by *   read 
+
+/etc/rc.d/rc.slapd 
+    Set the execute bits  
+    Symlink as /etc/rc.d/rc.openldap 
+
+/etc/syslog.conf
+    change the level for facility local4 from info to *
+
+/var/log/slapd.log
+    change owner:group to ldap:ldap
+
+* Stop and Start syslog
+
+===
+
+
+Debugging: Pain points
+= Permissions
+= Paths
+= Ports
+= Parsing (commands and shell scripts - Type Carefully!)
+
+
+===
+

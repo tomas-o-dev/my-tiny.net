@@ -1,0 +1,288 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Shares</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<br>
+
+<h2>Shared Folders</h2>
+
+<hr>
+
+<br>
+To access files on a VM from another machine, you have several options. 
+Choosing between them is a matter of figuring out how often you need to 
+move files, and what the source and destination will be.
+<br><br>
+<table border cellpadding="6"><tr><td>
+Copying files between systems may change the owner 
+of the file on the destination, so be sure to doublecheck.<br>
+A good command to know for this is <code>chown -R <i>owner:group&nbsp;/path</i></code> 
+to fix a whole directory of files.
+</td></tr></table>
+<br>
+<h3>Use a SSH Client on the Host</h3> 
+This is easy and reliable. First,  
+<a href="http://portableapps.com/apps/internet/winscp_portable">
+get a ssh client like WinSCP from a place like PortableApps.com</a> 
+and install it on your host machine.
+<br><br>
+Next check the network configuration. This method requires a Host-Only Interface 
+on the host and the guest that are on the same subnet, and that the SSH server 
+is runninng on the VM you want to access 
+(see <em>Getting started :: First Things First</em> on the menu)   
+
+<br><br>
+Start your SSH client on your host, and connect to the IP address 
+of the VM. The first time you connect it is normal to get a message asking if 
+you trust this host - just say yes, and the client will recognise the server 
+next time. 
+
+<br><br>
+<h3>VM to VM with mc and SSH</h3>
+A combination of a shared folder or SSH client on the host connecting to a 
+VM on the same subnet and SSH running on all of the VMs on different subnets 
+works really well - you can use one VM to get files from the host, then move 
+them to or between the others.
+
+<br><br>
+In <cite>mc</cite> use <cite>[F9]</cite>and under 
+Left or Right select <cite>Shell Link</cite>. 
+Type in the IP address of the other machine, and it will automatically connect.
+Again, the first time you connect it is normal to get a message asking if 
+you trust this host - just type yes, and the client will recognise the server 
+next time. You will also be asked for the password every time you connect.
+
+<br><br>
+There is a lot you can do with SSH: <em>Smoother&nbsp;SSH</em> under 
+<em>Host&nbsp;Management</em> on the menu shows you how to set up 
+automatic SSH login, and has links to other configuration tips.
+
+<br><br>
+
+<h3>Mount a USB drive to the virtual machine</h3>
+
+First, the USB device has to be plugged in and recognised by the Host 
+operating system. You need to create a unique "USB filter" for the guest  
+for every device. <u>Be aware that your host OS will not be able to see the  
+USB device while it is being used by VirtualBox</u>.
+<br><br>
+Then, in the VirtualBox manager, with all VMs closed, right-click the VM that you 
+want to use the USB device with to open the Settings window.
+Within settings, browse to the USB tab and click the Add button on the very 
+right of the window. Select the USB device that you want to use from the list. 
+You can also select "Enable USB 2.0 (EHCI) Controller" if the device will 
+use it.  
+<br><br>
+With that done, click OK to save changes and exit.
+Start the virtual machine and log in. You should be able to access the USB 
+device as <tt>/mnt/sda1</tt>. You only need to set up the filter once, but 
+you must do it individually for every VM.
+<br><br>
+
+<h3>Mount a Windows Shared Folder</h3>
+We can mount 
+shared folders on Windows hosts using the Common Internet File System (CIFS). 
+This method also requires a Virtualbox Bridged Interface or Host-Only Interface 
+that is configured in the guest to be on the same subnet as the Virtualbox setting.
+(see the ssh instructions above).
+<br><br>
+You also need to share the folder in Windows first.
+It is best to use <tt>C:\Users\Public\Public Documents</tt> because 
+Windows is all prepared for this to be shared. To verify, right-click  
+on it and select Properties, then click the Sharing tab. 
+<br><br>
+<center>
+<img src="logos/notyet2.jpg"><img src="logos/notyet4.jpg">
+</center>
+<br><br>
+Be sure to use the IP address and full network path in the script (it helps 
+to have the Properties window for the folder open). After you do this 
+successfully the first time, you can just go back and pick it off the list.
+
+
+<br><br>
+<h3>Mount a Linux Shared Folder</h3>
+The classic method of sharing directories between Linux hosts is <b>NFS</b>. Network File System (originally by SUN) uses Remote Procedure Calls (RPC) 
+to allow remote filesystems to be mounted locally. All TinyNet hosts have the proper software installed, but there is one special requirement we need to consider first. 
+
+<br><br>
+NFS needs to identify each filesystem that it exports, and normally uses a 
+UUID or the device number of the device where the filesystem is located. 
+Our mytyVM distro has a special architecture (see <em>TinyNet Notes</em> 
+on the menu for details) that creates one simple requirement for us: 
+<u>on the server side, create the directories to be exported 
+under </u><tt>/mnt/sda1/</tt> 
+so they will have a genuine block device number that NFS is happy with.
+
+<br><br>
+<b>Server Export:</b> Once the directories exist, edit <tt>/etc/exports</tt> 
+and add an entry to export the filesystem to any host in our domain:
+<br><br>
+<cite>/mnt/sda1/exported  *.tinynet.edu(rw,sync,subtree_check,no_root_squash)</cite>
+
+<br><br>
+Start <tt>/etc/rc.d/rc.nfsd</tt> and <tt>/etc/rc.d/rc.rpc</tt>, 
+and export the share with <code>exportfs -av</code><br>
+(do this once and after that <tt>/etc/rc.d/rc.inet2</tt> 
+will take care of this at boot time) 
+
+<br><br>
+<b>Client Mount:</b> First, create a mount point for the shared folder. 
+There are no special considerations, it can be anywhere in the filesystem. 
+Make sure that <tt>/etc/rc.d/rc.rpc</tt> is executable and running. 
+<br><br>
+Run this command to mount the share at the existing directory 
+<cite>/media/nfs_share</cite>
+<br><br>
+<code>mount&nbsp;-t&nbsp;nfs&nbsp;<i>nfsserver.domain.name</i>:/mnt/sda1/exported&nbsp;/media/nfs_share</code>
+<br><br>
+Or, to have <tt>/etc/rc.d/rc.inet2</tt> prepare to mount it at boot time, 
+add an entry like this to <tt>/etc/fstab</tt>
+
+<br>
+<pre>
+# device                                  mountpoint        fs-type   options              dump fsckord
+<i>nfsserver.domain.name</i>:/mnt/sda1/exported  /media/nfs_share    nfs     noauto,rw,hard,intr    0     0
+</pre>
+
+Then when you want to mount it, run (as root):&nbsp;&nbsp;<code>mount&nbsp;/media/nfs_share</code>
+<br><br>
+Just to note, the <cite>noauto</cite> option means the share will not be 
+mounted at bootup. If you remove this option and the server machine is unavailable, the NFS client will make multiple attempts to connect and 
+you will have to wait for it to time-out with each attempt. 
+The <cite>hard,intr</cite> options ensure the NFS client will handle a 
+server crash or network outage gracefully.
+
+<br><br>
+<h3>NFS Tips</h3>
+
+To see shares exported by a remote host:&nbsp;&nbsp;&nbsp;<code>showmount -e <i>hostname</i></code><br>
+
+To see shares exported by the local host:&nbsp;&nbsp;&nbsp;<code>exportfs -s </code><br>
+<br>
+To unexport all:&nbsp;&nbsp;&nbsp;<code>exportfs -au</code><br>
+To have the NFS daemon reload <tt>/etc/exports</tt>:&nbsp;&nbsp;&nbsp;<code>exportfs -rav</code><br>
+<br>
+To see all the gnarly details of shares exported by the local host:&nbsp;&nbsp;&nbsp;<code>cat /var/lib/nfs/etab</code><br>
+This is the file that <tt>rpc.mountd</tt> reads when a client sends 
+a <tt>mount -t nfs</tt> request.
+<br><br>
+To see what <tt>exportfs</tt> understands:&nbsp;&nbsp;&nbsp;<code>man exports</code><br>
+To see <tt>/etc/fstab</tt> mount options:&nbsp;&nbsp;&nbsp;<code>man nfs</code><br>
+<br>
+For security, the root user of a client machine should not 
+be treated as root when accessing files on the server. The default 
+is to "squash" root access by mapping uid 0 gid 0 to uid and gid 65534.  
+This should be left alone unless there is a a good reason to turn 
+it off with the <tt>no_root_squash</tt> option. There are several other 
+"squash" options listed in the <tt>exports</tt> man page 
+so you can decide to mistrust whomever you (don't) like on the clients.
+<br><br>
+The <tt>exports</tt> man page recommends using <tt>no_subtree_check</tt> 
+under normal circumstances, and <tt>subtree_check</tt> if 
+<tt>no_root_squash</tt> is enabled. NFS will complain if one of these 
+is not specified, because the default changed between versions.
+<br><br>
+The HowTo notes that <tt>/etc/exports</tt> is very sensitive to whitespace, 
+so these two statements are not the same:<br><br>
+<blockquote><blockquote>
+<cite>&nbsp;/mnt/hda1/exported&nbsp;<i>hostname</i>(rw,no_root_squash)&nbsp;<br>
+&nbsp;/mnt/hda1/exported&nbsp;<i>hostname</i>&nbsp;(rw,no_root_squash)&nbsp;</cite>
+</blockquote></blockquote>
+The first will grant <i>hostname</i> <tt>rw</tt> access to the exported directory 
+without squashing root privileges. The second will grant <i>hostname</i> 
+<tt>rw</tt> access with root squash (the default) and it will grant everyone else read/write access <u>without</u> squashing root privileges. Nice huh? 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<br><br>
+The old Slackware NFS HowTo says "Running NFS in an uncontrolled 
+environment is rather like leaving your front door open, painting 'On holiday' 
+on your house and posting maps to every known criminal...  In a fairly secure 
+environment or when you can recover data from stupid misuse its pretty much OK. 
+The worst someone can easily do is alter all the files on an NFS mounted disk 
+and/or crash the machine. ... Why do we use NFS at all then? Because it's the 
+only uniformly supported file sharing protocol for Unix. And because it works, 
+mostly."
+<br><br>
+To get a better understanding of the options and how to secure NFS see:
+<blockquote><blockquote>
+<a href="http://www.tldp.org/HOWTO/NFS-HOWTO/server.html">
+http://www.tldp.org/HOWTO/NFS-HOWTO/server.html</a><br>
+<a href="http://www.tldp.org/HOWTO/NFS-HOWTO/client.html">
+http://www.tldp.org/HOWTO/NFS-HOWTO/client.html</a><br>
+<a href="http://www.tldp.org/HOWTO/NFS-HOWTO/security.html">
+http://www.tldp.org/HOWTO/NFS-HOWTO/security.html</a><br>
+<a href="http://www.tldp.org/HOWTO/NFS-HOWTO/troubleshooting.html">
+http://www.tldp.org/HOWTO/NFS-HOWTO/troubleshooting.html</a>
+</blockquote></blockquote>
+
+<hr><hr>
+
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+

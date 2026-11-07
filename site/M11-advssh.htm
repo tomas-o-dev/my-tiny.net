@@ -1,0 +1,437 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Smooth SSH</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<!-- -->
+
+
+<br>
+
+<h2>Smoother SSH Connections</h2>
+
+<hr>
+<br>
+
+SSH has become a standard for remote host administration because it 
+provides secure communication over the network. There is a lot you 
+can do with SSH. A helpful reference is: 
+<a href="http://docs.slackware.com/howtos:security:ssh">http://docs.slackware.com/howtos:security:ssh</a>
+
+<br><br>
+However, we always have to deal with the tradeoff between security and usability: more security requires stronger and more frequent authentication. Tweakng the SSH configuration to allow connections without entering 
+usernames and passwords is not too difficult, and can be quite convenient when making frequent SSH connections.
+
+<h3>OpenSSH Configuration Files</h3>
+
+OpenSSH has two different sets of configuration files: one for the 
+server daemon (sshd) and one for client programs (ssh, scp, and sftp).
+<br><br>
+System-wide configuration information is stored in <tt>/etc/ssh/</tt>
+<br><br>
+<table border cellpadding="4"><tr><td>
+<dl>
+<dt>sshd_config</dt><dd> 
+The configuration file for the sshd daemon. 
+
+</dd><dt>ssh_config</dt><dd> 
+The system-wide default SSH client configuration file. 
+
+<br><br>
+<tt>sshd_config</tt> and <tt>ssh_config</tt> can contain any options that you would use on the command line to specify connection parameters, allowing 
+common connection parameters to be used automatically on connection. It is always possible to override the values defined in the configuration files through flags on the commands line. Refer to <a href="
+https://www.digitalocean.com/community/tutorials/how-to-configure-custom-connection-options-for-your-ssh-client">How To Configure Custom Connection Options for your SSH Client</a>
+and the man pages for <tt>sshd_config</tt> and <tt>ssh_config</tt> for information about the various directives available . 
+<br><br>
+
+</dd><dt>moduli</dt><dd> 
+This file contains Diffie-Hellman groups used for the Diffie-Hellman key exchange which is critical for constructing a secure transport layer. When keys are exchanged at the beginning of an SSH session, a shared, secret value is created which cannot be determined by either party alone. This value is then used to provide host authentication.
+<br><br>
+</dd><dt>ssh_host_rsa_key<br>ssh_host_rsa_key.pub</dt><dd> 
+The RSA private key and public key used by the sshd daemon for 
+version 2 of the SSH protocol. There may also be <tt>ssh_host_dsa_key(.pub)</tt> 
+for DSA encryption and/or <tt>ssh_host_key(.pub)</tt> which is the RSA key pair 
+used for version 1 of the SSH protocol.
+
+</dd>
+</dl>
+</td></tr></table>
+<br>
+User-specific SSH configuration information is stored in the user's 
+home directory<br> under a directory known as <tt>~/.ssh/</tt> or <tt>$HOME/.ssh/</tt>
+<br><br>
+<table border cellpadding="4"><tr><td>
+<dl>
+<dt>config</dt><dd> 
+Each user on the system can maintain a client-side SSH configuration file. 
+Any system-wide default is overridden if the directive is also here.
+
+</dd><dt>authorized_keys</dt><dd> 
+This file holds a list of authorized public keys for servers. 
+When the client connects to a server, the server authenticates the client by 
+checking its signed public key stored within this file.
+
+</dd><dt>known_hosts</dt><dd> 
+This file contains public key data of SSH servers accessed by the user. 
+This file is very important for ensuring that the SSH client is connecting 
+the correct server.
+
+</dd><dt>id_rsa<br>id_rsa.pub</dt><dd> 
+The RSA private key and public key used by the ssh client for version 2 of the SSH protocol. There may also be <tt>id_dsa(.pub)</tt> for DSA encryption and/or <tt>identity(.pub)</tt> which is the RSA key pair used for version 1 of the SSH protocol.
+
+</dd>
+</dl>
+</td></tr></table>
+<br>
+Note: If a server's host key has changed, the client may notify the user that the connection cannot proceed until the server's host key is deleted from the known_hosts file. 
+To remove a stale entry, use
+<code>ssh-keygen&nbsp;-R&nbsp;<i>host</i>&nbsp;-f&nbsp;~/.ssh/known_hosts</code>
+
+<br><br>
+
+<h3>SSH and SUDO</h3>
+An advantage of <tt>sudo</tt> is that an administrator can allow different users access to specific commands based on their needs. By default, sudo requires that users authenticate themselves with their own password. Once authenticated, permitted commands are executed as if by the root user, and the root password can be disabled (this is the default for Ubuntu, which is why you see so many helpful instructions that start with "sudo"). 
+
+<br><br>
+See the <em>Host Management :: User Accounts</em> page on the menu for 
+how to configure sudo. 
+
+<br><br>
+To prevent root logins via SSH, edit <tt>/etc/ssh/sshd_config</tt>
+and change <cite>PermitRootLogin</cite> to <code>no</code>. This forces 
+users with an ssh remote login to use <tt>su</tt> or <tt>sudo</tt> to 
+run commands with root privileges.
+
+<br><br>
+When <tt>requiretty</tt> is set in <tt>/etc/sudoers</tt>, sudo can only be run 
+from a login session ("tty" is the name for a screen or "terminal" in the Unix 
+tradition, usually held to be short for Teletype). By default, when you ssh 
+without a command to execute (just to log in), a "pseudo tty" is allocated 
+automatically. When you specify a command to execute that is not just plain text 
+output, you need to tell ssh specifically to open a tty for you, like this:
+<code>ssh -t user@host.name htop</code>.
+<br><br>
+We need to do the same thing when sudo requires a tty:
+<br><code>ssh -t user@box.example.com "sudo -n -u user -c runcommand"</code>
+<br><br>
+The -n option to sudo will prevent sudo from prompting for a password, 
+but if the command requires a password you'll get an error. To get around this, 
+set up <b>Multiplexing</b> or <b>Key Based Authentication</b>.
+
+<br><br>
+<br>
+<hr>
+
+
+<h3>Setting up ssh Multiplexing</h3>
+
+Multiplexing is the ability to send more than one signal over a single 
+line or connection. OpenSSH can re-use an existing TCP connection using 
+multiplexing. This enables the sharing of multiple sessions over a single 
+network connection. These sessions will try to reuse the master connection 
+to the remote server rather than initiating new ones, but will fall back 
+to connecting normally if the control socket does not exist, or is not 
+listening.
+<br><br>
+Multiplexing can be configured in either <tt>~/.ssh/config</tt> 
+(ssh client configuration file)
+or <tt>/etc/ssh/ssh_config</tt>
+(system wide settings) 
+<br><br>
+To reuse a ssh connection for all hosts:
+<br><br>
+<pre>
+host *
+    ControlMaster auto
+    ControlPath /tmp/ssh-%r@%h:%p
+    ControlPersist 3600
+</pre>
+
+<cite>ControlMaster</cite> enables multiplexing. When you have one active SSH session in a separate virtual terminal, you can open another connection to the same server without having to input a password or anything else. 
+<br><br>
+<cite>ControlPath</cite> specifies the path to the control socket 
+used for connection sharing. The remote login username will be substituted for 
+<cite>%r</cite>, the target host name for <cite>%h</cite>, and the port for 
+<cite>%p</cite>, to ensure that shared connections are uniquely identified.
+<br><br>
+<cite>ControlPersist</cite> keeps the control socket open for the specified number of seconds (3600 is one hour) after the original connection is closed. In other words, to need to start with a session where you log in with username and password, but you can stop that one immediately. Any new session within <tt>ControlPersist</tt> seconds will not require logging in.
+<br><br>
+You can match any host in the 192.168.0.[0-9] range with <cite>host&nbsp;192.168.0.?</cite> 
+or any host in a domain with <cite>host&nbsp;*.domain.name</cite>
+
+<br><br>
+Once multiplexing is configured:
+
+<table cellpadding = "4">
+<tr><td>
+To connect as usual (ssh / scp / sftp etc.)
+</td><td>
+<code>ssh&nbsp;admin@mailhost.tinynet.edu</code>
+</td></tr><tr><td>
+To Not use multiplexing for this session
+</td><td>
+<code>ssh&nbsp;-o&nbsp;'ControlMaster=no'&nbsp;admin@mailhost.tinynet.edu</code> 
+</td></tr><tr><td>
+To check the status of multiplexing
+</td><td>
+<code>ssh&nbsp;-O&nbsp;check&nbsp;admin@mailhost.tinynet.edu</code>
+</td></tr><tr><td>
+To gracefully shutdown multiplexing  
+</td><td>
+<code>ssh&nbsp;-O&nbsp;stop&nbsp;admin@mailhost.tinynet.edu</code>
+</td></tr><tr><td>
+To remove the control socket and<br>immediately terminate existing connections
+</td><td>
+<code>ssh&nbsp;-O&nbsp;exit&nbsp;admin@mailhost.tinynet.edu</code>
+</td></tr></table>
+
+<br><br>
+<hr>
+
+<h3>Setting up Key Based Authentication</h3>
+
+OpenSSH server supports various authentication schemes: 
+Password and Public Key are the most popular. 
+<br><br>
+Using key based authentication you can log into a server without having 
+to enter your account password. This can be convenient for using tools 
+like <tt>multitail</tt>, but it takes a bit more work to set up:
+<ol>
+<li> Create a key pair on the local (client) host for the server
+<li> Copy the public key to the remote (server) host
+<li> Install the public key on the remote (server) host
+<li> Add a passphrase to <tt>ssh-agent</tt> on the local (client) host
+<li> Add some code to <tt>.bashrc</tt> on the local (client) host to run <tt>ssh-agent</tt> 
+automatically when the user logs in
+<li> Add <code>AddKeysToAgent yes</code> to the <tt>Host</tt> section of <tt>/etc/ssh/ssh_config</tt> on the local (client) host
+</ol>
+
+<h4>1. Create a key pair on the local host for the server</h4>
+It is possible (although not considered best practice) to use the same 
+SSH key pair for multiple hosts. The better way is to use a distinct key for 
+each host with the <tt>IdentitiesOnly</tt> and <tt>IdentityFile</tt> 
+directives in a user-specific config file. See the <tt>ssh_config</tt> man page 
+for a full description of these options.  
+<br><br>
+An SSH key pair can be generated by running the <cite>ssh-keygen</cite> command. 
+The man page says the default 2048-bit RSA (and SHA256) is "generally 
+considered sufficient" and should be compatible with virtually all 
+clients and servers.  
+<br><br>
+You will be prompted for the desired name and location of your private key. 
+By default, keys are stored in <tt>$HOME/.ssh/</tt> and named according to 
+the type of encryption used. When asked for the location, give a directory 
+name that identifies the remote host to keep the keys organised.
+<br><br>
+You will be prompted to supply a passphrase (password) for your private key. 
+Use something that conforms to the rules for strong passwords.
+<br><br>
+If you want to change the passphrase for the private RSA key later, use
+(with the name of your actual public key file)<br> 
+<code>ssh-keygen -f ~/.ssh/id_rsa -p</code>
+
+<h4>2. Copy the public key to the remote server</h4>
+
+The <tt>ssh-copy-id</tt> script (and man page) is useful if you have a lot 
+of servers to update on a regular basis, but all the options are rather confusing.
+Much easier to simply just copy the public key (<tt>id_rsa.pub</tt>) 
+to your home directory on the remote server with <cite>[F9]&nbsp;[Shell Link]</cite> 
+in <cite>mc</cite> - just remember that <i>you can copy <b>from</b> but not <b>to</b></i> 
+the remote host. 
+<br><br>
+Or you can use the ssh copy command: 
+<code>scp&nbsp;~/.ssh/id_rsa.pub&nbsp;<i>username@remote-server.tld</i><b>:</b></code><br>
+Be sure to use the actual name of the file you want to copy, and be sure to 
+include the <cite>:</cite> at the end of the server address. 
+Provide the password for your remote user account when prompted. 
+
+<h4>3. Install the public key on the remote server</h4>
+
+To install the public key you just copied, login on the remote server and create  
+a <cite>.ssh</cite> directory in your home directory if it does not exist.
+Append your public key to the list of authorized_keys like this:
+<code>cat&nbsp;~/id_rsa.pub&nbsp;&gt;&gt;&nbsp;~/.ssh/authorized_keys</code>
+and delete <tt>id_rsa.pub</tt> from your home directory.
+<br><br>
+Finally, ensure that you have the proper permissions set on all relevant files: 
+they should only be readable and writeable by you, the owner.
+<br><br>
+<pre>
+For the local (client) system:
+    chmod 700 ~/
+    chmod 700 ~/.ssh
+    chmod 600 ~/.ssh/id_rsa
+
+For the remote (server) system:
+    chmod 700 ~/
+    chmod 700 ~/.ssh
+    chmod 600 ~/.ssh/authorized_keys
+</pre>
+Now test the setup: connect as usual, and you should be prompted for 
+the passphrase for the private key that you specified in Step One. 
+To get rid of passphrase whenever you log in the remote host, move on 
+to the next step.
+
+<h4>4. Add a passphrase to ssh-agent on the local host</h4>
+
+When your private key is encrypted with a passphrase, this passphrase must 
+be entered every time you attempt to connect to an SSH server using public-key authentication. An SSH agent is a program which caches your decrypted private 
+keys and provides them to SSH client programs on your behalf. In this arrangement, 
+you only provide your passphrase once, when adding your private key to the agent's cache. This can be quite convenient when making frequent SSH connections.
+
+<tt>ssh-agent</tt> is the default agent included with OpenSSH.
+When it is run from the command line, it forks to the background 
+and prints necessary environment variables. 
+<br><br>
+To make use of these variables, run the command through the eval command: 
+<code>eval&nbsp;$(ssh-agent)</code>
+<br><br>
+Once ssh-agent is running, you need to add your private key to its cache:
+<code>ssh-add&nbsp;~/.ssh/id_rsa</code><br>(enter the passphrase when prompted)
+<br><br>
+Once your private key has been successfully added to the agent you will 
+be able to make SSH connections without having to enter your passphrase.
+
+<h4>5. Configure the user startup file to run ssh-agent automatically when they log in</h4>
+
+An agent is typically configured to run automatically upon login and 
+persist for the duration of your login session. Adding the following code to  
+<tt>~/.bashrc</tt> will start ssh-agent automatically and make sure that only one 
+instance will be running. 
+<br><br>
+<blockquote>
+<blockquote>
+<code>if ! pgrep -u "$USER" ssh-agent &gt;/dev/null; then</code><br>
+<code>       &nbsp;&nbsp;&nbsp;ssh-agent &gt; ~/.ssh-agent-values</code><br>
+<code>    fi</code><br>
+<code>    if [ "$SSH_AGENT_PID" == "" ]; then</code><br>
+<code>       &nbsp;&nbsp;&nbsp;eval "$(&lt;~/.ssh-agent-values)"</code><br>
+<code>    fi</code>
+</blockquote>
+</blockquote>
+
+Line 1:
+<ul>
+<li> <tt>pgrep -u "$USER" ssh-agent</tt> looks through the process list ((like <cite>htop</cite>)) 
+for a process named <tt>ssh-agent</tt> owned by the current <tt>USER</tt>
+<li> <tt>&gt;/dev/null</tt> means don't show any output from the command to the user
+<li> <tt>if ! .... ; then</tt> means <tt>if</tt> the condition <cite>...</cite> is NOT <cite>!</cite> true, 
+do the next steps until there is an <tt>else</tt> or <tt>fi</tt>
+</ul>
+Line 2:
+<ul>
+<li> When <tt>ssh-agent</tt> is run from the command line, it prints some environment variables, so ... 
+<li> Run it and send the output <cite>&gt;</cite> to a file in the current user's home directory 
+<cite>~/</cite> named <tt>.ssh-agent-values</tt>
+</ul>
+Line 4:
+<ul>
+<li> When <tt>ssh-agent</tt> starts it stores its numeric process id 
+to the environment variable <tt>SSH_AGENT_PID</tt>
+<li> <tt>if</tt> the value of <cite>$</cite> the environment variable is NULL <cite>""</cite> <tt>then</tt>
+</ul>
+Line 5:
+<ul>
+<li> Run the <tt>eval</tt> command to set the environment variables <cite>"$( ... )"</cite>
+<li> Use the data stored in the file <cite>&lt;</cite> in the current user's home directory 
+<cite>~/</cite> named <tt>.ssh-agent-values</tt> 
+</ul>
+
+So, this will run a ssh-agent process if there is not one already, and save its output. 
+If there is one running, retrieve the saved output and evaluate it to set the necessary 
+environment variables. Note that if you change the <tt>.bashrc</tt> in <tt>etc/skel</tt> 
+then every new user will have it available. 
+
+<h4>6. Configure the user startup file to run ssh-agent automatically when they log in</h4>
+
+Putting <code>AddKeysToAgent yes</code> in the <tt>Host</tt> section 
+of <tt>/etc/ssh/ssh_config</tt> will make all ssh clients store keys in the agent 
+on first use. Note that you need to change <tt>.bashrc</tt> as described above 
+before the AddKeysToAgent directive will take effect. 
+
+<br><br>
+<hr>
+<h3>Testing</h3>
+Once you have Multiplexing or Key Based Authentication set up, test the connection 
+with a simple "Here Document" like this:
+(See <em>Script I/O</em> under <em>Standard I/O</em> on the menu)
+<br><br>
+<blockquote> 
+<blockquote> 
+<code>   ssh -T user@host.com << EOF</code> <br>
+<code>   echo "The current local working directory is: $PWD" </code><br>
+<code>   echo "The current remote working directory is: \$PWD" </code><br>
+<code>   EOF</code>
+</blockquote> 
+</blockquote> 
+<hr>
+
+<h3>Final Notes</h3>
+
+If it appears that the SSH server is ignoring your keys, check the permissions.
+If that does not solve the problem you may try temporarily setting 
+<cite>StrictModes no</cite> in <tt>sshd_config</tt>. If authentication with StrictModes 
+off is successful, it is likely that you still have an issue with file permissions.
+<br><br>
+Use debug mode and monitor the output while connecting: <code>/usr/bin/sshd -d</code>
+<br><br>
+To backup an existing private/public key, just copy the files to your backup server 
+or external USB drive.
+<br><br>
+Protect your ssh keys: (*) Always use a strong passphrase, (*) Restrict privileges, 
+(*) Do not share your private keys anywhere online or store in insecure cloud storage.  
+<br><br>
+There is a nice discussion of ssh encryption algorithms and other agents at
+<a href="https://wiki.archlinux.org/index.php/SSH_keys">
+https://wiki.archlinux.org/index.php/SSH_keys</a>
+
+<br><br>
+<hr><hr>
+<br>
+
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

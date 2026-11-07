@@ -1,0 +1,231 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Key Concepts</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+
+<br>
+
+<h2>Key Concepts - System Accounts, Sticky Bit</h2>
+<hr>
+<br>
+The first purpose of system accounts is file permissions and ownership. 
+For example, if a file has owner nobody and group nobody, and permissions 
+are 660 (rw-rw----) only the application running as nobody and root can 
+read or write the file. 
+<br><br>
+Take a look at <cite>/etc/passwd</cite> and <cite>/etc/group</cite>. 
+These are the master lists, 
+and for historical reasons need to be world readable; encrypted passwords 
+for users and groups are stored in <cite>/etc/shadow</cite> and 
+<cite>/etc/gshadow</cite> to keep 
+them secure. You can see that there are a number of system accounts defined 
+for specific applications in these files already: ftp, sshd, mysql for example; 
+the nobody user and group are used by our webserver. 
+<br><br>
+By convention, User IDs from 0 to 99 are statically allocated by the system, 
+and User IDs from 100 to 499 are reserved for dynamic allocation 
+by system administrators and post install scripts using <tt>useradd</tt>. Similarly, 
+Group IDs of less than 500 are reserved for user IDs employed by the operating 
+system or its services. 
+
+<br><br>
+Each field in a passwd entry is separated with ":" colon characters, 
+and are as follows:
+<ol><li>
+    Username: Case-sensitive, usually all lowercase
+</li><li>
+    An "x" in the password field: Passwords are stored in <tt>/etc/shadow</tt>
+</li><li>
+    Numeric user id: Unix uses this field, plus the following group field, 
+to identify which files and processes belong to the user
+</li><li>
+    Numeric group ID: On many systems the group id will match the user id
+</li><li>
+    Info (GECOS): typically used to record general information about the account or its user(s) such as their real name and phone number. 
+The name comes from ancient history (computerwise): the General Electric Comprehensive Operating Supervisor dates back 
+to 1962, and some early Unix systems at Bell Labs used GECOS machines for print spooling and various other services, so this field was added to carry 
+information on a user's GECOS identity
+</li><li>
+    Home directory: Usually /home/username (e.g., /home/bjensen). 
+All user's personal files, web pages, mail forwarding, etc. should be stored here.
+</li><li>
+    Shell: Often set to <tt>/bin/bash</tt> to provide access to the bash shell.
+</li></ol>
+
+
+As with the passwd file, each field in the shadow file is also separated with ":" colon characters, and are as follows:
+<ol><li>
+    A direct match to the username in the /etc/passwd file.
+</li><li>
+    Encrypted password. A blank entry (::) indicates a password is not 
+required to log in (usually a bad idea), and a * entry (:*:) indicates 
+the account has been disabled.
+</li><li>
+    The number of days (since January 1, 1970) since the password was last changed.
+</li><li>
+    The number of days before password may be changed (0 indicates it may be changed at any time) i.e. the number of days left before the user is allowed to change his/her password
+</li><li>
+    The number of days after which password must be changed (99999 indicates user can keep his or her password unchanged for many, many years) after that the user is forced to change his/her password
+</li><li>
+    The number of days to warn user of an expiring password (7 for a full week)
+</li><li>
+    The number of days after password expires that account is disabled
+</li><li>
+    The number of days since January 1, 1970 that an account has been 
+disabled i.e. an absolute date specifying when the login may no longer be used
+</li><li>
+    A reserved field for possible future use
+</li></ol>
+
+
+<br>
+
+<h3>Privileged Ports</h3>
+The second purpose of system accounts is access to "privileged ports".
+<br><br>
+A <tt>port</tt> is an application-specific or process-specific software construct 
+serving as a communications endpoint and it is identified by its number. 
+A port number is a 16-bit unsigned integer, thus ranging from 0 to 65535.
+A process associates its input and output channel file descriptors with a 
+port number and an IP address. This is known as <tt>binding</tt>. We saw an example 
+when we retrieved a web page using this form of URL:<br> 
+<code>http://127.0.0.1:</code><tt>port</tt><code>/Index.html</code>
+
+<br><br>
+Common services such as web, mail, imap etc. all use use specifically reserved, 
+well-known port numbers for receiving service requests from client hosts. The 
+well-known ports are defined by the Internet Assigned Numbers Authority (IANA) 
+and listed on the local machine in /etc/services. Since it is presently the 
+policy of IANA to assign a single well-known port number for both TCP and UDP, 
+most of the assignments there have two entries even if the protocol doesn't 
+support UDP operations.
+<br><br>
+IANA [RFC6335] has divided port numbers into three ranges or classes: 
+<ul>
+<li> The Well Known Ports are those from 0 through 1023.
+<li> The Registered Ports are those from 1024 through 49151
+<li> The Dynamic and/or Private Ports are those from 49152 through 65535
+</ul>
+
+For the list of current port assignments, check the IANA<br> 
+<a href="https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml">
+Service Name and Transport Protocol Port Number Registry</a>
+
+<br><br>
+Under UNIX and Linux, super user (root) privileges are required to open 
+port numbers less than 1024, which is why these ports are known as "privileged 
+ports". Typically clients use a port number from the dynamic/private range, 
+but in order for the client to contact a server and request a service, the port 
+for a service on a server needs to be predictable (well-known).
+<br><br>
+So, the way it is done is to start the server as root and drop privileges 
+by switching process ownership to a system account after it's started 
+listening on the privileged port.
+ <br><br>
+
+<h3>The Sticky Bit</h3>
+
+With the dovecot <tt>deliver</tt> LDA you have to make 
+<tt>/home/vmail</tt> world-writeable with sticky bit set 
+(same as <tt>/tmp</tt>). That is: wide open, except that 
+only the owner of a file can rename or remove it.
+
+<br><br>
+Turns out there is one more bit used for permissions, which is 
+shown as <b>t</b> in <tt>drwxrwxrwt</tt> when we look at them; 
+or 1777 as normal for /tmp.  
+
+<br><br>
+On a directory, the setting the sticky bit prevents anyone except the owner from renaming, moving or deleting files, even if they have write permission to the directory. Only the directory owner and superuser are exempt from this.
+
+<br><br>
+The sticky bit was introduced 
+in the Fifth Edition of Unix (in 1974) for use with pure executable files. 
+When set, it instructed the operating system to retain the <b>text</b> segment of 
+the program in swap space after the process exited. This speeds up subsequent 
+executions by allowing the kernel to make a single operation of moving the 
+program from swap to real memory. Setting the sticky bit on a file is rare 
+now, and usually will have no effect; but this explains why we see it as <b>t</b> 
+in the permissions list. 
+
+<br><br>
+Actually, there are <i>two</i> additional permission bits:
+<br><br>
+<pre>
+     04000 Set user ID on execution (setuid)
+     02000 Set group ID on execution (setgid)
+     01000 Sticky bit
+
+     so, 3777 sets both the setgid bit and the sticky bit
+</pre>
+
+When a file with setuid is executed, the resulting process will assume the 
+effective user ID of the file owner, so the user running the process
+temporarily has these privileges. The setuid 
+permission on a directory is ignored on UNIX and Linux systems.
+
+<br><br>
+When a file with setgid is executed, 
+the resulting process will assume the group ID of the owner.
+When the setgid bit is set on a directory all files (or directories) 
+created in that directory will belong to the group that owns the directory, 
+so group members do not have to explicitly change their current group before 
+creating new files or directories.
+
+<br><br>
+To see a list of all the files and directories with Sticky Bit bit set, use
+<code>find / -perm /1000</code>
+
+
+<br><br>
+<hr><hr>
+
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>
+
+
+
+

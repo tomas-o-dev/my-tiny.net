@@ -1,0 +1,282 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Squirrelmail</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<!-- -->
+
+
+<br>
+
+<h2>Testing the eMail service with WebMail</h2>
+
+<hr>
+
+The last Lab Exercise covered configuration of the Gateway and the MailServer 
+to get the mail moving. In the this Lab Exercise we move one step further  
+with the WebServer configuration.
+
+<br><br>
+<blockquote>
+<blockquote>
+<blockquote>
+<img src="logos/lab5.jpg" width="450" height="340">
+</blockquote>
+</blockquote>
+</blockquote>
+
+<hr><br>
+
+We use the same font conventions here:
+<br><br>
+<code>This</code> is a command you type in a virtual machine 
+<br><br>
+<cite>This</cite> is a menu option you choose or a keyboard shortcut
+<br><br>
+<tt>This</tt> is used for emphasis - something to look for or remember
+<br><br>
+<em>Menu Item</em>::<em>Page</em> is short for "this <em>Page</em> under 
+<em>Menu Item</em> on the Menu"
+<br><br>
+<hr>
+<br>
+
+
+<blockquote>
+<table border="4" cellpadding="6"><tr><td>
+<font color="red"><b>EXTREMELY IMPORTANT</b></font>
+<i>(are you tired of seeing this yet?)</i></font><br>
+<OL>
+<li> Make sure the VirtualBox DCHP is <i>turned off</i> for Host-Only network interfaces
+<br><br>
+<li> If your VM is not shut down properly it will become corrupted and you will have to recreate it. <br>
+Use <code>poweroff</code> at the command prompt, or go the the VirtualBox menu at the top 
+of the VM window and select <cite>Machine</cite> then <cite>ACPI Shutdown</cite>
+<br>NEVER close your VM by simply closing the window (except in an emergency).
+<br><br>
+<li> <b>Always start the Gateway first</b>, and wait until the Gateway has finished
+booting before 
+starting the other VMs. The WebServer, MailHost, and LDAPhost can all boot at the same time.
+
+</ol>
+</td></tr></table>
+</blockquote>
+<hr><br>
+
+We did some configuration by hand, and now 
+it's time to relax a bit and get back to the familiar browser interface. 
+Get all four of your VMs running, doublecheck that your Windows 
+host VirtualBox interface is on the same subnet as the WebServer VM, and 
+make sure mail can be delivered (see <em>Configure Mail</em> on the menu).
+
+<br><br>
+Webservers are essentially very simple: they respond to a request by either 
+sending back a file from their <tt>DocumentRoot</tt> directory, or they pass  
+the request to another program known as a <tt>CGI script</tt>. Every time we 
+use a form on a web page, the data is sent to the webserver and processed by 
+a CGI script: there is a very simple example on the default Monkey web page 
+that you should try.
+
+<br><br>
+What we do here is set up our WebServer to use an interpreter for a 
+programming language called PHP, and two PHP applications: 
+SquirrelMail ("WebMail for Nuts", whatever that might mean) and PHPLDAPAdmin 
+(referred to as "PLA" in their documentation). After we set Dovecot and 
+SquirrelMail to use the LDAP directory for mail rather than a plaintext file, 
+we can administer our mail accounts through the PLA browser interface. 
+
+<br><br>
+The good news is that the essential configuration is already done
+
+<br><br>
+<h3>PHP</h3>
+
+PHP is a scripting language that is usually used for web programming, but can 
+also be used from the command line. There are plenty of resources on learning 
+PHP, and lots of good applications. It is commonly packaged with the Apache 
+webserver and MySQL database as a "LAMP stack" for Linux or a "WAMP stack" 
+for Windows. 
+
+<br><br>
+If you have all the right libraries for the loadable modules, configuring 
+PHP for SquirrelMail and similar applications is easy. 
+All that was required for SquirrelMail and PHPLDAPAdmin was 
+to set the logging options and one key parameter in 
+<tt>/etc/httpd/php.ini</tt>
+<pre>
+      session.save_path = "/var/www/php-session"
+</pre>
+and then use SetRole.sh on the MyTyConfig.iso to initialise the logfile 
+and set permissions - the only trick there is to make sure the 
+<tt>session.save_path</tt> is world writeable with the "sticky bit" set (1777) 
+so anyone can write files there but only the owner can delete them. 
+
+<br><br>
+One thing you will notice about PHP is that there are too many ways to 
+have comments. A single line that starts with 
+<cite>#</cite> is a comment, <cite>//</cite> also 
+starts a single line comment, and <cite>/*</cite> starts a comment block 
+that ends with <cite>*/</cite> like this:
+
+<pre>
+      # To put PLA in debug mode, remove the /* and */ below
+      /*
+      $config->custom->debug['level'] = 255;    // comment: 255?
+      $config->custom->debug['syslog'] = true;
+      $config->custom->debug['file'] = '/tmp/pla_debug.log';
+      */
+</pre>
+
+<br>
+<h3>SquirrelMail</h3>
+
+Like everything to do with mail, SquirrelMail has lots of options that can 
+(and should) be left to the defaults.
+To make directives easier to find, the configuration is broken into a number 
+of files in <tt>/var/www/squirrelmail/config/</tt>
+
+<br><br>
+The basic setup is straightforward: just define the mailserver, SMTP port, 
+IMAP server type, location, and port in <tt>svr_adrs.php</tt>, set the 
+path to the attachments directory and the data directory in <tt>config.php</tt>, 
+and then set up whatever plugins look useful in <tt>config_plugins</tt>. 
+
+<br><br>
+<h3>PHPLDAPadmin</h3>
+
+PLA is another application with a zillion configuration options that system 
+administrators have asked for because they need it for their particular 
+setup. The configuration is finished because there are so few things that 
+actually must be done to get it up and running: see <tt>/var/www/ldapadmin/config/config.php</tt>
+
+<br><br>
+<h3>Configure the WebServer</h3>
+
+So, with that all done, we just need to make some minor 
+changes to tell Monkey how to handle PHP files. 
+
+<br><br>
+Open <tt>/etc/monkey/monkey.conf</tt> on the WebServer in the <tt>mc</tt> 
+editor. 
+<ol>
+<li> The first thing to do is change the default location for serving webpages
+<tt>Server_root</tt> from <cite>/var/monkey/htdocs</cite> to <code>/var/www</code>
+<br><br>
+<li> Then find the two <tt>Indexfile</tt> directives, and comment out the first one and uncomment the second one, so it looks like this
+<pre>
+<font color="red">#</font> Indexfile index.html index.htm 
+Indexfile index.html index.htm index.php
+</pre>
+
+<li> Now move down to the <tt>CGI</tt> section. Change the 
+<tt>Server_ScriptAlias</tt> from <cite>/var/monkey/</cite> to <code>/var/www/</code>
+<br><br>
+<li> Finally, uncomment (remove the <code>#</code>) from the <tt>AddScript</tt> 
+line for php, so Monkey will pass the content of any request that ends with 
+<cite>.php</cite> to the PHP interpreter. The other line tells Monkey to pass 
+the content of any file that ends with <cite>.sh</cite> to the bash shell.
+</ol>
+
+Save that file, and restart monkey to get the new configuration in place: 
+if you have not made a symlink from <tt>/usr/local/sbin/banana</tt> 
+to <tt>/etc/rc.d/rc.monkey</tt> yet, you need to kill the monkey 
+process in <tt>htop</tt> with 
+<cite>F9</cite> and SIGTERM, then start monkey at the command line with 
+<code>/usr/sbin/monkey&nbsp;-D</code>
+
+<br><br>
+Now you can open your favourite browser on your Windows host, run <cite>mytyip</cite> 
+on the webserver,<br>
+and use a URL like this to access SquirrelMail:&nbsp;&nbsp;&nbsp;
+<code>http://</code><tt>Web.Server.IP.address</tt><code>/squirrelmail/</code>
+<br><br>
+And a URL like this for LDAP Admin:&nbsp;&nbsp;&nbsp;
+<code>http://</code><tt>Web.Server.IP.address</tt><code>/ldapadmin/</code>
+<br><br>
+You can see the PHP configuration info with this:&nbsp;&nbsp;&nbsp;
+<code>http://</code><tt>Web.Server.IP.address</tt><code>/phpinfo</code><br>
+which is a bad idea from a security standpoint (we never want to give away 
+configuration information)<br>but hey, we show the root password on the login 
+screen! Never mind, we can change that later ...
+
+<br><br>
+Last thing to do for now: go back to the SquirrelMail URL, log in with a 
+username and password listed in<br> <tt>/home/vmail/mail-pwd</tt> and send 
+some mail to another user that is listed in that file. Then close the 
+browser window and reopen it (to clear the session) and log in as the 
+recipient. 
+
+<br><br>
+When that works, the last steps for having a complete system are 
+[a] using LDAP instead of <tt>/home/vmail/mail-pwd</tt> for user authentication, 
+and [b] securing communications with SSH.
+<br><br>
+<br>
+<b>Final Notes:</b>
+<ol>
+<li> The <tt>Indexfile</tt> list is in order. If more than 
+one of these files exist, the first one on the list that is found is used.
+<br><br>
+<li> ScriptAlias normally has the added meaning that everything under that 
+URL prefix will be considered a CGI program. This is not actually 
+implemented in this version of Monkey, but we should set it to 
+something under Server_root in case someone gets confused and puts 
+<tt>/cgi-bin/</tt> in a URL.
+<br><br>
+<li> A MIME Type defines an association between a file content and a name. 
+In the Web Server context this is useful because the browser needs to 
+know what kind of data is being sent. So, every time Monkey receives a request for a file named <tt>logo.jpg</tt>, it will look into the MIME Types list and return <tt>Content-Type: image/jpeg</tt> in the HTTP response header. When a resource cannot match a MIME Type the server will send <tt>text/plain</tt>.
+There is no limit on the number of MIME Types registered, they just 
+need to be there before the server starts. The <cite>AddScript</cite> directive 
+is another use for the MIME type.
+</ol>
+
+<br>
+<hr><hr>
+
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

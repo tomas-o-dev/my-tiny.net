@@ -1,0 +1,410 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Firewall</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<br>
+
+<h2>TCP/IP Level Access Controls</h2>
+
+<hr>
+<br>
+
+Earlier we finished configuration of stunnel, to provide encrypted 
+communications. Here we look at lower-level access controls. The essential difference 
+is that with SSL/TLS authentication credentials are provided voluntarily; with 
+iptables and tcpwrap access is controlled using information in the IP and TCP packets 
+that arrive at the server. 
+
+<br><br>
+The term "firewall" describes filters operating at the network and transport layers 
+that rely on packet headers to supply the attributes used to make access control decisions. 
+Access control decisions are made using the one or more of the subject/object address, 
+service, and direction of each individual packet.
+
+<br><br>
+At the very foundation of a firewall is a simple rule that reflects the system administrator's 
+philosophy:
+<blockquote>
+<ul><li>What is not allowed is denied
+<br>or<br>
+</li><li>
+What is not denied is allowed</li></ul>
+</blockquote>
+
+Which one to adopt depends on the services and data you need to protect. 
+It is perfectly reasonable to apply one philosophy to one set of servers and the other 
+philosophy to another set of servers. To deny specific types of packets and accept all else 
+requires a thorough understanding of specific security threats, and can be hard to implement.
+To accept specific types of packets and deny all else means you do not have to predict 
+future attacks, but you must have a thorough understanding of network requirements
+
+<br><br>
+Here we will take a look at two firewall tools: <tt>iptables</tt> and <tt>tcpwrap</tt>. 
+Either or both can be used to enforce the chosen philosophy.
+
+<table cellpadding="6"><tr><td>
+<img src="logos/stack-fw.jpg">
+<br>
+<font size="-2"><br>RHEL 9 Resource Guide Fig. 15-1</font><br><br>
+</td><td>
+<h3>Basic Concepts</h3>
+
+A <font size="-1"><i><b>packet filter</b></i></font> 
+is an application configured to 
+accept or reject packets, based on any observable characteristic of each packet, such as  
+source and destination IP address, source and destination TCP port, packet type, sequence, 
+etc.. 
+
+<br><br>
+Restrictions are specified in 
+<font size="-1"><i><b>Access Control Lists (ACLs)</b></i></font>. 
+ACLs can be implemented in a router as well as a separate server
+
+<br><br> 
+<font size="-1"><i><b>Stateful firewalls</b></i></font> specify 
+"circuit-level" rules pertaining to connections rather than individual packets
+
+<br><br>
+There is a good explanation of IP filtering terms and expressions at<br>
+<a href="http://security.maruhn.com/iptables-tutorial/x2940.html">
+http://security.maruhn.com/iptables-tutorial/x2940.html</a>
+<br><br>
+
+</td></tr></table>
+
+<h3>Packet Filtering: iptables</h3>
+
+We can use iptables rules to configure tables of packet-filter rules in the 
+Linux kernel - "in the kernel" meaning before any "user space" applications like 
+tcpwrap or SSL/TLS.
+
+<br><br>
+The iptables framework is:
+<ul><li>Each table has a number of chains
+</li><li>Each chain consists of a list of rules
+</li><li>Each rule specifies what to do with a matching packet
+</li></ul>
+
+The default table (filter, ACL) has 3 built-in chains:
+<blockquote>
+<table cellpadding="0">
+<tr><td>INPUT</td><td>&nbsp;&nbsp;&nbsp;&nbsp;</td><td>controls traffic from outside the LAN</td></tr>
+<tr><td>OUTPUT</td><td>&nbsp;&nbsp;&nbsp;&nbsp;</td><td>places restrictions on outbound connections</td></tr>
+<tr><td>FORWARD</td><td>&nbsp;&nbsp;&nbsp;&nbsp;</td><td>allows control over routing between interfaces</td></tr>
+</table>
+</blockquote>
+
+IPTables uses <i>policies</i> (<tt>-P</tt>) to create default rules.<br>
+These rules will block all traffic on a network gateway: 
+<pre>
+iptables -P INPUT DENY
+iptables -P OUTPUT REJECT
+iptables -P FORWARD REJECT
+</pre>
+DROP and DENY silently drop packets, REJECT returns a "connection refused" error to users. 
+
+<br><br>
+Specific rules are <i>appended</i> (<tt>-A</tt>) at the end of an existing ruleset. 
+<tt>-A</tt> is followed by the name of the chain for a rule, and flags to specify 
+packet characteristics like like 
+(p)rotocol, (i)nterface, (s)ource, (d)estination. The rule normally ends with 
+an instruction to "jump to" (<tt>-j</tt>) a <i>target</i>. 
+The targets ACCEPT, DROP, and REJECT behave as you would expect, while the LOG target can be used to log packets and let them continue moving through the chain. 
+The target can also be another chain - for good examples, skip down to the custom chains section at 
+<a href="http://www.pettingers.org/code/firewall.html">http://www.pettingers.org/code/firewall.html</a>
+
+<br><br>
+Some examples of rules: (for details see the <em>Quick Reference :: iptables</em> page on the menu)
+
+<pre>
+# refuse telnet connections
+  iptables -A INPUT -p tcp --sport telnet -j REJECT
+  iptables -A INPUT -p udp --sport telnet -j REJECT
+
+# allow ssh connections
+  iptables -A INPUT -p tcp --sport 22 -j ACCEPT
+  iptables -A INPUT -p udp --sport 22 -j ACCEPT
+
+# Allow new TCP connections from hosts in the 192.168.1.0/24 network to port 137 (stateful)
+  iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.1.0/24 --dport 137 -j ACCEPT
+</pre>
+
+Note how <tt>s!</tt> is used in the examples below. The first two rules drop 
+all packets where the source IP address is not on the subnet specified, while 
+the next two rules allow a specific IP address.
+<br><br>
+
+<pre>
+# allow connections to the portmap service (listening on port 111) 
+# from the 192.168.0/24 network and from localhost 
+# Any other port 111 packets are dropped.
+  iptables -A INPUT -p tcp -s! 192.168.0.0/24 --dport 111 -j DROP
+  iptables -A INPUT -p udp -s! 192.168.0.0/24 --dport 111 -j DROP
+  iptables -A INPUT -p tcp -s  127.0.0.1 --dport 111 -j ACCEPT
+  iptables -A INPUT -p udp -s  127.0.0.1 --dport 111 -j ACCEPT
+</pre>
+But Hey - there is something very wrong with that list! The ACL rules 
+are processed as a list from top to bottom, and as soon as a packet 
+matches a rule the processing "jumps" to the <tt>-j</tt> target. In the 
+example above the <tt>localhost</tt> <i>rules will never be matched</i> 
+because the packet will be DROPped by the "source address is not" 
+rules that come before.
+
+<br><br>
+The iptables ACL is usually in a shell script executed at boot time. 
+
+<br><br>
+
+<h3>iptables Logging</h3>
+
+The LOG target has options to tell iptables and syslog which log level to use.  Normally there are eight log levels, or priorities as they are normally referred to: debug, info, notice, warning, err, crit, alert, and emerg. The priority defines the severity of the message being logged. All iptables messages are logged through the kern facility.
+
+<br><br>
+The default TinyNet <tt>syslog.conf</tt> will put messages with facility <tt>kernel</tt> 
+and priority <tt>error</tt> in <tt>/var/log/messages</tt>. 
+
+<br><br>
+Adding <cite>kern.=error&nbsp;&nbsp;&nbsp;-/var/log/iptables</cite> to your 
+<tt>syslog.conf</tt> file, and then writing all your iptables rules with a 
+<code>-j&nbsp;LOG</code> target to have <code>--log-level error</code> would make 
+the messages appear in the <tt>/var/log/iptables</tt> file rather than 
+<tt>/var/log/messages</tt>
+(note that there may still be other messages here from other parts of 
+the kernel that use the <tt>error</tt> priority).
+
+<br><br>
+For example, after adding the IPtables rule with a LOG target<br><br>
+<code>iptables -A INPUT -p tcp --tcp-flags ALL NONE -j LOG --log-level error --log-prefix "iptables Null Scan:&nbsp;"</code>
+<br><br>
+Send three packets to test the rule - the default for hping is the "Null Scan" (no flags set).
+<br>Check the <em>Quick Reference :: hping2</em> page on the menu for the most important command switches.
+<br><br>
+<code>hping -c 3 192.168.56.101</code>
+<br><br>
+With the default syslog configuration, this will appear at the end of 
+<cite>/var/log/messages</cite>
+<pre>
+Nov 14 07:04:39 myty-gw kernel: iptables Null Scan: IN=lo OUT= MAC=00:00:00:00:00:00:00:00:00:00:00:00:08:00 SRC=192.168.56.101 DST=192.168.56.101 LEN=40 TOS=0x00 PREC=0x00 TTL=64 ID=60450 PROTO=TCP SPT=1897 DPT=0 WINDOW=512 RES=0x00 URGP=0 
+Nov 14 07:04:40 myty-gw kernel: iptables Null Scan: IN=lo OUT= MAC=00:00:00:00:00:00:00:00:00:00:00:00:08:00 SRC=192.168.56.101 DST=192.168.56.101 LEN=40 TOS=0x00 PREC=0x00 TTL=64 ID=50860 PROTO=TCP SPT=1898 DPT=0 WINDOW=512 RES=0x00 URGP=0 
+Nov 14 07:04:41 myty-gw kernel: iptables Null Scan: IN=lo OUT= MAC=00:00:00:00:00:00:00:00:00:00:00:00:08:00 SRC=192.168.56.101 DST=192.168.56.101 LEN=40 TOS=0x00 PREC=0x00 TTL=64 ID=40201 PROTO=TCP SPT=1899 DPT=0 WINDOW=512 RES=0x00 URGP=0 
+</pre>
+
+<ul>
+<li> iptables Null Scan<br>
+The prefix specified in the rule with the <tt>--log-prefix</tt> option
+<li> IN=lo<br> 
+Interface that was used for an incoming packet (localhost in this case). This will be empty for outgoing packets.
+<li> OUT=<br> Interface that was used for an outgoing packet. This will be empty for incoming packets.
+<li> MAC= ~~~<br>Layer 2 Mac address
+<li> SRC= ~~~<br>The source ip-address from the packet header (hping can spoof this!)
+<li> DST= ~~~<br>The destination ip-address 
+<li> LEN= 40<br>Length of the packet
+<li> TOS=0x00&nbsp;&nbsp;&nbsp;PREC=0x00&nbsp;&nbsp;&nbsp;TTL=64&nbsp;&nbsp;&nbsp;ID= ~~~<br> 
+Flags in the IP header of the packet 
+<li> PROTO=TCP&nbsp;&nbsp;&nbsp;SPT=1899&nbsp;&nbsp;&nbsp;DPT=0<br>
+Protocol, Source Port, Destination Port. Note how 
+hping starts with a random source port and shifts up one for each packet. 
+Check <em>Quick Reference :: hping2</em> on the menu for the flags to control 
+the source and destination ports in the header.
+<li> WINDOW=512&nbsp;&nbsp;&nbsp;RES=0x00&nbsp;&nbsp;&nbsp;URGP=0<br> 
+Flags in the TCP header of the packet. These will 
+be different for UDP and ICMP.
+</ul>
+
+<br><br>
+<h3>
+Service Filtering: TCPwrap</h3>
+
+In general terms, a TCP wrapped service is one that has been compiled with the 
+<tt>libwrap</tt> library
+These typically include sshd, sendmail, xinetd, etc.. 
+When a connection attempt is made the service checks if connection is allowed based 
+on rules in <tt>/etc/hosts.allow</tt> and <tt>/etc/hosts.deny</tt>. 
+If no rules for the service are found in either file, or if neither file exists, 
+access to the service is granted. If a client host is allowed to connect, TCPwrap 
+releases control of the connection to the requested
+service and does not interfere further with communication between the client host 
+and the server.
+
+<br><br>
+To 
+determine whether a given executable supports TCP Wrappers, use
+<code>ldd&nbsp;<i>/path/to/daemon</i>&nbsp;|&nbsp;grep&nbsp;libwrap</code>
+
+<br><br>
+Because access rules in hosts.allow are applied first, they take precedence over 
+rules specified in
+hosts.deny. Therefore, if access to a service is allowed in hosts.allow, a rule 
+denying access
+to that same service in hosts.deny is ignored.
+Since the rules in each file are read from the top down and the first matching rule 
+for a given service
+is the only one applied, the order of the rules is extremely important.
+If no rules for the service are found in either file, or if neither file exists, 
+access to the service is granted.
+
+<br><br>
+Changes to the hosts.allow and hosts.deny are dynamic: they take effect 
+as soon as the file is saved.
+A good starting point is to specify only the clients you want to allow 
+to use particular services and then deny everything to everybody else.
+
+<br><br>So, 
+<tt>hosts.deny</tt> can simply specify 
+<pre>
+ALL:ALL
+</pre>
+with any specific rules in hosts.allow - enforcing "What is not allowed is denied".
+
+<br><br>
+Turning this around by putting <cite>ALL:ALL</cite> in <tt>hosts.allow</tt> with 
+specific rules in hosts.deny also works - enforcing "What is not denied is allowed".
+
+<br><br>
+
+Using the <tt>except</tt> option, the hosts on the left hand side of the <tt>:</tt> are 
+denied access, but the hosts in the right hand list are allowed.
+
+<br><br>
+
+So for example, if this rule appears in <tt>/etc/hosts.allow</tt>, 
+all example.com hosts are allowed to connect to all services except cracker.example.com
+If this rule appears in <tt>/etc/hosts.deny</tt>, only cracker.example.com 
+has access to all services, and other example.com hosts have access to none
+
+<pre>
+ALL : .example.com EXCEPT cracker.example.com
+</pre>
+
+Given that, what is the effect of this?
+
+<pre>
+ALL EXCEPT telnetd : 192.168.0. 
+</pre>
+
+Using this approach, it is good practice and a good habit to 
+explicitly allow or deny hosts in a single rule by adding the
+allow or deny directive as the final option.
+
+<br><br>
+
+For example, with <tt>ALL:ALL</tt> in hosts.deny, we can have this in hosts.allow
+
+<pre>
+imapd: .tinynet.edu :allow
+sshd:  .tinynet.edu except public1.tinynet.edu, public2.tinynet.edu :deny
+</pre>
+
+The <tt>.</tt> before the domain name is a "wild card" and means all hosts ending 
+with <i>tinynet.edu</i>, and since this is in hosts.allow, <tt>:allow</tt> and 
+and <tt>:deny</tt> are not really necessary, but make the intent clear. 
+
+<br><br>
+The <code>tcpdchk</code> command will examine your TCP Wrapper configuration and 
+report all of the potential and real problems it can find.
+
+<br><br>
+One important note: if the last line of a hosts access file is not a newline 
+character (created by pressing the Enter key), the last rule in the file fails 
+and an error is logged. This is also the case for a rule that spans multiple 
+lines without using the backslash <cite>\</cite> character.
+
+<br><br>
+<h3>IPtables or TCPwrap? or xinetd?</h3>
+
+<cite>IPtables</cite> filters individual packets at layer 3 and 4. 
+It is fastest, but rules are more difficult to write, and it requires 
+a restart when rules are changed. It is the most widely used because 
+it is scalable and has active support from the Linux kernel developers.
+<br><br>
+<cite>TCPwrap</cite> controls initial access to a service. It is simpler, 
+rules take effect immediately, and you can use domain names. However, in 
+practice it is not widely used, with most Linux distros favoring PAM 
+instead (see <em>User Accounts</em> under <em>Host Management</em> on the 
+menu). Slackware still prefers tcpwrap to PAM, so if you want PAM for 
+your TinyNet you need to install it from a Slackware Current archive.
+<br><br>
+<cite>xinetd</cite> has many of the same advantages as TCPwrap for 
+protecting the services it runs. One thing that xinetd 
+has that the others do not is the ability to control access using time 
+intervals when the service is available. SENSOR is another interesting 
+unique feature: 
+it replaces the service with a sensor that detects accesses to the 
+specified port. When an access is made, the IP Address is added to a 
+global <tt>no_access</tt> list until the <tt>deny_time</tt> setting expires. 
+This flag should be used only on services that you 
+know you don't need, but can be useful to find malicious outsiders.
+<br><br>
+All in all, this means we may 
+want to use a combination of tools to meet the goals of our security policy.
+The bottom line is: 
+<font size="-1"><i><b>don't have redundant rules</b></i></font>. 
+There are lots of ways to divide things up, and as a systems administrator 
+you need to use the logfiles over time to see traffic patterns and make 
+informed decisions.
+<br>
+
+<br><hr><br>
+<b>RHEL 9 Reference Guide</b>
+<pre>
+15. TCP Wrappers and xinetd......................... 205
+15.1. TCP Wrappers.................................. 205
+15.2. TCP Wrappers Configuration Files.............. 206
+
+16. iptables ....................................... 219
+16.1. Packet Filtering ............................. 219
+16.2. Differences between iptables and ipchains .... 220
+16.3. Options Used in iptables Commands............. 221
+16.4. Storing iptables Information ................. 227
+</pre>
+<br>
+<hr><hr>
+<br>
+
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

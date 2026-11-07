@@ -1,0 +1,234 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::PenTest</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<br>
+
+<h2>Basics of Penetration Testing</h2>
+
+<hr>
+<br>
+Verifying that your firewall rules are performing as intended should be a regular procedure. 
+Once you have identified any unfiltered ports or other issues, you should review your firewall rules to ensure that access to all services is controlled, and that filters and rules are performing as intended. 
+After changes are implemented, run the audit scan again to ensure that your changes achieve the desired effect.
+<br><br>
+
+<b>hping</b> is a packet assembler/analyzer used for crafting 
+TCP/IP packets. 
+You can experiment probing and analysing your firewalls and network by sending a variety of probe types with different flag settings. 
+It's possible to use most of the options for the scan mode, so the packets you use to scan can be tuned to uncover different aspects of the firewall layer. 
+
+<h3>Background:</h3>
+
+The TCP segment (packet) header has six flag bits that can be set independently. 
+A mnemonic to remember them in order is 'Unskilled Attackers Pester Real Security Folks'.
+<br><br>
+<blockquote><blockquote>
+<img src="logos/hdr.png" alt="http://www.lovemytool.com/blog/2010/07/practical-tcp-series-tcp-flags-by-chris-greer.html">
+</blockquote></blockquote>
+PSH (PuSH) and URG (URGent) are used to ensure priority 
+over other packets for processing when a packet is received. 
+The CWR and ECN bits may be used together by a client and server  
+that have the ability to use RFC 3168 Explicit Congestion Notification.
+<br><br>
+Four flag bits are used to describe the state of the connection:
+<ul>
+<li> SYN (SYNchronise) is used for starting a connection
+<li> ACK (ACKnowledge) is used to confirm packets are received
+<li> FIN (FINish) is used for ending a connection
+<li> RST (ReSeT) is used to denote that no service is listening on the port
+</ul>
+
+<blockquote><blockquote>
+<table cellpadding = "4">
+<tr><td>
+<img src="logos/syn.gif" alt="http://www.firewall.cx/networking-topics/protocols/tcp/136-tcp-flag-options.html">
+</td><td>
+The initial connection with a TCP service is established with the "TCP 3 way handshake". 
+First a SYN is sent to a port that has a service bound to it (an open port).  
+The server side will see the SYN and respond with SYN + ACK, with the client answering 
+the SYN + ACK with an ACK, which completes the connection set up. 
+</td></tr>
+<tr><td>
+<img src="logos/win.gif" width="340" Height="235" alt="http://www.firewall.cx/networking-topics/protocols/tcp/137-tcp-window-size-checksum.html">
+</td><td>
+After this, an ACK is sent after receiving each "window size" 
+group of packets (details are beyond our scope, but here is a nice graphic). 
+</td></tr>
+<tr><td>
+<img src="logos/fin.gif" alt="http://www.firewall.cx/networking-topics/protocols/tcp/136-tcp-flag-options.html">
+</td><td>
+When a host sends a FIN flag to close a connection, it may continue to receive data 
+until the remote host has also closed the connection, although this only occurs under 
+certain circumstances.
+</td></tr>
+<tr><td colspan="2">
+Full details-:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;http://www.firewall.cx/networking-topics/protocols/tcp/136-tcp-flag-options.html<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+http://www.firewall.cx/networking-topics/protocols/tcp/137-tcp-window-size-checksum.html
+</td></tr>
+</table>
+</blockquote></blockquote>
+
+<h3>Packet Crafting</h3>
+<b>hping</b> allow you to set any of the flag bits in a 
+TCP, UDP, ICMP or RAW-IP packet to 
+see how the target will react.
+The default is to 
+ send empty (0 data byte) packets, but there are lots of options for tuning the payload. 
+Most scan types send and receive raw packets, and so are only available to privileged users, meaning root access on Unix/Linux or an administrator account on Windows.
+<br><br>
+hping is on all TinyNet machines. 
+Try it out: <code>hping --scan known 192.168.56.101</code>
+
+<ul>
+<li> The man page is good: <code>man 8 hping</code> or 
+<a href="http://www.hping.org/manpage.html">
+http://www.hping.org/manpage.html</a>
+
+<br><br>
+<li> Sections 5 and 6 of 
+<a href="http://www.radarhack.com/tutorial/hping.pdf">
+http://www.radarhack.com/tutorial/hping.pdf</a>
+ are particularly interesting, showing how 
+a data payload and signature can be used with the hping 
+<cite>listen</cite> feature 
+(<cite>-9</cite> switch) to transfer files. 
+</ul>
+
+By specifying the TCP flags, a destination port and a target IP address, one can easily test firewall Access Control Lists (ACLs). There is a very good explanation of scans and attacks that use these techniques at 
+<a href="http://thesprawl.org/research/port-scanning/">
+http://thesprawl.org/research/port-scanning/</a></b>
+
+<br><br>
+<blockquote><blockquote>
+<table border cellpadding="16"><tr><td>
+Logfiles can grow quickly with pentesting. If you want a clean file to 
+begin with
+<ol>
+<li> stop the syslog daemon with 
+<code>/etc/rc.d/rc.syslog stop</code>
+<li> rename the existing logfile
+<li> create a new one with something like 
+<code>echo "Test Record" &gt;&gt;log.log</code> (using the proper file name)
+<li> restart the syslog daemon with 
+<code>/etc/rc.d/rc.syslog start</code>
+</ol>
+<tr><td align="center">
+<b>Multitail</b> is an ideal tool for watching tests of firewall rules<br>
+Check the <em>Penetration Testing (PenTest)</em> section of the 
+<em>Multitail</em> page<br>
+under <em>Utilities</em> on the menu.
+</td></tr>
+</table>
+</blockquote></blockquote>
+
+<hr>
+<b>Null Scan:</b> This scan sets the sequence number to zero and no flags set in the packet. If the port is closed we get a RST packet in reply, and no reply if the port is open.
+<br><br>
+This is the default behaviour for hping: <code>hping 192.168.56.101</code> sends a TCP null-flags packet to port 0 of the target host every second and shows the replies.  Port 0 is used by default because it's very strange for it to be in the LISTEN state. 
+<br><br>
+The iptables command to close this off is simple:<br><br>  
+<cite>iptables -A INPUT -p tcp --tcp-flags ALL NONE -j DROP</cite>
+<br><hr>
+<b>SYN Scan:</b> In a TCP connection a packet with just the SYN flag set is used in the connection setup routine, and should get a SYN+ACK in reply if the port is open, and RST+ACK if the port is closed. This will send a single packet with the SYN flag set to port 80 from port 5050:<br><br>
+<code>hping -c 1 -V -p 80 -s 5050 -S 192.168.56.101</code> 
+<br><br>
+<b>ACK Scan:</b> In a TCP connection a packet with just the ACK flag set is used in both the connection setup and connection close routines. A lone ACK packet without the rest of the routine should receive a RST packet in reply if the port is open, and no reply if the port is closed. This will send a single packet with the ACK flag set to port 80 from port 5050:<br><br>
+<code>hping -c 1 -V -p 80 -s 5050 -A 192.168.56.101</code> 
+<br><br>
+Since SYN and ACK packets are part of the normal operation of TCP, there is no iptables command to close this off - we need to rely on an Intrusion Detection System (IDS) to warn about these scans. 
+<br><hr>
+<b>FIN Scan:</b> In a TCP connection a FIN+ACK packet is used to start the connection closing routine. With just the FIN flag set, we expect to receive a RST+ACK packet in reply if the port is closed, and no reply if the port is open. This will send a single packet with the FIN flag set to port 80 from port 5050:<br><br>
+<code>hping -c 1 -V -p 80 -s 5050 -F 192.168.56.101</code> 
+<br><br>
+The iptables command to close this off says FIN+ACK is valid, FIN alone is not.<br><br>  
+<cite>iptables -A INPUT -p tcp --tcp-flags FIN,ACK FIN -j DROP</cite>
+<br><hr>
+<b>Xmas Scan:</b> This scan sets the sequence number to zero and set the URG+PSH+FIN flags in the packet (lighting it up like a Christmas tree). If the port is closed we get a RST packet in reply, and no reply if the port is open. This type of packet requires more processing than the usual packets, so it can be used to perform a DOS attack on the server. The hping command is:<br><br>
+<code>hping -c 1 -V -p 80 -s 5050 -M 0 -UPF 192.168.56.101</code> 
+<br><br>
+The iptables command to close this off is<br> <br> 
+<cite>iptables -A INPUT -p tcp --tcp-flags ALL FIN,PSH,URG -j DROP</cite>
+<br><hr>
+<b>LAND Attack:</b> LAND stands for Local Area Network Denial. In this attack, a packet is spoofed with source address as the address of the target itself, i.e., the source and destination addresses are the same. The target machine ends up replying to itself continuously. This is a quite famous DOS attack that was quite effective on Windows NT in the old days.
+The hping command, setting SYN and using a known open port is:<br><br>
+<code>hping -S -a 192.168.56.101 -p 80 192.168.56.101</code>  
+<br><br>
+The iptables command to close this off would be like this<br><br>  
+<cite>iptables -A INPUT -s 192.168.56.101 -d 192.168.56.101 -j DROP</cite><br><br>
+but it would work better from a script, to handle dynamic addresses
+<pre>
+  LN=$(ifconfig |grep -v 127.0.0.1 |grep inet |grep -v inet6)
+  IA=$(echo $LN |cut -d " " -f 2 |cut -d ":" -f 2)
+  iptables -A INPUT -s $IA -d $IA -j DROP
+</pre>
+<hr>
+<b>SYN flood:</b> The attacker sends a large number of SYN requests with a spoofed  source IP address. The target replies with SYN+ACK, and allocates its resources for the connection, but never gets an ACK reply. Eventually the target machine's resources are exhausted and it stops serving legitimate requests.
+<br><br>
+With hping it is easy to send 1000 packets per second with a random source address to a single port:<br><br>
+<code>hping --faster -S --rand-source -p 80 --keep 192.168.56.101</code>
+<br><br>
+This attack and some other DOS/DDOS attacks can be controlled by limiting the incoming TCP connection request packets. Note that only new connection requests need to be controlled, and the limit set should be based on the capacity of the server.<br><br> 
+<cite>
+iptables -A INPUT -p tcp -m state --state NEW -m limit --limit 2/second --limit-burst 2 -j ACCEPT</cite><br><br>
+<cite>iptables -A INPUT -p tcp -m state --state NEW -j DROP</cite><br><br>
+If you want to log the dropped packets, don't forget to apply a limit to the logging as well, or you will just be moving the resource problem from one point to another!
+<br><hr>
+<b>Smurf Attack:</b> Broadcast a large number of ICMP echo requests with source IP address spoofed to that of target's IP address. All the machines on the subnet receive this broadcast message and send an ICMP echo reply to the target. 
+<br><br>
+This command will send 100 "pings" per second:<br><br>
+<code>hping -1 -i u1000 -a 192.168.56.101 192.168.56.255</code> 
+<br><br>
+This attack can be controlled with iptables the same way as the SYN flood:<br><br>  
+<cite>iptables -A INPUT -p icmp -m limit --limit 2/second --limit-burst 2 -j ACCEPT</cite><br><br>
+<cite>iptables -A INPUT -p icmp -j DROP</cite>
+
+<br><br>
+<hr><hr>
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

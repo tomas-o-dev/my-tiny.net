@@ -1,0 +1,361 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Monkey</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<!-- -->
+
+
+<br>
+
+<h2>Virtual Servers with Monkey</h2>
+
+<hr>
+<br>
+
+This version of Monkey webserver has a very simple configuration file, 
+with all the same essential features as production strength servers like 
+Apache, Lighttpd, and IIS but without all of the distractions. 
+
+<br><br>
+<tt>Virtual Servers</tt> allow one webserver process to handle multiple websites. 
+This is very common, so it is useful to understand how to set them up.
+
+<br><br>
+It used to be common to see websites with URLs with a <cite>/~username/</cite> 
+which meant it was a personal website. The <tt>UserDir</tt> directive is for 
+this style, allowing users to serve web pages from a directory under their home directory. 
+
+<br><br>
+It is much nicer, though, to comment out the <tt>UserDir</tt> directive and 
+give users their own <tt>Virtualhost</tt>. This requires some modifications 
+to the monkey configuration file along with new <tt>cnames</tt> for them, 
+creating some directories and changing the owner and permissions, and setting 
+up <tt>cron</tt> jobs (<i>Scheduled Tasks</i> in Windows) to copy files for 
+better security. 
+<br><br>
+<h3>[&nbsp;1&nbsp;]&nbsp;&nbsp;Setting up the VirtualHosts and cnames</h3>
+ 
+Open <tt>/etc/monkey/monkey.conf</tt> in the <cite>mc</cite> editor 
+with <cite>[F4]</cite> and move
+down to the <tt>Virtualhost</tt> section. 
+
+<br><br> 
+Press <cite>[F3]</cite> and look for <cite>[B---]</cite> in the top status 
+bar which means you are marking a block. Use the arrow keys to highlight from the 
+<tt>&lt;Virtualhost&gt;</tt> tag to the <tt>&lt;/Virtualhost&gt;</tt>
+tag, and press <cite>[F3]</cite> again at the end of the block. 
+
+<br><br>
+Press <cite>[Enter]</cite> to open a blank line (top status bar will 
+now show <cite>[BM--]</cite>), and press <cite>[F5]</cite> to paste in 
+the block. Then press <cite>[F3]</cite> until the top status bar 
+just shows <cite>[-M--]</cite> (twice is usually enough), which means 
+you have stopped marking blocks of text.
+
+<br><br>
+<i>(yes, that's clunky, but mc does so many good things we just have to 
+forgive this one)</i>
+<br><br>
+Now edit the directives to create a new site:
+
+<pre>
+      &lt;Virtualhost&gt;
+           VirtualServerName <font color="red">arnie.tinynet.edu</font>
+           VirtualDocumentRoot <font color="red">/var/monkey/vhosts/arnie</font>
+           VirtualScriptAlias /cgi-bin/ <font color="red">/var/monkey/vhosts/arnie/run/</font>
+           VirtualForceGetDir off 
+      &lt;/Virtualhost&gt;
+</pre>
+
+Save this, and create the <i>VirtualDocumentRoot</i> and <i>VirtualScriptAlias</i> 
+directories. Then change the owner and group for each new directory to <tt>nobody</tt> 
+(the owner of the monkey process), and change the permissions so that only the owner 
+can Read+Write+Execute [700]. 
+
+<br><br>
+Final step is to restart the monkey webserver process. 
+<br><br>
+
+Now move over to your Gateway and edit <tt>/etc/dnsmasq.d/cnames</tt>. 
+Find the cnames for the Webserver, copy one and paste it in below, and 
+put the <i>VirtualServerName</i> in the first half of the line - like this:
+
+<pre>
+      <font color="red">arnie.tinynet.edu</font>, lecture-web.net-a.tinynet.edu
+</pre>
+
+Save the file and restart dnsmasq with <br>
+<code>/etc/rc.d/rc.dnsmasq&nbsp;stop</code> and<br>
+<code>/etc/rc.d/rc.dnsmasq&nbsp;start</code>
+
+<br><br>
+You can have any number of <tt>Virtualhost</tt> blocks in monkey.conf, as long as 
+each one has a unique <i>VirtualServerName</i> and a matching cname in the DNS.
+
+
+<br><br>
+<h3>[&nbsp;2&nbsp;]&nbsp;&nbsp;Setting up user accounts</h3>
+
+See the <em>Creating Users</em> section in the <em>User Accounts</em> page 
+under <em>Host Management</em> on the menu for how to create an account 
+for <tt>arnie</tt> with <tt>adduser</tt>. 
+
+<br><br>
+Once the account is created, open a new virtual terminal, log in as arnie, 
+and create a new <code>webpages</code> directory with another <code>run</code> 
+directory under it in the home directory. Check the permissions to make sure 
+that arnie is the owner, and only the owner can write to these directories.
+
+<br><br>
+Now arnie can log in with a SFTP (ssh) client and drop his pages in
+<cite>~/webpages</cite>, and his CGI scripts in
+<cite>~/webpages/run</cite>. The corresponding directories 
+under his VirtualDocumentRoot can only be accessed by the user that 
+owns the webserver process (<i>nobody</i>), so we need a way to move 
+new uploads from the home directory to the VirtualDocumentRoot. We take 
+care of this with <tt>cron</tt> jobs (<i>Scheduled Tasks</i> in Windows).
+
+
+<br><br>
+<h3>[&nbsp;3&nbsp;]&nbsp;&nbsp;Scheduling Tasks With cron</h3>
+
+The cron service (daemon) runs in the background and constantly checks the 
+lists in the files in the <tt>/var/spool/cron/crontabs</tt> directory for 
+jobs to be done. Confusingly enough, these files are referred to as 
+<tt>crontabs</tt>, and the command to create and edit the job lists inside 
+the file is called (you guessed it) <cite>crontab</cite>.
+
+<br><br>
+The format of the crontab entries is simple: five time fields separated with spaces or tabs, followed by the command to be executed and any parameters it needs.
+<br><br>
+<pre>
+      |================ [1] Minute (0 - 59)
+      | |============== [2] Hour (0 - 23)
+      | | |============ [3] Day of month (1 - 31)
+      | | | |========== [4] Month (1 - 12) 
+      | | | | |======== [5] Day of week (0 - 7) (Sunday = 0 or 7)
+<font color="blue">      * * * * * /path/to/command parameters</font>
+</pre>
+Operators:
+<blockquote><blockquote>
+<br> <cite>*</cite> specifies all possible values for a field. For example, * in the month field (4) means every month.
+<br> <cite>,</cite> specifies a list of values. For example, 1,2,3,4,5
+in the day of week field (5) means run only on weekdays.
+<br> <cite>-</cite> specifies a range of values. For example, 1-5 in the 
+day of week field (5) means run only on weekdays
+<br> <cite>/</cite> specifies a step value. For example, 
+*/10 in the minutes field (1) means run every 10 minutes
+</blockquote></blockquote>
+Note: cron does not deal with seconds. 
+Day of month and day of week fields are an <tt>or</tt> condition - when either field is true it will be executed.
+The <tt>crontab</tt> man page has more examples.
+
+<br><br>
+Some important restrictions to take note of:
+<ul>
+<li> Each user can have their own crontab file, and the jobs run from it are 
+executed as that user.
+<li> The crontab files have to be regular files or symlinks to regular files, 
+and they must not be executable or writeable by anyone else than the owner.
+<li> Setting paths, environment variables, etc. must be done in the script cron is calling. 
+<li> Absolute path names for commands, like <tt>/bin/ls</tt> should always be used.
+</ul>
+
+To create or edit your 
+crontab:&nbsp;&nbsp;&nbsp;&nbsp;<code>crontab&nbsp;-e</code><br>
+After you save and exit from the editor, the new crontab will be installed automatically.<br><br>
+To list all your cron jobs:&nbsp;&nbsp;&nbsp;&nbsp;<code>crontab&nbsp;-l</code>
+&nbsp;&nbsp;&nbsp;&nbsp;(lowercase L not one)<br>
+To see the cron logs:&nbsp;&nbsp;&nbsp;&nbsp;<code>cat 
+/var/log/cron</code><br>
+
+<br><br>
+The existing <tt>/var/spool/cron/crontabs/root</tt> uses the 
+<cite>run-parts</cite> command to run the scripts or programs in a directory. 
+This makes it easy: we can put executable scripts into the 
+<tt>/etc/cron.{daily or hourly}</tt>
+directories to designate cron jobs (be sure to set the execute bits).  
+
+<br><br>
+So, <u>when we have a root login</u> we have two ways to move the files out 
+of our user's home into the webserver VirtualDocumentRoot directories:
+<br><br>
+use <code>crontab -e</code> to create jobs in the root crontab to run 
+every ten minutes, for example:
+<pre>
+# move user Virtualhost files to the VirtualDocumentRoot
+*/10 * * * * mv -f $(find /home/arnie/webpages -maxdepth 1 -type f) /var/monkey/vhosts/arnie
+*/10 * * * * mv -f $(find /home/arnie/webpages/run -type f) /var/monkey/vhosts/arnie/run
+</pre>
+or put a script like this into the <tt>/etc/cron.hourly/</tt> directory  
+(make sure owner is <cite>root</cite> and the execute bits are set)
+<pre>
+#!/bin/sh
+# move user Virtualhost files to the VirtualDocumentRoot
+mv -f $(find /home/arnie/webpages -maxdepth 1 -type f) /var/monkey/vhosts/arnie
+mv -f $(find /home/arnie/webpages/run -type f) /var/monkey/vhosts/arnie/run
+</pre>
+
+We have to use <cite>find -type f</cite> to move only the files, otherwise the first 
+<cite>mv</cite> command will move the <tt>run</tt> directory too! We also need 
+<cite>maxdepth&nbsp;1</cite> or all the files in <tt>run</tt> will get moved to the 
+top directory. 
+
+<br><br>
+Running a task as <i>exactly</i> as cron would run it is tricky: 
+cron is designed to run in a non-interactive shell with no attached 
+input terminal and a modified environment, and possibly also requires 
+a specific shell (like bin/sh instead of /bin/bash). That means testing 
+is a slow process because 
+<u>the best way to test is just wait</u>.
+
+<br><br>
+Version Note: <br>
+mytyVM uses "dillon's cron", which is similar to the "vixie cron" used by 
+other Linux distributions, but simpler. Debian and Redhat also have 
+<tt>/etc/crontab</tt> for system jobs, with an extra field to specify 
+the user to run as. On these systems cron treats the files in 
+<tt>/etc/cron.d</tt> as extensions to /etc/crontab - on mytyVM systems 
+<tt>/etc/cron.d</tt> stays empty. 
+
+
+<br><br>
+<h3>[&nbsp;4&nbsp;]&nbsp;&nbsp;Setting up the user site</h3>
+
+Now you can start <code>links</code> on the Gateway, 
+press <cite>Esc</cite> 
+to get the menu and select <cite>File</cite> and <cite>Go to URL</cite>. Type in 
+<code>http://arnie.tinynet.edu/</code> to get the site.
+
+<br><br>
+When the VirtualDocumentRoot is empty, <tt>links</tt> shows the site name 
+and says "Forbidden". So, we know we got to the right place, but there is 
+nothing to serve up!
+
+<br><br>
+Use <cite>mc</cite> to copy the file <cite>index.html</cite> from 
+<tt>/var/monkey/htdocs</tt> to <tt>/home/arnie/webpages</tt>. Use 
+<cite>[F4]</cite> to edit arnie's copy, and change the part that says 
+<i>Monkey is running in your system</i> to 
+<i>You have reached Arnie's homepage</i> (or whatever you like).
+
+<br><br>
+Now the hard part: wait for the cronjob to execute (just relax and enjoy the break!).
+<br><br>
+When <tt>index.html</tt> shows up in the VirtualDocumentRoot, go back to the other VM 
+running <cite>links</cite>, press <cite>Esc</cite> 
+to get the menu and select <cite>File</cite> and <cite>Reload</cite>. Smile and be happy!
+
+<br><br>
+<hr><hr>
+
+<br>
+<h3>Enhanced cron</h3>
+That is enough for proof-of-concept, but there is a flaw in our cron strategy: 
+what happens when our user wants to have more directories to organise their site 
+pages and images? And we really do not want to force ourselves to update the 
+cron job list every time we add a new user.
+
+<br><br>
+Here is a script that will check every directory in /home, and move all of the 
+files and directories under <tt>webpages</tt> to our VirtualDocumentRoot 
+(uncomment the lines in blue and comment out the move line in red to see it in action)
+<br><br>
+<tt>/usr/local/bin/mvUserSites.sh</tt>
+<pre>
+    #!/bin/sh
+    # move user Virtualhost files to the VirtualDocumentRoot
+    WPD=$(find /home -maxdepth 2 -type d -name 'webpages')
+    <font color="blue"># echo $WPD</font>
+    for DN in $(echo $WPD); do
+       <font color="blue"># echo $DN</font>
+       WPF=$(find $DN -type f)
+       <font color="blue"># echo $WPF</font>
+       for SF in $(echo $WPF); do
+          DF=$(echo $SF |sed 's:^/home:/var/monkey/vhosts:' |sed 's:/webpages::')
+          DD=$(dirname "${DF}")
+          if [[ ! -d $DD ]]; then
+             mkdir -p $DD
+          fi
+          <font color="blue"># echo "move $SF $DD"</font>
+          <font color="red">mv -f $SF $DD</font>
+          ## change owner:group? permissions? 
+          ##   $DF is destination file, $DD is destination directory
+       done
+    done
+</pre>
+<ol type="a">
+<li> variable <b>WPD</b> is a list of all the <tt>webpages</tt> directories under a user 
+home directory
+<li> the first "for" loop moves through the <b>WPD</b> list 
+<li> variable <b>WPF</b> is a list of all the files in the <tt>webpages</tt> directories
+<li> the second "for" loop moves through the <b>WPF</b> list 
+<li> the first <tt>sed</tt> replaces <tt>/home</tt> with our top VirtualDocumentRoot, 
+the second deletes <tt>/webpages</tt> from the path,<br>and the outcome is stored in the
+variable <b>DF</b>
+<li> <tt>dirname</tt> is a handy way to get the path without the name of the file
+<li> if the directory does not exist, <tt>mkdir -p</tt> will create all of the directories 
+in the path
+<li> and now we can move the source file to the destination directory
+</ol>
+After we name the script <tt>mvUserSites</tt> (for example), and make sure owner is 
+<cite>root</cite> and the execute bits are set, we can put this script in 
+<tt>/etc/cron.hourly/</tt> to have it run every hour, or if we want to run it more 
+often we could put it in a new directory <tt>/etc/cron.vhosts/</tt> (for example) 
+and replace the two lines we added to the root <tt>crontab</tt> with this one:
+<br><br>
+<pre>
+# move user Virtualhost files to the VirtualDocumentRoot
+*/5 * * * * /etc/cron.vhosts/mvUserSites
+</pre>
+
+<br><br>
+<hr><hr>
+<br>
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

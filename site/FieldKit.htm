@@ -1,0 +1,548 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>Net-R::Forensics Fieldkit</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Breaking Bad</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<!-- -->
+
+<br>
+<h2>Portable Forensics Fieldkit</h2>
+
+<hr>
+<br>
+This is a collection of Windows PortableApps for digital forensics.<br>  
+PortableApps do not use the registry, so they can be 
+run from a USB with minimal effect on the target system.
+<br>
+Most of these run as a normal user - because we may have to crack our 
+way in to the Administrators group on a target system! <br>
+The exceptions are marked with [&nbsp;^&nbsp;]
+
+<br><br>Download: 
+<br><a href="refs/ForensicsFieldKit.zip">
+<b>zip 264mb</b></a> - just unzip to your USB or Windows drive
+<br><a href="refs/ForensicsFieldKit.iso">
+<b>iso 593mb</b></a> - just double-click to mount 
+
+<br><br><b>Install:</b><br>
+Windows insists on full paths in shortcuts, and that means this app 
+needs to have its shortcut created.<br>To accomodate running from the 
+ISO image, the shortcut is created on the desktop, and can then be 
+copied or moved to wherever you want it.
+<br><br>
+Go to the Forensics FieldKit folder and doubleclick <b>FFK-INSTALL.bat</b><br>
+This creates a shortcut on the desktop: Forensics Fieldkit
+<br><br>
+The shortcut will work as long as the drive letter and path stay  
+the same;<br>if Windows mounts your usb/iso with a different drive 
+letter, just run FFK-INSTALL.bat again.
+
+<br><br><b>Run:</b><br>
+Double-click to start an app. Close the window will minimise to the Taskbar, use File::Exit to completely quit.<br> (these settings can be changed under the Setup tab)
+
+<br><br>
+<br><br>
+Extra tools for extracting forensically interesting artefacts 
+from RAM images come separately:
+<ul>
+<li> <a href="https://www.cgsecurity.org/wiki/PhotoRec">PhotoRec (v7.1)</a>
+<br>note that image file extensions are limited to .dd .raw .img &nbsp;-&nbsp; rename  .vmem  images to  .raw  works fine 
+</li>
+
+<li> <a href="https://github.com/simsong/bulk_extractor">
+Bulkextractor 1.1.5 </a> <br>
+packaged with 
+<a href="https://portableapps.com/apps/utilities/java_portable">
+jPortable</a> and 
+<a href="https://portableapps.com/apps/utilities/java_portable_launcher">
+jPortable Launcher</a></li> 
+
+<li> 
+<a href="https://www.fireeye.com/services/freeware/redline.html">
+Mandiant Redline</a><br>
+packaged with 
+<a href="https://www.fireeye.com/services/freeware/ioc-editor.html">
+Mandiant IOC editor</a>
+for OpenIOC files and some 
+<a href="https://github.com/mandiant/iocs">
+sample IOCs</a> to work with</li>
+
+</ul>
+<a href="refs/ForensicsFK-RAM.zip">
+<b>zip 237mb</b></a> - just unzip to your USB or Windows drive
+<br><a href="refs/ForensicsFK-RAM.iso">
+<b>iso 627mb</b></a> - just double-click to mount
+
+<br><br>Install:<br>
+Go to the Forensics FK-RAM folder and doubleclick <b>FKRAM-INSTALL.bat</b><br>
+This creates four shortcuts on the desktop: 
+<br>&nbsp;&nbsp;&nbsp;&nbsp;FKRAM BEviewer
+<br>&nbsp;&nbsp;&nbsp;&nbsp;FKRAM Redline
+<br>&nbsp;&nbsp;&nbsp;&nbsp;FKRAM qPhotoRec
+<br>&nbsp;&nbsp;&nbsp;&nbsp;FKRAM IOCeditor
+<br><br>
+The shortcuts will work as long as the drive letter and path stay  
+the same;<br>if Windows mounts your usb/iso with a different drive 
+letter, just run FKRAM-INSTALL.bat again.
+
+<br><br>
+<br><br>
+<table border cellpadding="6"><tr><td>
+<font color="red"><b>Note:</b></font>&nbsp;Windows 10 configuration tends to "drift" with 
+its continuous updates, which can cause problems you never knew you had until some app will not start. <i>This is a problem with Windows, not the app!</i> 
+<a href="refs/dism-sfc.pdf">
+Follow this procedure if the FieldKit will not start</a>.
+</tr></td></table>
+
+<br><br>
+EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT
+HOLDERS AND/OR OTHER PARTIES PROVIDE <br>
+THIS SOFTWARE "AS IS" 
+WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, 
+INCLUDING, BUT <br>
+NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. <br>
+THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THIS SOFTWARE
+IS WITH YOU. IN NO EVENT WILL <br>
+ANY COPYRIGHT HOLDER OR ANY OTHER 
+PARTY BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, <br>
+SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR 
+INABILITY TO USE THIS <br>
+SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS 
+OF DATA OR DATA BEING RENDERED INACCURATE OR <br>
+LOSSES SUSTAINED BY 
+YOU OR THIRD PARTIES OR A FAILURE OF ANY PROGRAM TO OPERATE WITH 
+ANY <br>
+OTHER PROGRAMS). 
+
+
+<br><br>
+In the FieldKit, apps are organised into seven categories.<br>
+The FieldKit itself is:
+<br><br>
+<table cellpadding="4">
+<tr><td valign="top">
+Portable Start Menu
+</td><td>
+v3.7 &copy; 2000 - 2021 Aignesberger Software GmbH
+<br><i>App Launcher: www.aignes.com/psmenu.htm</i>
+
+</td></tr><tr><td valign="top">
+PopSel (Help Files)
+</td><td>
+Freeware &copy; 2003 - 2015 Horst Schaeffer
+<br><i>Sadly not all of these have helpfiles</i>
+
+</td></tr><tr><td valign="top">
+NirCmd (install shortcuts)
+</td><td>
+v2.86 &copy; 2003 - 2019 Nir Sofer
+<br><i>A very capable command processor</i>
+
+</table>
+
+<h3>Report Tools</h3>
+<table cellpadding="4">
+
+</td></tr><tr><td valign="top">
+AptEdit Lite
+</td><td>
+v5.7.1 build 474 &copy; 2000 - 2011 Brother Technology, Inc.
+<br><i>Easy text and hex view, plus text or binary compare files</i>
+
+</td></tr><tr><td valign="top">
+OperaPortable
+</td><td>
+v84.0.4316.31 &copy; 1995 - 2022 Opera Norway AS
+<br><i>To avoid using the browser on the target system</i>
+
+</td></tr><tr><td valign="top">
+Screen Recorder
+</td><td>
+v1.0.3 &copy; 2000 free-simple-apps
+<br><i>Opera Screen Recorder Extension</i>
+
+</td></tr><tr><td valign="top">
+7-Zip
+</td><td>
+v19.00 Rev 3 &copy; 1999 - 2018 Igor Pavlov
+<br><i>Opens practically every type of compressed file</i>
+
+</td></tr><tr><td valign="top">
+Folder to ISO
+</td><td>
+v3.1 &copy; 2013 Karydis Anastasios
+<br><i>Simple ISO image file creator, useful for final archive of a case file</i>
+
+</td></tr><tr><td valign="top">
+IrfanView
+</td><td>
+v4.54 &copy; 1996 - 2020 Irfan Skiljan
+<br><i>Opens practically every type of graphics file, basic editing capabilities</i>
+
+</td></tr><tr><td valign="top">
+PDF-XChange<br>Viewer
+</td><td>
+v2.5.322.10 &copy; 2005 - 2019 Tracker Software
+<br><i>View and annotate PDF documents</i>
+
+</td></tr><tr><td valign="top">
+HashMyFiles
+</td><td>
+v2.37 &copy; 2007 - 2020 Nir Sofer
+<br><i>Calculate MD5/SHA1/CRC32 hashes of files</i>
+
+</td></tr>
+</table>
+
+
+<h3>System Profile</h3>
+<table cellpadding="4">
+
+<tr><td valign="top">
+AutoRuns
+</td><td>
+v13.98 &copy; 2002 - 2019 Mark Russinovich
+
+</td></tr><tr><td valign="top">
+InstalledAppView
+</td><td>
+v1.01 &copy; 2019 - 2020 Nir Sofer
+
+</td></tr><tr><td valign="top">
+InstalledPackagesView
+</td><td>
+v1.05 &copy; 2017 - 2019 Nir Sofer
+
+</td></tr><tr><td valign="top">
+WinUpdatesView 
+</td><td>
+v1.14 &copy; 2019 - 2020 Nir Sofer
+
+</td></tr><tr><td valign="top">
+SpecialFoldersView 
+</td><td>
+v1.26 &copy; 2008 - 2016 Nir Sofer 
+
+</td></tr><tr><td valign="top">
+UserProfilesView 
+</td><td>
+v1.10 &copy; 2008 - 2015 Nir Sofer
+
+</td></tr><tr><td valign="top">
+DriveLetterView 
+</td><td>
+v1.50 &copy; 2011 - 2019 Nir Sofer
+
+</td></tr><tr><td valign="top">
+USBDeview 
+</td><td>
+v3.01 &copy; 2006 - 2020 Nir Sofer
+
+</td></tr>
+</table>
+
+
+<h3>Event Log</h3>
+<table cellpadding="4">
+
+</td></tr><tr><td valign="top">
+TurnedOnTimesView 
+</td><td>
+v1.42 &copy; 2013 - 2019 Nir Sofer
+
+</td></tr><tr><td valign="top">
+WinLogOnView 
+</td><td>
+v1.35 &copy; 2013 - 2020 Nir Sofer
+
+</td></tr><tr><td valign="top">
+LastActivityView 
+</td><td>
+v1.35 &copy; 2012 - 2019 Nir Sofer
+
+</td></tr><tr><td valign="top">
+RecentFilesView 
+</td><td>
+v1.33 &copy; 2007 - 2017 Nir Sofer
+
+</td></tr><tr><td valign="top">
+ExecutedProgramsList 
+</td><td>
+v1.11 &copy; 2015 - 2020 Nir Sofer
+
+</td></tr><tr><td valign="top">
+WifiHistoryView
+</td><td>
+v1.56 &copy; 2016 - 2020 Nir Sofer
+
+</td></tr><tr><td valign="top">
+FullEventLogView 
+</td><td>
+v1.58 &copy; 2016 - 2020 Nir Sofer
+
+</td></tr><tr><td valign="top">
+EventLogSourcesView
+</td><td>
+v1.00 &copy; 2013 Nir Sofer
+
+<tr><td valign="top">
+EventLogChannelsView
+</td><td>
+v1.28 &copy; 2016 - 2020 Nir Sofer
+
+</td></tr>
+</table>
+
+
+<h3>Web Activity</h3>
+<table cellpadding="4">
+
+<tr><td valign="top">
+BrowserDownloadsView
+</td><td>
+v1.31 &copy; 2019 - 2020 Nir Sofer
+
+</td></tr><tr><td valign="top">
+BrowsingHistoryView 
+</td><td>
+v2.45 &copy; 2012 - 2020 Nir Sofer
+
+</td></tr><tr><td valign="top">
+ChromeCacheView 
+</td><td>
+v2.21 &copy; 2008 - 2020 Nir Sofer
+
+</td></tr><tr><td valign="top">
+ChromeCookiesView 
+</td><td>
+v1.61 &copy; 2011 - 2020 Nir Sofer
+
+</td></tr><tr><td valign="top">
+EdgeCookiesView 
+</td><td>
+v1.17 &copy; 2018 - 2019 Nir Sofer
+
+</td></tr><tr><td valign="top">
+FBCacheView 
+</td><td>
+v1.20 &copy; 2013 - 2018 Nir Sofer
+
+</td></tr><tr><td valign="top">
+ImageCacheViewer 
+</td><td>
+v1.20 &copy; 2014 - 2018 Nir Sofer
+
+</td></tr><tr><td valign="top">
+myLastSearch 
+</td><td>
+v1.65 &copy; 2007 - 2015 Nir Sofer
+
+</td></tr><tr><td valign="top">
+MZCacheView 
+</td><td>
+v2.01 &copy; 2007 - 2020 Nir Sofer
+
+</td></tr><tr><td valign="top">
+MZCookiesView 
+</td><td>
+v1.58 &copy; 2004 - 2019 Nir Sofer
+
+</td></tr>
+</table>
+
+
+<h3>File System</h3>
+<table cellpadding="4">
+
+<tr><td valign="top">
+File Manager
+</td><td>
+4.0 &copy; 1997-2019 ALTAP
+<br><i>Altap Salamander</i>
+
+</td></tr><tr><td valign="top">
+FTK Imager
+</td><td>
+4.5.0.3 &copy; 2011-2020 AccessData Group
+<br><i>Create and examine disk image files</i>
+
+</td></tr><tr><td valign="top">
+Recuva
+</td><td>
+v1.53.1087 &copy; 2016 Piriform Software
+<br><i>Recover deleted files</i>
+
+</td></tr><tr><td valign="top">
+HxD
+</td><td>
+2.4.0.0 &copy; 2002-2020 Mael Horz
+<br><i>Binary File/Disk/RAM/virtual memory editor</i>
+
+</td></tr><tr><td valign="top">
+SearchMyFiles 
+</td><td>
+v3.10 &copy; 2009 - 2020 Nir Sofer
+<br><i>Search For Files And Folders + Duplicates Search</i>
+
+</td></tr><tr><td valign="top">
+File Alyzer
+</td><td>
+v2.0.5.57 &copy; 2011 Safer-Networking Ltd
+<br><i>Detailed file metadata</i>
+
+</td></tr><tr><td valign="top">
+Magic File Identifier
+</td><td>
+v1.1.0 &copy; 2021 Jacquelin POTIER
+<br><i>Windows GUI implementation of the Unix </i>file<i> command</i>
+
+</td></tr><tr><td valign="top">
+grepWin
+</td><td>
+v2.0.7 &copy; 2018-2021 Stefan Küng 
+<br><i>Select files with specified text / regular expression</i>
+
+</td></tr><tr><td valign="top">
+TextScan
+</td><td>
+v1.03 &copy; 1998-2009 AnalogX
+<br><i>Find readable strings in binary files</i>
+
+</td></tr><tr><td valign="top">
+ExifDataView 
+</td><td>
+v1.11 &copy; 2012 - 2020 Nir Sofer
+<br><i>Displays EXIF data in .jpg image files</i>
+
+</td></tr><tr><td valign="top">
+AlternateStreamView 
+</td><td>
+v1.56 &copy; 2009 - 2019 Nir Sofer
+<br><i>View/Copy/Delete NTFS Alternate Data Streams</i>
+
+</td></tr>
+</table>
+
+
+<h3>Dynamic Analysis</h3>
+<table cellpadding="4">
+
+<tr><td valign="top">
+Process Hacker
+</td><td>
+v2.39.124 &copy; 2008-2016 Wen Jia Liu
+<br><i>Detailed view of processes and their activity</i>
+
+</td></tr><tr><td valign="top">
+VMMap
+</td><td>
+v3.31 &copy; 2009 - 2020 Mark Russinovich
+<br><i>A process virtual and physical memory analysis utility</i>
+
+</td></tr><tr><td valign="top">
+CurrPorts 
+</td><td>
+v2.63 &copy; 2004 - 2020 Nir Sofer
+<br><i>Displays the list of all currently opened TCP/UDP ports</i>
+
+</td></tr><tr><td valign="top">
+SimpleProgramDebugger
+</td><td>
+v1.10 &copy; 2014 - 2020 Nir Sofer
+<br><i>Displays events when attached to a process</i>
+
+</td></tr><tr><td valign="top">
+Hibernation File 
+</td><td>
+v1.2.1.79 &copy; 2016-2021 Arsenal Recon
+<br><i>Process hiberfil.sys for RAM analysis (BulkExtractor, Redline, etc.)</i>
+
+</td></tr>
+</table>
+
+
+<h3>Registry</h3>
+<table cellpadding="4">
+
+</td></tr><tr><td valign="top">
+MJ RegWatcher
+</td><td>
+v1.2.8.6 &copy; 2013 - 2018 Mark Jacobs
+<br><i>Monitors and alerts on changes to registry keys, files, or folders</i>
+
+</td></tr><tr><td valign="top">
+SpyMe Tools
+</td><td>
+v1.5.0 &copy; 2007 LC IBros Solutions
+<br><i>Registry and disk/directory list diff utility</i>
+
+</td></tr><tr><td valign="top">
+OfflineRegistryFinder
+</td><td>
+v1.11 &copy; 2018 - 2020 Nir Sofer
+<br><i>Scan and search Registry Hives from snapshots/external drive</i>
+
+</td></tr><tr><td valign="top">
+RegistryChangesView
+</td><td>
+v1.26 &copy; 2017 - 2020 Nir Sofer
+<br><i>Create and compare Registry snapshots (.reg files/shadow copy)</i>
+
+</td></tr><tr><td valign="top">
+OfflineRegistryView
+</td><td>
+v1.03 &copy; 2018 - 2019 Nir Sofer
+<br><i>Read Registry files offline/from external drive</i>
+
+</td></tr>
+</table>
+
+<br><br>
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="net-r/css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o &amp; <br> Centre for Forensics and
+Cyber Security, Asia Pacific University<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

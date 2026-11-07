@@ -1,0 +1,369 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Software List</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<!-- -->
+
+<br>
+
+<h2>Tinynet Packages</h2>
+
+Tinynet is set up around 
+the mytyVM distro, which is based on Slackware Current as of December 2019, 
+and has been tested on
+Windows 7 and 10 hosts with Virtualbox 5 and 6. 
+<br><br>
+Here is some brief documentation on the applications and utilities. 
+ALL SOFTWARE ON THIS SITE IS (re)DISTRIBUTED "As-Is" UNDER THE ORIGINAL 
+LICENSE AND (lack of) WARRANTEE. Source code is readily available from 
+various places. 
+<br><hr><hr>
+
+The TinyNet mail system has a lot of moving parts. 
+The cumulative number of configuration options is staggering (over 500) 
+so to put a cap on the number of choices that have to be made immediately, 
+it is configured to the level of an insecure system that passes mail 
+through the Gateway to the Mailhost. In the end we will have an integrated 
+system with LDAP addressbook lookups, encrypted transmission, client 
+authentication, and plenty of traffic to watch ... 
+
+<dl>
+<dt>dnsmasq-2.80</dt><dd> 
+A lightweight, easy to configure DNS forwarder and DHCP server. 
+It is designed to provide DNS and DHCP to a small network, and 
+can serve the names of local machines which are not in the global DNS. 
+<br>
+<a href="http://www.thekelleys.org.uk/dnsmasq/docs/dnsmasq-man.html">
+http://www.thekelleys.org.uk/dnsmasq/docs/dnsmasq-man.html</a>
+
+<br><br>
+</dd><dt>postfix-2.11.11</dt><dd> 
+Postfix attempts to be fast, easy to administer, and secure, while 
+at the same time being compatible enough with sendmail to not upset 
+existing users. Thus, it looks like sendmail on the outside, but the 
+inside is completely different. Configuration is also completely 
+different, and many will find it much easier. 
+This build supports TLS and SASL (cyrus or dovecot).
+<br>
+<a href="http://www.postfix.org/">
+http://www.postfix.org/</a>
+
+<br><br>
+</dd><dt>dovecot-2.3.9.2</dt><dd>  
+An open source IMAP and POP3 server. It is fast, easy to set up, 
+light on memory, and fail safe. This build has support for 
+LMTP, IMAP, POP3, IPv6, TLS and can work with standard mbox and maildir 
+formats. We have Dovecot acting as the postfix Local Delivery Agent (LDA) 
+on the mailhost.
+<br>
+<a href="http://www.dovecot.org/">
+http://www.dovecot.org/</a>
+
+<br><br>
+</dd><dt>openldap-2.4.48</dt><dd> 
+A free, open source implementation of the 
+Lightweight Directory Access Protocol (LDAP). 
+<br>
+<a href="http://www.openldap.org/">
+http://www.openldap.org/</a>
+ 
+<br><br>
+</dd><dt>stunnel-5.56</dt><dd> 
+A universal SSL tunnel designed to work as an SSL encryption wrapper 
+between remote client and local or remote servers. The goal is to add 
+SSL encryption and authentication functionality to commonly used 
+daemons without any changes to their code. 
+We use stunnel rather than the native SSL capabilities of Postfix, 
+Dovecot, and OpenLDAP because it is simpler to have one configuration  
+and adapt it rather than munging all of the config files ... and it 
+demonstrates the concept of port forwarding.
+
+<br><br>
+</dd><dt>openssh-8.1 (Secure Shell daemon and clients)<br>
+openssl-1.1.1d (Secure Sockets Layer toolkit, with so libs)</dt><dd> 
+ssh provides secure encrypted communications between
+two hosts over the network, when logging into a remote machine and
+executing commands. The OpenSSL toolkit and shared libraries provide 
+certificate management and encryption routines required by programs 
+such as openssh.  
+
+<br><br>
+</dd><dt>cyrus-sasl-2.1.27</dt><dd>  
+The Cyrus SASL (RFC 2222 Simple Authentication and Security Layer) 
+library is used by programs on the client or server side to provide 
+authentication and authorization services. Postfix, Dovecot, and OpenLDAP 
+can all use SASL. 
+<br>
+<a href="https://www.arschkrebs.de/slides/surviving_cyrus_sasl-handout.pdf">
+https://www.arschkrebs.de/slides/surviving_cyrus_sasl-handout.pdf</a>
+
+<br><br>
+</dd><dt>monkey-0.9.2</dt><dd>   
+The Monkey HTTP Daemon is a lightweight web server - much smaller than 
+most servers, like Apache, and has a simple configuration. The server 
+supports PHP and cgi scripts. Note that newer versions of Monkey HTTPD 
+have kernel version dependencies.
+<br>
+<a href="http://www.monkeyd.sourceforge.net/">
+http://www.monkeyd.sourceforge.net/</a>
+
+<br><br>
+</dd><dt>php-5.3.27</dt><dd> 
+PHP is a fast and easy-to-use scripting language for dynamic web sites. 
+It shares syntax characteristics with C, Java, and Perl. This is a minimal 
+build of an older version, just enough to support our apps. The world doesn't 
+need another LAMP stack: Bitnami has a nice one on a pre-built VM.
+<br>
+<a href="http://www.php.net/">
+http://www.php.net/</a>
+
+<br><br>
+</dd><dt>squirrelmail-1.4.22<br>phpldapadmin-1.2.2</dt><dd> 
+PHP applications: WebMail and LDAP administration 
+<br>
+<a href="http://squirrelmail.org/documentation/">
+http://squirrelmail.org/documentation/</a>
+<br>
+<a href="http://phpldapadmin.sourceforge.net/wiki/index.php/FAQ">
+http://phpldapadmin.sourceforge.net/wiki/index.php/FAQ</a>
+
+</dd>
+</dl>
+
+<br><hr><hr><br>
+
+<h3>Other network utilities</h3>
+
+<dl>
+
+<dt>openvpn-2.4.8</dt><dd> 
+OpenVPN is a full-featured SSL VPN which can accommodate a wide range
+of configurations, including remote access, site-to-site VPNs, 
+WiFi security, and remote access with load balancing, failover, 
+and fine-grained access-controls. OpenVPN requires the bridge-utils 
+package, which is included in the mytyVM core. 
+<br>
+<a href="http://openvpn.net/index.php/open-source/documentation.html">
+http://openvpn.net/index.php/open-source/documentation.html</a>
+<br>
+Be sure to see the "General" section of the FAQ:
+<br>
+<a href="http://openvpn.net/index.php/open-source/faq">
+http://openvpn.net/index.php/open-source/faq</a>
+<br><br>
+
+</dd><dt>iproute2-5.4.0</dt><dd>
+iproute2 (IP routing utilities) are tools used to administer many 
+advanced IP routing features in the kernel. You should not need to 
+go too far into this, unless you really want to ...
+<br>Home: 
+<a href="http://www.linuxfoundation.org/collaborate/workgroups/networking/iproute2">
+http://www.linuxfoundation.org/collaborate/workgroups/networking/iproute2
+</a>
+<br><br>
+
+</dd><dt>dhcpcd-8.1.2</dt><dd> 
+The DHCP client program used to connect to a network by contacting a 
+DHCP server. 
+<br><br>
+
+</dd><dt>bind 9.14.8-utils</dt><dd> 
+DNS support utilities: dig, host, and nslookup. 
+Extracted from the ISC bind package.
+<br><br>
+
+</dd><dt>hping2</dt><dd>
+A command-line oriented TCP/IP packet assembler/analyzer. 
+It supports TCP, UDP, ICMP and RAW-IP protocols, has a 
+traceroute mode, and many other features.
+<br>
+See <code>man 8 hping</code> and <a href="http://www.hping.org/">
+http://www.hping.org/</a>
+
+<br><br>
+</dd><dt>nc-1.10<br>bsdnc-1.130</dt><dd> 
+A simple Unix utility which reads and writes data 
+across network connections using TCP or UDP protocol. It is 
+designed to be a reliable "back-end" tool that can be used 
+directly or easily driven by other programs and scripts. At 
+the same time it is a feature-rich network debugging and 
+exploration tool, since it can create almost any kind of 
+connection you would need and has several interesting 
+built-in capabilities. The capabilities of the BSD version 
+are different (and more commonly documented) than the original 
+NetCat, so both are here.
+<br>
+See <code>man 1 nc</code> and <code>man 1 bsdnc</code> 
+and <cite>/usr/local/doc/nc-1.10/scripts</cite>
+
+<br><br>
+</dd><dt>ngep-1.45</dt><dd>
+ngrep is like GNU grep applied to the network layer. 
+It's a PCAP-based tool that allows you to specify an extended 
+regular or hexadecimal expression to match against data payloads 
+of packets. It understands many kinds of protocols, including 
+IPv4/6, TCP, UDP, ICMPv4/6, IGMP and Raw, across a wide variety 
+of interface types, and understands BPF filter logic in the same 
+fashion as more common packet sniffing tools, such as tcpdump.
+<br>
+<a href="https://github.com/jpr5/ngrep/">
+https://github.com/jpr5/ngrep/</a>
+<br>
+<a href="https://github.com/jpr5/ngrep/blob/master/EXAMPLES.md">
+https://github.com/jpr5/ngrep/blob/master/EXAMPLES.md</a>
+
+<br><br>
+</dd><dt>tcpflow-1.3.0</dt><dd>
+tcpflow is a useful tool for understanding network packet flows and
+performing network forensics. It is similar to 'tcpdump', in that 
+both process packets from the wire or from a stored file. However 
+tcpflow reconstructs the actual data streams and stores each flow 
+in a separate file for later analysis.Because tcpflow uses the the 
+libpcap library, tcpflow has the same powerful filtering language 
+available as programs such as tcpdump and ngrep. 
+<br>
+<a href="https://linux.die.net/man/1/tcpflow">
+https://linux.die.net/man/1/tcpflow</a>
+
+<br><br>
+</dd><dt>knock-0.5</dt><dd>
+knock is a server/client set that implements port-knocking, a method of 
+accessing a backdoor  where a
+server can sniff one of its interfaces for a special "knock" sequence of
+port-hits.  When detected, it will run a specified event bound to that port
+knock sequence.  These port-hits need not be on open ports, since we use
+libpcap to sniff the raw interface traffic. The knock client is very basic, 
+If you want more advanced knocks (e.g., setting specific tcp flags) use hping.
+<br>
+See the man page and <cite>/usr/local/share/doc/knockd-README</cite>
+
+</dl>
+... and a few others 
+
+<dl>
+
+<dt>MultiTail-6.5.0</dt><dd> 
+MultiTail lets you view one or multiple files like the original tail 
+program. The difference is that it creates multiple windows on your 
+console (with ncurses). It can also monitor wildcards: if another 
+file matching the wildcard has a more recent modification date, 
+it will automatically switch to that file. That way you can, for 
+example, monitor a complete directory of files. Merging of 2 or even 
+more logfiles is possible. It can also use colors while displaying 
+the logfiles (through regular expressions), for faster recognition 
+of what is important and what not. It can also filter lines 
+(again with regular expressions). It has interactive menus for editing 
+given regular expressions and deleting and adding windows. One can 
+also have windows with the output of shell scripts and other software. 
+<br>
+See <code>man&nbsp;1&nbsp;multitail</code> and
+<a href="https://www.vanheusden.com/multitail/">
+https://www.vanheusden.com/multitail/</a>
+
+<br><br>
+</dd><dt>pwgen-2.07</dt><dd>
+Generates random, meaningless but pronounceable passwords that 
+passwords contain either only lowercase letters, or upper and 
+lower case mixed, or digits thrown in. Uppercase letters and 
+digits are placed in a way that eases remembering their position 
+when memorizing only the word.
+<br>
+See <code>man 1 pwgen</code>
+
+<br><br>
+</dd><dt>figlet-2.2.5, boxes 1.1.2, fortune, caesar</dt><dd> 
+fortune and caesar are extracted from bsd-games 2.17, 
+figlet is like the BSD games banner, 
+boxes is an ascii art utility from 
+<a href="http://boxes.thomasjensen.com/docs/">
+http://boxes.thomasjensen.com/docs/</a> 
+
+<br><br>
+</dd><dt>toilet-0.3, libcaca-0.99b19, sl-5.02</dt><dd> 
+TOILET stands for "The Other Implementation's LETters", 
+coined after FIGLET's "Frank, Ian and Glen's LETters". 
+TOILET uses the libcaca library to achieve various FIGLET style effects, 
+but with lots of extra capability. TOILET and libcaca are provided as 
+source code, so you need to build a TinyNet-gcc VM to compile them,  
+using the Template.Slackbuild in <tt>/opt</tt>. sl runs a Steam Locomotive 
+across the screen - just use 
+make to compile sl, and copy files to appropriate locations. 
+<br>TOILET:  
+<a href="http://caca.zoy.org/wiki">
+http://caca.zoy.org/wiki</a>
+<br>The Linux Steam Locomotive:   
+<a href="https://github.com/mtoyoda/sl">
+https://github.com/mtoyoda/sl</a>
+
+<br><br>
+
+</dd>
+</dl> 
+
+<br><hr><hr>
+<dl>
+<dt>WinShares</dt><dd> 
+Menu-driven scripts for mounting CIFS shares. 
+<br>
+<a href="refs/WinShares.pdf">Follow the screenshots ...</a>.
+</dd>
+</dl>
+
+<center>
+<img src="logos/notyet2.jpg"><img src="logos/notyet4.jpg">
+</center>
+
+<h3>TinyNet-gcc ISO</h3>
+
+<br>
+
+<hr><hr>
+<br>
+
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

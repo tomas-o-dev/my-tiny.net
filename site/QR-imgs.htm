@@ -1,0 +1,129 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::ISO Images</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+<br>
+
+<h2>mytyVM ISO (CD) Images</h2>
+
+<hr>
+<ol>
+<li><b>Base.iso</b>: the kernel and common packages. Start here. There are a 
+few things that you need to do to finish the configuration: see 
+<tt>mytyINSTALL.txt</tt> on the iso or 
+<em>Getting&nbsp;Started::First&nbsp;Things&nbsp;First</em> on the menu.
+
+<br><br>
+<li><b>Config.iso</b>: menu driven configuration<br> 
+Necessary for the lab exercises. Create a VM with the Base.iso, 
+mount this, change the current directory to wherever you mounted this image, 
+run <code>./RoleConfig</code> and choose <b>one</b> role for the VM from the 
+menu. The scripts will install the proper packages and prompt you for a reboot. 
+There are a few things that you need to do to finish the configuration: see 
+<tt>BaseSystem.txt</tt> on the iso for a summary or 2 through 6 on the menu 
+for step-by-step with explanations.
+
+<h4>No-role Host Setup</h4>
+The <cite>Basic Configuration (No Role)</cite> option from the setup menu 
+just does the standard cleanup and logfile setup, which is useful for many 
+purposes. 
+The RoleConfig script will ask you for a hostname, and configure the network 
+to be on <tt>net-b</tt> (192.168.66/24) using the TinyNet Gateway for DHCP.
+
+<br><br>  
+Log in and edit <cite>/etc/HOSTNAME</cite> if you want to change that to 
+<tt>net-a</tt> or <tt>net-c</tt>. If you want to use a static address, 
+you also need to edit <cite>/etc/hosts</cite>. 
+If you want to use the name of the machine, you will also need to 
+add the name and aliases to <cite>/etc/hosts</cite> on the Gateway, so it 
+will automatically get picked up by <tt>dnsmasq</tt>.
+Choose a 192.168 IP address with .56. or .66. or .76. to stay on the 
+subnets and 2-9 or 102-109 or 250-254 to stay outside dnsmasq DHCP. 
+Be sure to make the additions 
+<b><i>after</i></b> the entries used to configure the interfaces on the 
+Gateway. 
+
+
+<br><br>
+<li><b>GCC.iso</b>: C/C++ compiler and build tools.<br> 
+Not necessary for the lab exercises. Create a new VM with the Base.iso exactly 
+as described in <em>Getting&nbsp;Started::Creating&nbsp;VMs</em> on the menu, 
+<b><i>except</i></b> (a) give it 320mb RAM and use "Dynamically expanding storage" 
+of 980mb in VirtualBox, and (b) in <tt>cfdisk</tt> allocate 950M to <tt>dev/sda1</tt> 
+and 30M to <tt>dev/sda2</tt> (compiling is more about CPU than memory). 
+<br><br>
+Mount this iso on your VM and run <tt>install-gcc.sh</tt> to install the software 
+and touch up the configuration. The script will insist you have 200mb free space beyond 
+the size of the software being installed (100M). 
+
+
+
+<br><br>
+<li><b>Xwin.iso</b>: X-windows system and XFCE<br> 
+Not necessary for the lab exercises. Create a new VM with the Base.iso exactly 
+as described in <em>Getting&nbsp;Started::Creating&nbsp;VMs</em> on the menu, 
+<b><i>except</i></b> (a) give it 512mb RAM and use "Dynamically expanding storage" 
+of 980mb in VirtualBox, and (b) in <tt>cfdisk</tt> allocate 950M to <tt>dev/sda1</tt> 
+and 30M to <tt>dev/sda2</tt>  
+<br><br>
+Mount this iso on your VM and run <tt>install-xwin.sh</tt> to install the software 
+and touch up the configuration. The script will insist you have 200mb free space beyond 
+the size of the software being installed: 180mb for X plus 50mb each for Wireshark and  
+the Midori browser. 
+ 
+</ol>
+<br>
+
+
+<br><br>
+<hr><hr>
+
+
+<br>
+
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

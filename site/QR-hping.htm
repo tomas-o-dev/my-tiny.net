@@ -1,0 +1,156 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::QR-hping2</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+<!--  -->
+<br>
+
+<h2>hping2 Quick Reference</h2>
+
+
+See the man page for full details.
+<br><br>
+
+<table cellpadding=4>
+<tr><td colspan=3><hr></td></tr>
+<tr><td width="25">-V</td><td width="115">--verbose</td><td valign=top> 
+Display more information in the output</td></tr>
+
+<tr><td valign=top>-q</td><td valign=top>--quiet</td><td valign=top> 
+Display only the summary lines at start and finish</td></tr>
+
+<tr><td valign=top>-n</td><td valign=top>--numeric</td><td valign=top> 
+Numeric output (no lookup of symbolic names)</td></tr>
+
+<tr><td valign=top>-c</td><td valign=top>--count</td><td valign=top> 
+Stop after sending (and receiving) count packets</td></tr>
+
+<tr><td valign=top>-I</td><td valign=top>--interface</td><td valign=top> 
+Interface name (otherwise default routing interface)</td></tr>
+
+<tr><td valign=top>-i</td><td valign=top>--interval</td><td valign=top> 
+Wait for N seconds (uN for N microseconds)<br>
+The default is to wait one second between each packet</td></tr>
+
+<tr><td valign=top>&nbsp;</td><td valign=top>--fast</td><td valign=top> 
+Alias for -i u10000 (10 packets/second)</td></tr>
+
+<tr><td valign=top>&nbsp</td><td valign=top>--faster</td><td valign=top> 
+Alias for -i u1 (1000 packets/second)</td></tr>
+
+<tr><td colspan=3><hr></td></tr>
+
+<tr><td valign=top>-d</td><td valign=top>--data</td><td valign=top> 
+Data size (default is 0)</td></tr>
+
+<tr><td valign=top>-E</td><td valign=top>--file</td><td valign=top> 
+Filename with content to use to fill packet's data</td></tr>
+
+<tr><td valign=top>-e</td><td valign=top>--sign</td><td valign=top> 
+Content to fill first [length] bytes of data - see the man page!!</td></tr>
+
+<tr><td colspan=3><hr></td></tr>
+
+<tr><td colspan=3>IP Packets</td></tr>
+
+<tr><td valign=top>-a</td><td valign=top>--spoof</td><td valign=top> 
+Spoof source address (replies will be sent here, so you won't see them)</td></tr>
+
+<tr><td valign=top>&nbsp;</td><td valign=top>--rand-source</td><td valign=top> 
+Random source address (interesting for stress-testing firewalls)</td></tr>
+
+<tr><td valign=top>&nbsp;</td><td valign=top>--rand-dest</td><td valign=top> 
+Random destination address - see the man page!!</td></tr>
+
+<tr><td colspan=3><hr></td></tr>
+
+<tr><td colspan=3>TCP/UDP Packets</td></tr>
+
+<tr><td valign=top>-s</td><td valign=top>--baseport</td><td valign=top> 
+Base source port (default random, increased for each packet sent)</td></tr>
+
+<tr><td valign=top>-k</td><td valign=top>--keep</td><td valign=top> 
+Maintain constant source port</td></tr>
+
+<tr><td valign=top>-p</td><td valign=top>--destport</td><td valign=top> 
+Destination port (default 0)<br>
+Add + (e.g., +1024) to increase with each reply received<br> 
+Add ++ (e.g., ++1024) to increase with each packet sent</td></tr>
+
+<tr><td colspan=3><hr></td></tr>
+
+<tr><td colspan=3>TCP Packets</td></tr>
+
+<tr><td valign=top>-M</td><td valign=top>--setseq</td><td valign=top> 
+Set TCP sequence number</td></tr>
+<tr><td valign=top>-F</td><td valign=top>--fin</td><td valign=top> 
+Set FIN flag</td></tr>
+<tr><td valign=top>-S</td><td valign=top>--syn</td><td valign=top> 
+Set SYN flag</td></tr>
+<tr><td valign=top>-R</td><td valign=top>--rst</td><td valign=top> 
+Set RST flag</td></tr>
+<tr><td valign=top>-P</td><td valign=top>--push</td><td valign=top> 
+Set PUSH flag</td></tr>
+<tr><td valign=top>-A</td><td valign=top>--ack</td><td valign=top> 
+Set ACK flag</td></tr>
+<tr><td valign=top>-U</td><td valign=top>--urg</td><td valign=top> 
+Set URG flag</td></tr>
+
+<tr><td colspan=3><hr></td></tr>
+
+</table>
+
+
+<br><br>
+<hr><hr>
+<br>
+
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>
+
+
+

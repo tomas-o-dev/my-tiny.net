@@ -1,0 +1,254 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::VM Setup</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<br>
+
+<h2>Setting up our TinyNet Virtual Machines</h2>
+
+<hr>
+In this Lab Exercise we set up a "To Clone" virtual machine and do some 
+initial configuration, so we can use this as a base for each of our 
+servers (Gateway, WebServer, MailHost, LDAPhost).
+<hr>
+
+We use some font conventions here:
+<br><br>
+<blockquote><blockquote>
+<code>This</code> is a command you type in a virtual machine 
+<br><br>
+<cite>This</cite> is a menu option you choose or a keyboard shortcut
+<br><br>
+<tt>This</tt> is used for emphasis - something to look for or remember
+<br><br>
+<em>Menu Item</em>::<em>Page</em> is short for "this <em>Page</em> under 
+<em>Menu Item</em> on the Menu"
+</blockquote></blockquote>
+<hr>
+<br>
+<font color="red"><b>IMPORTANT</b></font><br>
+DHCP is a service that automatically assigns IP addresses. 
+We'll talk in detail about it in Lab Exercise 4. 
+VirtualBox has an internal DHCP server for the Host-Only interfaces. 
+The Bridged adapter will get an IP address for external Internet access 
+from the campus DHCP server, while the others will only communicate 
+within our private LAN. 
+<br><br>
+We want to <font color="red"><b>turn off the VirtualBox internal 
+DHCP server for the Host-Only interfaces</b></font>, <br>because 
+our TinyNet will be using separate subnets
+and <tt>dnsmasq</tt> on the Gateway.  
+
+<ol>
+<li> Make sure all of your virtual machines are stopped. 
+<br><br>
+<li> The Virtualbox menus change between versions, <br>but the DHCP feature is always 
+controlled by the <cite>Host Network Manager</cite> 
+<br><br>
+<li> Clear the <cite>Enable</cite> box under DHCP Server and click <cite>OK</cite> 
+<br><br>
+<li> Close VirtualBox to force it to save the new configuration 
+(just to be safe), and then restart it.
+</ol>
+
+Remember how to do this: we want it turned off for TinyNet, but you may 
+want it turned on for other situations. 
+<br><br>
+
+<hr>
+<h3>Let's get started!</h3>
+
+We are going to to create one Virtual Machine and do some initial configuration.
+Then we will use VirtualBox to "clone" that VM into others that we can 
+configure as Gateway, WebServer, MailHost, and LDAPhost (like a "VM factory").
+<br><br>
+When we setup a VM there are a few things we need to do to get it ready to run:
+<ul>
+<li> Set the order of boot devices
+<li> Define the type of network hardware
+<li> Put a bootable CD (image) in the drive
+</ul><ul>
+<li> Boot the VM from the CD
+<li> Prepare the Hard Disk for the operating system:
+<ol> 
+<li> Partition the Hard disk into separate Data and Swap (virtual memory) sections
+<li> Create a file system on each partition
+<li> Make the partitions available to the operating system
+<li> Copy the operating system files from the CD onto the Data partition
+<li> Install the bootloader
+</ol>
+</ul>
+
+Step-by-step screenshots of this process are at 
+the <em>Creating VMs</em> link in the <em>Getting Started</em> section on the menu.
+<br>
+There is also a quick summary in the file <tt>mytyINSTALL.txt</tt> on the 
+<tt>mytyBase.iso</tt> bootable CD image, which you need to download from 
+the <em>mytyVM Images</em> link on the menu.
+<br><br>
+<hr>
+<br>
+After you have created your <tt>ToClone</tt> VM, log in as root and do the following:
+<ol>
+<li> Start <code>htop</code> and check how many <tt>tty</tt> processes are running. 
+These processes support virtual terminals.
+You should be able to have six, each on its own <cite>[Fkey]</cite>
+<br><br>
+
+<li> Use <cite>[Alt][F2]</cite> to open a new virtual terminal, log in as root, 
+and use <code>df&nbsp;-h</code> to see how much free disk space you have. 
+How many partitions are mounted on your system?
+<br><br>
+
+<li>Open another virtual terminal with <cite>[Alt][F3]</cite>, log in as root, 
+and start the file manager <code>mc</code>
+<br><br>
+<li> In the left window, move to <cite>/var/log</cite> 
+and in the right window move to <cite>/etc</cite><br> 
+(use <cite>Tab</cite> to change windows, and <cite>Enter</cite> on the "two dots" 
+to move up a level in the filesystem tree)
+<br><br>
+Take a look at each of the files in <tt>/var/log</tt>: 
+use <cite>[F3]</cite> to find out which ones are readable and which ones are not. 
+<br><br>
+Take a look at <tt>/etc/syslog.conf</tt> with <cite>[F3]</cite> to get an idea of 
+where to look for messages from different programs. 
+The <em>Logfiles</em> page under <em>Orientation</em> on the menu has a helpful table.
+<br><br>
+<li> Move to <cite>/etc/rc.d</cite> and scroll through to see what 
+configuration scripts are there. This is where the system startup 
+scripts are: use <cite>[F3]</cite> to see how this works in 
+<cite>rc.M</cite> and <cite>rc.inet2</cite> 
+<br><br>
+</ol>
+<hr>
+<br>
+That's a quick start - there is a lot more to do! 
+<ul>
+<li> Getting the big picture - <em>System Administration</em>::<em>Resources</em>
+<br>
+Understanding that different distributions of Linux set up their 
+configuration files in different ways is extremely useful. 
+<b>All documentation does not apply to all systems!</b> The
+documentation provided here is good for our system, but always suspect 
+that there may be some slight differences.
+<br><br></li>
+<li> How to get help for commands - <em>System Administration</em>::<em>Man Pages</em><br>
+Just typing a command and <cite>[Enter]</cite> has unpredictable results: 
+the command may execute and do something you don't want, or it may present 
+a short list of options. Much better to try the command with 
+<code>--help</code> which will normally display the options list. If the 
+list is long, use <code>--help 2>&1 |less</code> so you can use the arrow keys to 
+scroll up and down, and <code>q</code> to quit.
+<br><br>
+</li>
+</ul>
+
+<center>
+<table border cellpadding="4"><tr><td>
+It is a good habit to have three virtual terminals on each VM: 
+<ul>
+<li> one with a plain shell for entering commands,
+<li> one with <code>mc</code> for reading log files, configuration files, etc.
+<li> one with <code>htop</code> for watching processes, 
+<li> and maybe one more for reading <code>man</code> pages too!
+</ul>
+</td></tr></table>
+</center>
+
+<br><hr><br>
+<b>RHEL 9 Reference Guide</b>
+<pre>
+1. Boot Process, Init, and Shutdown
+1.1. The Boot Process 
+1.2. A Detailed Look at the Boot Process
+1.3. Running Additional Programs at Boot Time 
+1.4. SysV Init Runlevels 
+1.5. Shutting Down 
+
+2. Boot Loaders
+2.1. Boot Loaders and System Architecture
+2.2. GRUB
+2.8. LILO 
+
+3. File System Structure
+3.1. Why Share a Common Structure?
+3.2. Overview of File System Hierarchy Standard (FHS) 
+3.3. Special File Locations
+     ((Pretty similar - explore and note differences, especially /etc))
+</pre>
+
+We use Slackware because the configuration files are actually readable 
+(known as <tt>bsd</tt> style<br>
+Ubuntu, RedHat , and others use <tt>SysV</tt> style symbolically linked 
+start/stop init scripts <br>
+in directories defining the services to be run.  
+<br><br>
+For an extensive and detailed look at how other distributions organise 
+their startup files,<br> check 
+<a href="http://www.yolinux.com/TUTORIALS/LinuxTutorialInitProcess.html">
+http://www.yolinux.com/TUTORIALS/LinuxTutorialInitProcess.html</a>
+<br><br>
+or 
+<a href="https://www.jamescoyle.net/category/cheat-sheets">
+https://www.jamescoyle.net/category/cheat-sheets</a>
+<blockquote>
+      update-rc.d Cheat Sheet (Debian/Ubuntu)<br>
+      chkconfig Cheat Sheet (Debian/Ubuntu)
+</blockquote>
+
+<br><hr>
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+

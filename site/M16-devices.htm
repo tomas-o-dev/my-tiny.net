@@ -1,0 +1,401 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::Device Drivers</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+
+<br>
+
+<br>
+
+<h2>Device Drivers, Kernel Modules, and udev</h2>
+
+<hr>
+<br>
+This note explains device driver handling in Linux, and the associated filesystems.
+
+<h3>Key Concepts</h3>
+
+You can think about an operating system as having two levels. At the top is the "user space" where applications are executed, and below the user space is "kernel space" 
+("space" in this sense actually refers to protected memory addresses). In Linux, 
+the GNU C Library (glibc) provides a system call interface that connects user-space 
+applications and the kernel.
+
+<br><br>
+Abstract handling of devices is one of the basic features of Unix and Unix-like systems.
+From the user-space perspective, all hardware devices look like regular files; they can 
+be opened, closed, read and written using the same, standard, system calls that are used 
+to manipulate files. Every device in the system is represented by a file - even to read 
+from memory is to read from a file.
+
+<br><br>
+Consider the output of <cite>ls -l</cite>.
+The first character in each and every line 
+indicates one of the following file types. 
+<blockquote>
+<table cellpadding="4">
+<tr><td>-</td><td>regular file</td><tr>
+<tr><td>l</td><td>file link</td><tr>
+<tr><td>d</td><td>directory</td><tr>
+<tr><td>p</td><td>named pipe</td><tr>
+<tr><td>c</td><td>character special device</td><tr>
+<tr><td>b</td><td>block special device</td><tr>
+</table>
+</blockquote>
+
+Obviously, different devices behave and react differently: there are no keys on a hard 
+disk and no sectors on a keyboard, although you can read from both. All of the functions 
+used to access a specific device are jointly referred to as the <tt>device driver</tt>. Each device 
+on the system has its own device driver, with the routines needed to open, write to, read 
+from, and close (among other things) that particular device.
+
+<br><br>
+The difference lies in kernel space, where the virtual file system (VFS) decodes the 
+file type and transfers the file operations to the appropriate channel, like a filesystem 
+module in case of a regular file or directory, or the corresponding device driver in 
+the case of a device file.
+<br><br>
+
+<table><tr>
+<td><img src="logos/UserSpace.jpg"></td>
+<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+<td><img src="logos/vfs.jpg"></td>
+</tr><tr><td colspan="3"><font size="-2">
+Source: M. Tim Jones, <i>Anatomy of the Linux kernel</i>, 06 June 2007<br>
+<a href="http://www.ibm.com/developerworks/linux/library/l-linux-kernel/">
+http://www.ibm.com/developerworks/linux/library/l-linux-kernel/</a> 
+</font></td></tr></table>
+
+<br>
+A device node is a file with type <b>c</b> (for "character" devices, devices that bypass the 
+kernel buffer cache) or <b>b</b> (for "block" devices, which go through the buffer cache). Each device 
+file is assigned a "major number" and a "minor number". Traditionally, each device driver has 
+a major number, and all device files for devices controlled by that driver have the 
+same major number. It is entirely up to the driver how the minor number is interpreted;  
+the driver documentation usually describes how the driver uses minor numbers.
+
+<br><br>
+Some devices have a fixed major/minor number pair assigned to them - there is a list at 
+<br>
+<a href="http://www.cs.fsu.edu/~baker/devices/lxr/http/source/linux/Documentation/devices.txt">
+http://www.cs.fsu.edu/~baker/devices/lxr/http/source/linux/Documentation/devices.txt</a>
+<br>
+and a more definitive one can be found in <tt>Documentation/devices.txt</tt> within the kernel 
+source tree. Modern Linux kernels allow multiple drivers to share major numbers, but most 
+devices that you will see are still organized on the one-major-one-driver principle.
+
+<br><br>
+Device files (also called device nodes) are located in the <tt>/dev/</tt> directory. 
+In early Linux kernel versions, <tt>/dev</tt> had one static device file for each device 
+that might possibly be connected to the system (and controlled by a device driver). 
+Now, with <B><I>udev</I></B>, device nodes are created only for devices which are actually present 
+in the system.
+
+<br><br>
+<h3>Kernel modules</h3>
+
+As noted above, all of the functions used to access a specific device are jointly 
+referred to as the device driver. Each device driver must be statically compiled 
+into the kernel or stored on disk as a dynamically loadable module. 
+
+<br><br>
+Devices identify themselves by an id, which tells what kind of device it is. Usually 
+this  consist of vendor and product id and other subsystem specific values. Every 
+device driver has a list of known id's for devices it can handle. The program 
+<tt>depmod</tt> reads each module file and creates the file <tt>modules.alias</tt> 
+in <tt>/lib/modules</tt> for all of the available dynamically loadable 
+modules, along with a list of dependences by determining what symbols each kernel 
+module exports and what symbols it needs.
+<br><br>
+To see a list of all available kernel modules, use 
+<code>ls&nbsp;/lib/modules/$(uname&nbsp;-r)</code>
+<br><br>
+Running <tt>modprobe -c</tt> and counting the lines will give us the total number available (you will be surprised!)<br><code>modprobe&nbsp;-c&nbsp;|&nbsp;wc&nbsp;-l</code>
+<br><br>
+To show the status of modules currently loaded in the kernel, just use <code>lsmod</code>
+
+<br><br>
+<h3>Kernel module loading</h3>
+
+One of the first actions during bootup is to mount <tt>/dev/</tt> with 
+a <i>tmpfs</i> filesystem (tmpfs means wipeout on reboot). All initial and static 
+device nodes from the <i>/lib/udev/devices</i> directory are copied to the empty 
+<tt>/dev/</tt> directory. After that, the udevd daemon is started. The udev daemon 
+reads and parses all rules from the <i>/etc/udev/rules.d/*.rules</i> files once at 
+startup and keeps them in memory, and then listens to the netlink socket that the 
+kernel uses for communicating with user space applications. 
+
+<br><br>
+The kernel bus drivers (usb, ide, network, etc.) probe for devices. For every 
+detected device, the kernel creates an internal device structure and the driver 
+core sends an event to udev. The driver core uevents look like this:
+
+<br><br>
+<pre>   recv(4, "add@/class/input/input9/mouse2\0
+           ACTION=add\0
+           DEVPATH=/class/input/input9/mouse2\0
+           SUBSYSTEM=input\0
+           SEQNUM=1064\0
+           PHYSDEVPATH=/devices/pci0000:00/0000:00:1d.1/usb2/2-2/2-2:1.0\0
+           PHYSDEVBUS=usb\0
+           PHYSDEVDRIVER=usbhid\0
+           MAJOR=13\0
+           MINOR=34\0", 
+        2048, 0) = 221</pre>
+
+Note how the kernel will assign a major/minor number pair when it detects a hardware device.
+
+<br><br>
+If a module needs to be loaded, the kernel includes a MODALIAS argument in the event. 
+For a USB mouse it looks like this: 
+<pre>
+     MODALIAS=usb:v046DpC03Ed2000dc00dsc00dp00ic03isc01ip02
+</pre>
+udev calls <tt>modprobe $MODALIAS</tt>, and if modprobe can match the device alias 
+composed by the kernel for the device with an alias provided by the module on the 
+list created by depmod, the module will be loaded. 
+
+<br><br>
+<pre>
+Kernel modules can also be managed with <tt>insmod</tt> and <tt>rmmod</tt>.
+The difference between modprobe and insmod is that modprobe needs 
+only the module name, but insmod needs the path to the module. 
+Also, insmod does not load the module dependencies, but modprobe does.
+rmmod is similar - insmod to load, rmmod to unload a module.
+
+<code>modprobe&nbsp;-l</code> is used for displaying all the modules available 
+(that can be loaded):
+
+<code>lsmod</code> must be run by root, to list currently loaded modules, and display the name, 
+size, use count, and list of referring modules.
+
+If you don't know why a module is needed, use <code>modinfo</code> 
+to find information about it
+
+GOOD Links at the bottom too!
+<a href="http://www.thegeekstuff.com/2010/11/modprobe-command-examples/">http://www.thegeekstuff.com/2010/11/modprobe-command-examples/</a>
+</pre>
+
+
+<h3>/dev/ and /sys/</h3>
+
+Once the proper device driver is loaded, udev processes the event (see below) 
+and creates the device node in <tt>/dev/</tt>. Then, for every device the kernel 
+has detected and initialized, a directory with the device name is created that 
+contains attribute files with device specific properties in <tt>/sys/</tt>. 
+
+<br><br>
+Just like /proc/ uses the "proc" virtual filesystem for process information exported 
+from "kernel space" to "user space", the /sys/ directory uses a "sysfs" virtual 
+filesystem. You can see this with the mount command. 
+
+<br><br>
+In /sys/class/ there is a directory for each different class of device. There are 
+also a large number of symlinks, for easy access to devices without having to know 
+exactly which PCI and USB ports they are connected to. Particularly of note are the 
+files with leafname "dev", which contain the major and minor device numbers of the 
+device and "uevent". If you write the correct string to a uevent file the kernel 
+generates an event as if the device had just been plugged in, so that udev can 
+create devices in a consistent fashion for all devices, both fixed and removable.
+
+<br><br>
+<h3>udev Event Processing</h3>
+
+Every event is matched against the set of rules provided in 
+<i>/etc/udev/rules.d/*.rules</i>. These rules can add or change event environment keys, 
+request a specific name for the device node to be created, add symlinks pointing to 
+the node or add programs to be run after the device node is created. udev rules can 
+match on any property the kernel exports in /sysfs/ or adds to the event, and the rule 
+may also request additional information from external programs. 
+
+<br><br>
+The rule syntax and keys to match or import data are described in the udev man pages. 
+An advanced example is persistent device naming, to provide stable names for all devices 
+regardless of their order of recognition or the connection used to plug the device.
+
+<br><br>
+If udev rule files are changed, added or removed, the daemon receives an inotify event 
+and updates the in-memory representation of the rules. 
+
+<br><br>
+From the user space perspective, there is no difference between a device coldplug 
+sequence and device discovery during runtime (hotplug). All devices that are plugged 
+in or removed will cause an uevent to be sent to the udev daemon, which runs an event 
+process to match against udev rules, create/remove the device node and symlinks as 
+required, and possibly run specified programs to set up/clean up after the device. 
+
+<br><br>
+A couple more applications that build on this system to provide services that allow 
+user space applications to accesses and manage hardware and hardware related events 
+are worth mentioning.
+
+<br><br>
+dbus - Desktop Bus - is like a system bus which is used for inter-process 
+communication (IPC). Applications register with the D-Bus daemon to receive 
+notifications of events and also post event notifications that other applications 
+may be interested in, such as a digital camera being plugged in or a laptop computer 
+closing its lid. In this way, desktops such as GNOME and KDE could, for example, 
+start the file browser for a newly attached USB flash drive.
+
+<br><br>
+HAL (Hardware Abstraction Layer or Hardware Annotation Library) used to be responsible 
+for mediating access to hardware by desktop applications. HAL would either scan /sys/ 
+or get notification of changes via a udev rule, and issue a broadcast message on the 
+D-Bus IPC system to all interested processes. HAL basically maintained its own database 
+of devices, and got into the business of guessing what devices were likely to be cameras, 
+iPods, etc.. By mid-2011 the functionality of HAL had been integrated into udev or moved 
+to other daemons such as udisks and upower, and HAL was deprecated by most Linux 
+distributions and desktop environments.
+
+<br><br>
+<h3>Event queue management</h3>
+
+The udev daemon takes care of the right order of event execution and serializes events 
+for devices which depend on other events. Events for child devices will be delayed until 
+the event for the parent device has returned. That way, for example, partition events 
+will wait for the main block device event to finish.
+
+<br><br>
+The current state of the event queue is visible in <tt>/etc/.udev/queue</tt>. 
+If that directory exists, then events are currently queued or already running. 
+Every event in this directory is represented as a symlink to the corresponding 
+sysfs device. With the removal of the last event, the whole directory goes away. 
+
+<br><br>
+All event processes which have failed because of an error or executed program 
+returning a failure will be represented in <tt>/etc/.udev/failed</tt>. A later 
+successful event for the same device will remove the symlink from that directory.
+
+<br><br>
+Certain steps during bootup need to synchronize with the kernel event handling. 
+This can be accomplished by watching the event queue directory. If events fail 
+at this stage, they can be retried at a later stage by picking up the symlinks 
+from the "failed" directory.
+
+<br><br>
+<h3>Debugging events</h3>
+
+<tt>udevmonitor</tt> visualizes the driver core events and the udev event 
+processes. This is a sequence of events while connecting an USB mouse:
+
+<pre>  UEVENT[1132632714.285362] add@/devices/pci0000:00/0000:00:1d.1/usb2/2-2
+  UEVENT[1132632714.288166] add@/devices/pci0000:00/0000:00:1d.1/usb2/2-2/2-2:1.0
+  UEVENT[1132632714.309485] add@/class/input/input6
+  UEVENT[1132632714.309511] add@/class/input/input6/mouse2
+  UEVENT[1132632714.309524] add@/class/usb_device/usbdev2.12
+  UDEV  [1132632714.348966] add@/devices/pci0000:00/0000:00:1d.1/usb2/2-2
+  UDEV  [1132632714.420947] add@/devices/pci0000:00/0000:00:1d.1/usb2/2-2/2-2:1.0
+  UDEV  [1132632714.427298] add@/class/input/input6
+  UDEV  [1132632714.434223] add@/class/usb_device/usbdev2.12
+  UDEV  [1132632714.439934] add@/class/input/input6/mouse2 </pre>
+
+The UEVENT lines show the events the kernel sends over netlink, the UDEV lines 
+show the finished udev event handlers. The timing is printed in microseconds. 
+The time between UEVENT and UDEV is the time udev took to process this event or 
+was queued to synchronize it with other events.
+
+<br><br>
+<tt>udevmonitor --env</tt> shows the complete event environment:
+
+<pre>  UDEV  [1132633002.937243] add@/class/input/input7
+  UDEV_LOG=3
+  ACTION=add
+  DEVPATH=/class/input/input7
+  SUBSYSTEM=input
+  SEQNUM=1043
+  PHYSDEVPATH=/devices/pci0000:00/0000:00:1d.1/usb2/2-2/2-2:1.0
+  PHYSDEVBUS=usb
+  PHYSDEVDRIVER=usbhid
+  PRODUCT=3/46d/c03e/2000
+  NAME="Logitech USB-PS/2 Optical Mouse"
+  PHYS="usb-0000:00:1d.1-2/input0"
+  UNIQ=""
+  EV=7
+  KEY=70000 0 0 0 0 0 0 0 0
+  REL=103 </pre>
+
+Udev also sends messages to syslog. The default syslog priority is specified 
+in the udev configuration file <tt>/etc/udev/udev.conf</tt>. The log priority 
+of the running daemon can be changed with 
+<br><br>
+<code>udevcontrol log_priority=<tt>level or number</tt></code>
+<br><br>
+
+<h3>Key Files</h3>
+<pre>
+  /etc/udev/udev.conf    -&gt; main udev config file
+  /etc/udev/rules.d/*    -&gt; udev event matching rules
+  /lib/udev/devices/*    -&gt; static /dev content
+  /lib/udev/*            -&gt; helper programs called from udev rules
+  /dev/*                 -&gt; dynamic udev content 
+</pre>
+
+<br><hr>
+<font size="-1">Best information and event details was from <br>
+Kay Sievers - Dec 2005 - Recent state of udev <br> 
+http://vrfy.org/log/recent-state-of-udev.html <br>
+which seems to be long gone, but it was once available from<br> 
+<a href="http://web.archive.org/web/20090918133056/">
+http://web.archive.org/web/20090918133056/</a>
+</font> 
+
+<!-- saved from http://web.archive.org/web/20090918133056/
+http://vrfy.org/log/recent-state-of-udev.html -->
+
+<!--
+Kay Sievers - Dec 2005 - Recent state of udev
+     FILE ARCHIVED ON 13:30:56 Sep 18, 2009 AND RETRIEVED FROM THE
+     INTERNET ARCHIVE ON 1:07:18 Jan 9, 2014.
+     JAVASCRIPT APPENDED BY WAYBACK MACHINE, COPYRIGHT INTERNET ARCHIVE.
+
+     ALL OTHER CONTENT MAY ALSO BE PROTECTED BY COPYRIGHT 
+     (17 U.S.C. SECTION 108(a)(3)).
+-->
+
+<br><hr><hr>
+<br>
+
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

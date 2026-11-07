@@ -1,0 +1,392 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::GCC and Make</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net :: Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<br>
+<h2>GCC and Make</h2>
+<hr>
+
+<br>
+There are four essential ingredients in a Linux distribution: 
+the kernel code, the C compiler, C libraries, and the the linker. 
+Binaries from other distributions are highly likely to work 
+when the versions of these major components are similar. 
+<a href="http://distrowatch.com/">distrowatch.com</a> tracks the 
+characteristics of about a zillion distributions.
+<br><br>
+In these modern times we usually get software from a repository, but sometimes you need to compile it for yourself. 
+<br><br>
+<cite>make</cite> (or rather a Makefile) is a <i>buildsystem</i>: it drives the compiler and other build tools to build your code. For a multi-platform project you really want a 
+<i>buildsystem generator</i> like <cite>CMake</cite> (cross-platform make), which 
+can produce Makefiles, Ninja build files, KDEvelop or XCode projects, and Visual Studio solutions from the same starting point. <cite>GNU&nbsp;Autotools</cite> (automake) integrates very well with building Linux distributions. It is not a general build system generator though - it implements the GNU coding standards and nothing else, but that's 
+good enough for the Linux kernel and nearly all of our applications.
+<br><br>
+
+Great Reference: <a href="https://robots.thoughtbot.com/the-magic-behind-configure-make-make-install">
+https://robots.thoughtbot.com/the-magic-behind-configure-make-make-install</a>
+<br><br>
+
+GNU Autotools, make, and cmake are actually insanely complicated, 
+but they make the build process practically painless.
+Essentially, each application will have a "Makefile" with various targets - some 
+common ones are <tt>make</tt>, <tt>make install</tt>, and <tt>make clean</tt>. 
+There may be a layer "above" the makefile: <tt>./configure</tt> is commonly used 
+with GNU&nbsp;Autotools to actually generate the required Makefiles.  
+We can add another layer to automate even more: a 
+<a href="Template_Build.txt">"app.Build" script</a> 
+that passes optional parameters to our buildsystem. 
+
+<h4>The basic process:</h4>
+
+<ol>
+<li> Use <cite>mc</cite> to highlight a source code archive to look inside
+<li> Look for <tt>configure</tt> - this one uses automake
+<li> Look for <tt>CMakeLists.txt</tt> - this one uses Cmake
+<br><br>
+<li> IF you have a package that uses Automake or Cmake, THEN
+<ol>
+<li> Copy and rename Template.Build to <cite>app.Build</cite> and put it into the same directory as the source code archive. 
+<li> Follow the instructions in the template to make the necessary edits and customisations
+<li> Run <code>./app.Build</code> and if everything works, it will create two new files and install the application<br><br>
+</ol>
+<li> IF you do not have a package that uses Automake or Cmake, THEN
+<ol>
+<li> Check the file named <tt>Makefile</tt> for options you can customise, and 
+<li> for an INSTALL target, and  
+<li> for a CLEAN target.
+<li> Run <code>make</code> and if everything works, it will create new files in the source directories
+<li> If you can, run <code>make install</code> to move the new files from the source directories into their proper places in the filesystem
+<li> If something goes wrong, run <code>make clean</code> to remove new files from the source directories, debug, and run <code>make</code> again.
+</ol>
+</ol>
+<br>
+<h3>Hands On</h3>
+
+The mytyVM-gcc.iso image is available from <em>mytyVM Images</em> on the menu. 
+The <tt>install-gcc.sh</tt> script will insist you have 300mb free space, so 
+use your <tt>Base.iso</tt> to create a new VM exactly 
+as described in <em>Getting&nbsp;Started::Creating&nbsp;VMs</em> on the menu, 
+<b><i>except</i></b> (a) give it 320mb RAM and use "Dynamically expanding storage" 
+of 980mb in VirtualBox, and (b) in <tt>cfdisk</tt> allocate 950M to <tt>dev/sda1</tt> 
+and 30M to <tt>dev/sda2</tt> (compiling is more about CPU than memory). 
+The <tt>install-gcc.sh</tt> script will take care of all of the configuration steps 
+necessary to get the VM up and running on <tt>net-b</tt> with three files of source code and a Template.Build script 
+and <tt>/opt</tt> for you to work with.
+
+<br><br>
+The source code in <tt>/opt</tt> is for two AsciiArt applications:
+the Steam Locomotive, which is supposed to help cure you 
+of "fat fingers", and <cite>toilet</cite> which is "a supercharged figlet". 
+The template build script is there to make it easier to manage compile options.
+<br><br>
+We want to compile <cite>sl</cite> first because it is simple and fun: 
+all it does is run a Steam Locomotive across the screen. 
+<br><br>
+<blockquote><blockquote>
+<pre>
+
+                          (  ) (@@) ( )  (@)  ()    @@    O     @     O     @      O
+                     (@@@)
+                 (    )
+              (@@@@)
+
+            (   )
+         ====        ________                ___________
+     _D _|  |_______/        \__I_I_____===__|_________|
+      |(_)---  |   H\________/ |   |        =|___ ___|      _________________
+      /     |  |   H  |  |     |   |         ||_| |_||     _|                \_____A
+     |      |  |   H  |__--------------------| [___] |   =|                        |
+     | ________|___H__/__|_____/[][]~\_______|       |   -|                        |
+     |/ |   |-----------I_____I [][] []  D   |=======|____|________________________|_
+   __/ =| o |=-O=====O=====O=====O \ ____Y___________|__|__________________________|_
+    |/-=|___|=    ||    ||    ||    |_____/~\___/          |_D__D__D_|  |_D__D__D_|
+     \_/      \__/  \__/  \__/  \__/      \_/               \_/   \_/    \_/   \_/
+
+</pre>
+</blockquote></blockquote>
+To get it going: 
+<ol>
+<li> use <cite>&nbsp;mc&nbsp;</cite> to open <tt>/opt/sl-5.02.tar.gz</tt>
+<li> use <cite>F5</cite> to copy the <tt>sl-5.02</tt> directory 
+inside the archive to <tt>/tmp</tt>
+<li> move into <tt>/tmp/sl-5.02</tt> and use <cite>F4</cite> to edit the <tt>Makefile</tt>
+<br> we need to add another library to the compile directive so it looks like this: 
+("minus little L", not one)<br>
+<pre>    $(CC) $(CFLAGS) -o sl sl.c -lncurses <font color="red">-ltinfo</font></pre>
+<li> run <code>&nbsp;make&nbsp;</code> 
+<li> copy the <cite>&nbsp;sl&nbsp;</cite> executable to <tt>/usr/local/sbin</tt> and the 
+man page <cite>&nbsp;sl.1&nbsp;</cite> to <tt>/usr/local/man/man1</tt>
+<li> run it with <code>&nbsp;sl&nbsp;</code>
+</ol>
+
+The man page says <code>&nbsp;sl&nbsp;</code> "rarely shows contents of current directory", 
+but further investigation reveals that this will only happen when the command 
+is mistyped as <code>&nbsp;ls&nbsp;</code> ...
+
+<br><br>
+
+<h4>libcaca and toilet</h4>
+
+The goal of the <i><b>TOIlet</b></i> project by caca labs is basically 
+to create a super-enhanced FIGlet. 
+TOIlet stands for <tt>The Other Implementation's letters</tt>, like 
+FIGlet stands for <tt>Frank, Ian and Glen's letters</tt> 
+
+<br><br>
+The <cite>sl</cite> Makefile is as simple as can be. <cite>TOIlet</cite> is 
+a different story: it requires the <cite>libcaca</cite> library, and has a 
+lot of other dependencies because of the way it manipulates the screen. 
+Because of these complexities the developers decided to use <tt>./configure</tt> 
+and the GNU Autotools build system.
+
+<br><br>
+With the Template.Build script there is no need to unpack the source code archives.  
+Get </tt>/opt</tt> on both sides of <cite>mc</cite> and use <cite>[F5]</cite> to 
+copy and rename <tt>Template.Build</tt> to 
+<code>libcaca.Build</code> (just type the new name in the lower box),
+and then set the execute permissions. Do the same again to make a new file called
+<code>toilet.Build</code>
+
+<br><br>
+The <cite>libcaca</cite> library needs to be compiled and installed 
+before <cite>toilet</cite> can be compiled. 
+Make these changes at the top of <code>libcaca.Build</code>
+<br><br>
+<pre>
+      PRGNAM=<font color="red">libcaca</font>          # replace with name of the application
+      VERSION=<font color="red">0.99.beta19</font>     # replace with version of the application
+      SRCFN=<font color="red">.tar</font>              # replace with source archive type 
+</pre>
+Move down to the automake Build Options to adjust the flags. This will take 
+a little careful editing, because we need to take some out and add others in. 
+<br><br>
+When command lines are long 
+we can use <cite>&nbsp;\&nbsp;</cite> (backslash) to break them up into multiple lines. 
+The <cite>&nbsp;\&nbsp;</cite> 
+means in this case "to be continued" or "more to come".
+<i><b>IMPORTANT:</b></i> If you add a space after the <cite>&nbsp;\&nbsp;</cite> 
+the command WILL NOT work. Also, no comments are allowed, since this is 
+actually a single (very long) command line, even though it looks like a list. 
+<br><br>
+For <cite>libcaca</cite> we uncomment all of the options and add one line 
+for a cleaner build; the final result should be:
+
+<br><br>
+<pre>
+    # ---------------------------------------------------------------------------
+    #     automake Build Options: run
+    #        ./configure --help |less 
+    #     and look for Optional Features\Optional Packages  
+    # ---------------------------------------------------------------------------
+    CFLAGS="$SLKCFLAGS" \
+    CXXFLAGS="$SLKCFLAGS" \
+<font color="red">    LIBS="-ltinfo" \</font>
+    ./configure \
+      --prefix=/usr \
+      --libdir=/usr/lib${LIBDIRSUFFIX} \
+      --sysconfdir=/etc \
+      --localstatedir=/var \
+      --mandir=/usr/man \
+      --docdir=/usr/doc/$PRGNAM-$VERSION \
+      --build=$ARCH
+    # -----------------------------------------------------------------------
+</pre>
+Again, if there is a space after the <cite>&nbsp;\&nbsp;</cite> the command WILL NOT work.
+The <cite>mc</cite> editor helps us out here - a light blue dot is a trailing 
+space, and signals trouble!
+
+<br><br>
+A few lines below the compiler options there is a section for 
+copying documentation into the package. You might be surprised 
+at how many compilations fail because the documentation list is 
+wrong, which is why this section is "verbose but safe". The 
+default list could use a little adjustment, but it is really optional:
+
+<br><br>
+<pre>
+      # *** you probably want to to adjust this list ***
+         for i in AUTHORS THANKS COPYING <font color="red">NEWS NOTES</font>; do 
+</pre>
+
+Finally, go to the last section and uncomment the (two) commands to 
+install the application to the local system, and the command to 
+clean up the temporary copy of the application. If you don't 
+clean up the source code and intermediate compilation files, you can 
+see how many Makefiles the <tt>configure</tt> script created by moving 
+into that directory after running the <cite>libcaca.Build</cite> script 
+and running <code>find . -name "Makefile"</code>  
+
+<br><br>
+All Ready! Run <code>./libcaca.Build</code> and if everything works  
+it will create a <tt>.tgz</tt> archive with compiled application  
+(there are lots of warnings from the compiler, but it turns out they are all harmless).
+You can easily move the <tt>.tgz</tt> file to your other VMs, and use <cite>mc</cite> 
+to copy the files inside the archive into the proper system directories. 
+
+<br><br>
+Once you have the <cite>libcaca</cite> library compiled and installed
+you can compile <cite>toilet</cite>. 
+Make these changes at the top of <code>toilet.Build</code>
+<br><br>
+<pre>
+      PRGNAM=<font color="red">toilet</font>          # replace with name of the application
+      VERSION=<font color="red">0.3</font>     # replace with version of the application
+      SRCFN=<font color="red">.tar.gz</font>              # replace with source archive type 
+</pre>
+Move down to the automake Build Options to adjust the flags. We have to make one small 
+adjustment after uncommenting all of the existing lines:
+
+<br><br>
+<pre>
+    # ---------------------------------------------------------------------------
+    #     automake Build Options: run
+    #        ./configure --help |less 
+    #     and look for Optional Features\Optional Packages  
+    # ---------------------------------------------------------------------------
+    CFLAGS="$SLKCFLAGS" \
+    CXXFLAGS="$SLKCFLAGS" \
+<font color="red">    LIBS="-lz -ltinfo -lncurses" \</font>
+    ./configure \
+      --prefix=/usr \
+      --libdir=/usr/lib${LIBDIRSUFFIX} \
+      --sysconfdir=/etc \
+      --localstatedir=/var \
+      --mandir=/usr/man \
+      --docdir=/usr/doc/$PRGNAM-$VERSION \
+      --build=$ARCH
+    # -----------------------------------------------------------------------
+</pre>
+
+If you are wondering how to know if and what adjustments are necessary: these came 
+from test runs.
+
+<br><br>
+This time no adjustments are necessary for the documentation, so move on down 
+to the last section and uncomment the lines to install the application locally 
+and clean up. These are commented out for the test runs - but we know it works now!
+<br><br> 
+Run <code>./toilet.Build</code> and check that it creates the <tt>.tgz</tt> file 
+in <tt>/opt</tt>.
+
+<br><br>
+
+<h3>ASCII Art - Supercharged</h3>
+
+Once you have compiled libcaca and TOIlet and installed the packages, you will see 
+new TOIlet fonts in with the FIGlet fonts. To see the list:
+<br><br>
+<blockquote><blockquote><code>
+ls /usr/share/figlet/ | grep .*lf
+</code></blockquote></blockquote>
+
+Unfortunately, there are a few toilet fonts that do not work with our terminal. 
+You can use a command like this to display the font name and formatted text:
+<br><br>
+<blockquote><blockquote>
+<code>for FN in $(ls /usr/share/figlet/ | grep .*lf); do \</code><br>
+<code>echo $FN; toilet -f $FN $(date +%A); done |less</code>
+</blockquote></blockquote>
+
+Once you get them cleaned up, run this to see a random font each time
+<br><br>
+<blockquote><blockquote>
+<code>FN=$(ls /usr/share/figlet/ | grep .*lf | shuf -n1 |cut -d '.' -f 1); \</code><br>
+<code>echo $FN; toilet -f $FN $(date +%B)</code> 
+</blockquote></blockquote>
+
+Filters and export options are what set TOIlet apart from FIGlet. Use 
+<code>toilet&nbsp;-F&nbsp;list</code> to see all available filters. Try it out:
+<br><br>
+<blockquote><blockquote>
+<code>toilet -F gay -F border -f letter $(date +%A)</code>
+<br><br>
+<code>fortune |toilet -F gay -F border -f term</code>
+<br><br>
+<code>fortune |boxes -d columns -a hcvc |toilet --gay -f term</code>
+</blockquote></blockquote>
+
+TOIlet is a little bit funny with multi-line input: 
+<code>toilet&nbsp;-f&nbsp;term&nbsp;$(fortune)</code> does not 
+wrap the text properly, but
+<code>fortune&nbsp;|toilet&nbsp;-f&nbsp;term</code> does! 
+<br><br>
+Just for fun, this might be worth an experiment:
+<code>toilet&nbsp;-f&nbsp;term&nbsp;$(fortune&nbsp;|fold&nbsp;-s&nbsp;-w&nbsp;60)</code><br>
+where <cite>-s</cite> means wrap on spaces (proper wordwrap) and <cite>-w</cite> says to have only 60 characters on a line rather than the default of 80.
+
+<br><br>
+<h3>Bonus: libcaca Live!</h3>
+
+The libcaca build includes the <tt>cacaserver</tt>, which reads libcaca 
+animation files in its standard input and serves them as ANSI art on network 
+port 51914. 
+<br><br>
+To use it, just set the CACA_DRIVER environment variable 
+to raw and pipe the program's standard output to cacaserver. 
+Clients can then 
+connect to port 51914 using telnet or netcat to see the output.
+<br><br>
+Try it out: In one virtual terminal type
+<br><br>
+<code>CACA_DRIVER=raw cacademo | cacaserver</code>
+<br><br>
+and you should see <tt>initialised network, listening on port 51914</tt>
+<br><br>
+Then in another virtual terminal type <code>telnet localhost 51914</code> 
+and let it run for a while to see the variations.
+<br><br>
+Also try this one: <tt>cacafire</tt> displays a screen with 
+ASCII (moving) burning fire. Works the same way, with
+<br><br>
+<code>CACA_DRIVER=raw cacafire | cacaserver</code>
+<br><br>
+
+<br><br>
+<hr><hr>
+
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

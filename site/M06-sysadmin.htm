@@ -1,0 +1,353 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::SysAdmin</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<!--  -->
+
+<br>
+<h2>System Administration Resources</h2>
+<hr><br>
+
+The RedHat 9 documentation under <em>RHEL 9 Guides</em> on the menu 
+is very well written, and describes applications that are quite  
+similar to our TinyNet versions. 
+Some good chapters to start off with are:
+<br><br>
+<b>RedHat 9 System Administration Primer</b>
+<pre>
+1. The Philosophy of System Administration 
+1.1. Automate Everything 
+1.2. Document Everything
+1.3. Communicate as Much as Possible
+1.3.1. Tell Your Users What You Are Going to Do 
+1.3.2. Tell Your Users What You Are Doing  
+1.3.3. Tell Your Users What You Have Done 
+1.4. Know Your Resources
+1.5. Know Your Users
+1.6. Know Your Business
+1.7. Security Cannot be an Afterthought 
+1.7.1. The Risks of Social Engineering
+1.8. Plan Ahead
+1.9. Expect the Unexpected
+</pre>
+
+<b>RedHat 9 Security Guide</b>
+<pre>
+I. A General Introduction to Security 
+1. Security Overview
+1.1. What is Computer Security? 
+1.2. Security Controls 
+1.3. Conclusion 
+
+2. Attackers and Vulnerabilities 
+2.1. A Quick History of Hackers 
+2.2. Threats to Network Security 
+2.3. Threats to Server Security
+2.4. Threats to Workstation and Home PC Security 
+</pre>
+
+
+
+<br><hr><br>
+The system and network administration community is huge, active, and 
+generous - support is always readily available. But you have to try 
+and solve or at least investigate the situation yourself so you can 
+give a good description of the problem. This description is essential 
+for giving a useful response. 
+
+<br><br>
+A lot of help can be found on the internet; one of the things you 
+will want to use this for is to look for particular error messages.
+The Stack Exchange community of sites is a major resource for answering technical and other questions and is even the preferred forum for 
+many open-source projects. There's a very good chance someone has already 
+asked a similar question, and the Stack Exchange sites 
+(including Stack Overflow for questions about programming and 
+Server Fault for questions about server and network administration) 
+are often near the top of the search results. 
+
+<br><br>
+Many people are delighted to share their experience with configuring things, 
+but we need to be careful because they may not be specific about what versions 
+they are using. MySql and OpenLDAP are leaders in the area of apparently 
+conflicting and inaccurate information, simply because different versions have 
+different features. The base operating system also makes a difference, because 
+the configuration files are organised differently. The Linux world loves to make customised distributions ("distros"): check out 
+<a href="https://distrowatch.com/">https://distrowatch.com/</a> for the big 
+picture.
+
+<br><br>
+A great case in point here is network configuration. The Linux tutorial at 
+<a href="http://www.yolinux.com/TUTORIALS/LinuxTutorialNetworking.html">
+http://www.yolinux.com/TUTORIALS/LinuxTutorialNetworking.html</a>
+covers TCP/IP networking and system configuration basics for 
+Debian&nbsp;/&nbsp;Ubuntu (which are variants of the same "distro") 
+and Red Hat&nbsp;/&nbsp;Fedora&nbsp;/&nbsp;CentOS (which are variants 
+of another "distro"). TinyNet configuration is customised from Slackware, 
+which is more similar to NetBSD (more "distros"!), and that's why the 
+details are in <em>Tinynet Notes::Network Startup</em> on the menu.
+
+<br><br>
+So, we need to celebrate diversity by looking carefully for clues 
+about how whatever we find might work on our system. The first and 
+most basic information we need to know is what versions we have: 
+see <em>TinyNet Packages</em> under <em>TinyNet Notes</em> on the menu. 
+Then we need to look carefully at the description to find out what 
+platform is being used and what version is being described. Finally, 
+we need to be able to manage the level of detail. 
+
+<br><br>
+For example, the <cite>Berkeley Internet Name Domain (BIND)</cite> in 
+Chapter 12 of the RedHat 9 Reference Guide and the DHCP pages from the 
+RedHat 9 Customization Guide are quite good, but they describe older 
+versions, and the details of configuring have changed. There is a very good explanation of how to configure Bind9 and DHCP on Ubuntu at
+<a href="http://blog.bigdinosaur.org/running-bind9-and-isc-dhcp/">
+http://blog.bigdinosaur.org/running-bind9-and-isc-dhcp/</a> which 
+should work fine if we adapt our interpretation of the instructions 
+to use our startup files and paths. Together, these two have enough 
+detail about the instructions and practical aspects to get our installation 
+running.
+
+<br><br>
+That's where the level of detail comes in. Everyone seems to want to start 
+at the very beginning with the installation instructions, and then move 
+along at their own pace, possibly with some side tracks. The OpenVPN HowTO  
+<a href="https://openvpn.net/index.php/open-source/documentation/howto.html">
+https://openvpn.net/index.php/open-source/documentation/howto.html</a>
+is a good example, with all of the instructions for windows mixed with linux, 
+and links to pages where various features/issues are discussed in more detail.
+
+<br><br>
+This is all just part of the environment that we have to get used to. 
+After a while you quickly pick up that nearly every command in Ubuntu 
+needs to have <tt>sudo</tt> in front, and ignore it as you work through 
+the instructions; you also recognise that RedHat uses the <cite>Service</cite> 
+command to start and stop listeners rather than <tt>/etc/rc.d/</tt> scripts. 
+The package manager is also a good clue: <tt>apt-get</tt> or <tt>aptitude</tt> 
+is Debian&nbsp;/&nbsp;Ubuntu, <tt>Yum</tt> is Red Hat&nbsp;/&nbsp;Fedora&nbsp;/&nbsp;CentOS. You just have to pay attention, and be patient with yourself. 
+
+<br><br>
+
+<hr>
+
+<h3>Architecture Note</h3>
+Intel designed the first microprocessor (i.e. a processor on a single chip) ever: 
+the 4-bit Intel 4004, released in late 1971. The X86 processors started with the 
+Intel 8086 processor in 1978, and rapid incremental improvements (80186, 80286) 
+led to the Intel 386 (i386) in 1980. That became the new baseline, and was followed 
+by the 486 (i486), the Pentium (i586), the Pentium 3/4 (i686) and the 
+AMD Athlon/Duron/T-bird (also i686).
+
+<br><br>
+Since all these processors were based on the same architecture (basically they 
+read and wrote 1 or 0 in the same way), and their names all contained "86", the 
+whole family was collectively called "X86". All the X86 processors are 32-bit. 
+
+<br><br>
+The modern world uses 64-bit processors. The AMD Athlon64, released in late 2003, spoke 
+the same language as the 32-bit X86 processors, but added 64-bit registers. By 2005 
+Intel had redesigned its 64-bit Xeon processors to use the same kind of architecture, 
+calling it "Intel 64-bit with Extended Memory Technology" because they couldn't say they 
+copied AMD without being laughed at in irony, since AMD got its start by reverse engineering 
+Intel's chips.
+
+<br><br>
+Physical Address Extension (PAE) is hardware support that gives 32-bit operating systems 
+the most important features of 64 bit systems. PAE is available on almost all 32-bit 
+processors produced after Pentium Pro (around 1995). 
+
+<br><br>
+Very simply, a 32-bit OS can handle 2^32 addresses (4,294,967,296), where a 64-bit OS 
+can manage 2^64 addresses (18,446,744,073,709,551,616). In practice this means 32-bit 
+OS can handle a maximum of 4gb of memory - made up of system RAM, graphics RAM, PCI memory range, ACPI and a probably a few others. The maximum partition size for storage depends 
+on a number of factors, but two terabytes (2TB) is generally considered a safe limit for 
+32-bit systems, and 15-20 exabytes for 64-bit systems. 
+
+<br><br>
+Also, 64-bit processors can come in dual core, quad core, six core, and eight core versions 
+for home computing. Multiple cores allow for a higher number of calculations per second, 
+which can make applications run faster. 
+
+<br><br>
+In practice, we can set VirtualBox to use a single processor and let the host OS handle the 
+job of distributing load across the cores - use <em>Performance Monitor</em> in Windows to 
+see this in real time. The memory available to a VM is a subset of the memory installed in 
+machine, as are the virtual hard disks, so the limits of a 32-bit OS are not really a problem. 
+That's why MyTiVM uses a 32-bit NonPAE kernel: we get all the benefits of the 64-bit host OS 
+underlying a smaller and more efficient 32-bit OS on the VM.
+
+<br><br>
+<h4>Linux Distros</h4>
+Linus Torvalds, a 21-year-old student at the University of Helsinki, released Linux 
+version 0.01 on the Finnish University and Research Network FTP server (ftp.funet.fi)
+in September 1991. Linux 1.0.0 was released March 1994, with Version 2 released June 1996. 
+In July 2011 Torvalds announced that Linux 3.0 would follow version 2.6.39, to mark the 
+kernel's 20th anniversary. In December 2012 Torvalds decided to remove support for i386 
+processors to reduce the complexity of the kernel, making the 3.7 kernel the last one 
+still supporting the original processor. Now the team led by Linus Torvalds releases a 
+new mainline kernel every few weeks - check 
+<a href="https://www.kernel.org/category/releases.html">
+https://www.kernel.org/category/releases.html</a> 
+for the latest.
+
+<br><br>
+In mid-1992, Peter MacDonald created the comprehensive Linux distribution 
+known as Softlanding Linux System (SLS), which offered elements such as X 
+and TCP/IP. SLS was the most popular Linux distribution at the time, but 
+it was considered to be rather buggy by its users. Yggdrasil 
+Linux/GNU/X (pronounced igg-drah-sill), or LGX, made the first beta 
+release of their 'bootable Linux/GNU/X-based UNIX(R) clone for PC 
+compatibles' in February 1993. These were the first Linux Distros!
+
+<br><br>
+Patrick Volkerding cleaned up the SLS Linux distribution, and released 
+Slackware version 1.00 in July 1993, supplied as twenty-four 3.5 inch 
+floppy disk images. By version 2.1, released October 1994, it had more 
+than tripled to seventy-three 1.44M floppy disk images. Also in 1994,Slackware scripts were translated into German for the first release 
+of the S.u.S.E. (Software und System-Entwicklung "Software and systems 
+development") Linux 1.0 distribution.
+
+<br><br>
+Around the same time, frustration with SLS led to the Debian project.
+The first version of Debian (0.01) was released in September 1993, 
+and its first stable version (1.1) was released in June 1996. Ubuntu 
+was first released in October 2004, built on Debian's architecture 
+and infrastructure. Ubuntu 18.04 (kernel 4.18) is the last one to 
+include full i686 support.
+
+<br><br>
+RedHat was introduced with a beta version in October 1994, and the first stable version was released in May 1995. Version 3.0.3 released May 1996 
+was one of the first Linux distributions to support Executable and Linkable 
+Format (ELF) binaries instead of the older (statically linked) a.out format.
+In 2002 Red Hat introduced Red Hat Linux Advanced Server, later renamed Red Hat Enterprise Linux (RHEL); Dell, IBM, HP and Oracle Corporation announced their support of the platform. Red Hat Linux was split into Fedora Core 
+(free) and Red Hat Enterprise Linux (commercial). The last official release 
+of the unsplit distribution was Red Hat Linux 9 in March 2003. CentOS is a 
+community version of RHEL that is available for free to everybody. CentOS 6 (Linux kernel 2.6).is the last one to include full i686 support. 
+
+<br><br>
+ALT Linux arose from cooperation with teams from SUSE and Mandrake Linux 
+(a RedHat 5.1 spinoff, now called Mandriva) working to improve Cyrillic 
+language support in Linux. ALT Linux Junior 1.0 was released in summer of 2001; ALT Linux Junior 2.0 was released in mid-2002 as a one CD 
+desktop/workstation-oriented release, along with ALT Linux Master 2.0, 
+a 4CD all-purpose Linux distribution for software developers and system 
+administrators.
+
+<br><br>
+The practical application of that bit of history is that the hundreds of 
+Linux distros (see distrowatch.com) are all derived from these first ones. 
+If you want to add something, for binary compatibility with mytyVM the 
+best distros are:
+<ul>
+<li> Slackware 14.2 or Slackware Current [txz package format]
+<li> Ubuntu-18.04 or Debian-10 [deb package format]
+<li> ALT Linux-9  [rpm package format]
+</ul>
+The best archive is <a href="https://pkgs.org/">pkgs.org</a>, where 
+you just set the filters to "Arches: Intel-32" and put in the package name.
+
+<br><br>
+That's probably more than you care to know ... but now you do. 
+Amaze your friends.
+<br><br>
+<hr>
+
+<h4>Bash Scripting References</h4>
+Here are some links to general bash scripting references. 
+Bash Scripting and TinyNet scripts are covered in:
+<ul>
+<li> Utilities&nbsp;::&nbsp;Multitail
+<li> SSL and SSH&nbsp;::&nbsp;Smoother SSH
+<li> Standard I/O&nbsp;::&nbsp;Script I/O
+<li> Standard I/O&nbsp;::&nbsp;Netcat
+<li> TinyNet Notes&nbsp;::&nbsp;Network Startup
+</ul>
+
+Highly recommended: 
+<a href="http://tldp.org/LDP/Bash-Beginners-Guide/html/index.html">
+Bash Guide for Beginners</a>
+<blockquote>
+Chapter 1. Bash and Bash scripts
+<br>Chapter 2. Writing and debugging scripts
+<br>Chapter 3. The Bash environment
+<br>Chapter 7. Conditional statements
+<br>Chapter 8. Writing interactive scripts
+<br>Chapter 9. Repetitive tasks
+<br>When you have those down, move on to Chapter 4. Regular expressions
+</blockquote>
+
+This is nice - small bash scripts with simple examples of common tasks&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="http://www.hlevkin.com/Shell_progr/hellobash.htm">
+http://www.hlevkin.com/Shell_progr/hellobash.htm</a>
+<br><br>
+A really great quick reference&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="https://devhints.io/bash">https://devhints.io/bash</a>
+<br><br>
+
+Some tips on Debugging bash scripts&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="http://security.maruhn.com/iptables-tutorial/x10776.html">
+http://security.maruhn.com/iptables-tutorial/x10776.html</a> 
+
+<br><br>
+This one is very complete, more of a reference than a tutorial&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="https://bash.cyberciti.biz/guide/Main_Page">
+https://bash.cyberciti.biz/guide/Main_Page</a>
+
+<br><br>
+A great reference: http://linuxcommand.org/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="http://linuxcommand.org/lc3_learning_the_shell.php">
+Learning The Shell</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="http://linuxcommand.org/lc3_writing_shell_scripts.php">
+Writing Shell Scripts</a><br>
+<blockquote><blockquote><blockquote>
+In the Resources section, take a look at Power Terminals and the 
+bash shell script template generator: a script to help write shell scripts. 
+Generated templates include useful shell functions, error and signal handling, 
+and command-line option and argument parsing.
+</blockquote></blockquote></blockquote>
+
+<br><br>
+<hr><hr>
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>

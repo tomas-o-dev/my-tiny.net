@@ -1,0 +1,255 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::DHCPDNS</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+
+<!-- -->
+
+<br>
+
+<h2>Host Name Resolution</h2>
+
+<hr>
+<br>
+First, the essentials:
+<ol>
+<li> There are three files that are used for name resolution 
+(address to name mapping): <br>Any host name used in a configuration 
+file needs to be in one of these places.<br>
+<blockquote>
+<table>
+<tr><td>
+/etc/HOSTNAME 
+</td><td>&nbsp;&nbsp;&nbsp;all systems</td><td> 
+the "official" or "baseline" name, only one line here
+</td></tr><tr><td>
+/etc/hosts
+</td><td>&nbsp;&nbsp;&nbsp;all systems</td><td> 
+lists of alternative names or "aliases" for IP addresses
+</td></tr><tr><td>
+/etc/dnsmasq.d/cnames
+</td><td>&nbsp;&nbsp;&nbsp;gateway only&nbsp;&nbsp;&nbsp;</td><td> 
+list of alternative names or "aliases" for official names
+</td></tr></table>
+</blockquote>
+
+<li> Every host on the network <b>must</b> have<br>
+(See <em>Linux Notes::Network Basics</em> for a hands-on exercise)
+<ul>
+<li> IP address (uniquely identifies the host on the network)
+<li> Netmask (defines the local subnet / layer 3 "broadcast domain")
+<li> Default route (address of a system that knows how to get beyond the subnet)
+</ul>
+<br>
+<li> Commonly used dhcp options
+<ul>
+<li> option <b>subnet-mask</b><i> mask</i> 
+<br>Specifies the subnet mask in dotted decimal notation. 
+<li> option <b>broadcast-address</b><i> address</i>
+<br>Defines the broadcast address for the client's subnet.
+<li> option <b>domain-name</b><i> domain</i>
+<br>Defines the domain part of the FQDN (everything except the HOSTNAME).
+<li> option <b>domain-name-servers</b><i> address [ , address ...]</i>
+<br>Lists the Domain Name System (DNS) name servers the client should use, in order of preference.
+<li> option <b>routers</b><i> address [ , address ...]</i>
+<br>Lists the routers the client should use, in order of preference. Also used to set the default route.
+<li> option <b>static-routes</b><i> destination gateway [ , destination gateway ... ]</i>
+<br>Lists the static routes the client should use. 
+
+</ol>
+
+<br>
+<h3>TinyNet dnsmasq</h3>
+
+Nowadays, /etc/hosts is considered a fallback for when the DNS is not running. 
+It only sets the <tt>localhost</tt> address on all of our systems except the  
+Gateway. Two reasons for this: since it is the gateway between subnets it needs 
+to have one interface with an IP address on each subnet; and since it runs the 
+DNS and DHCP server, 
+it makes sense to have its own addresses and names set outside that service.   
+<br><br>
+One thing to know is that on all Linux systems, names in /etc/hosts 
+without a dot give inconsistent results - sometimes they work and sometimes 
+they don't. The reason is buried deep in the system call code, and will probably 
+never be changed. 
+
+<br><br>
+We use <tt>dnsmasq</tt> because it 
+does two things well: DHCP server and nameserver. 
+They are closely related, but we can pick them apart.
+
+<br><br>
+When <tt>dnsmasq</tt> starts, it reads <tt>/etc/hosts</tt> on the local 
+system along with its configuration files in <tt>/etc/dnsmasq.d/</tt> . 
+Names for the gateway interfaces come from /etc/hosts:
+<pre>
+192.168.56.101    neta-gw.tinynet.edu    net-a.tinynet.edu   gw
+192.168.66.101    netb-gw.tinynet.edu    net-b.tinynet.edu
+192.168.76.101    netc-gw.tinynet.edu    net-c.tinynet.edu   gateway
+</pre>
+Names for the other systems come from the client DHCP requests (dhcpcd), 
+that use <tt>/etc/HOSTNAME</tt> on the local system in a special way. 
+<br><br>
+For example with 
+<cite>ldap-nb.net-b.tinynet.edu</cite> in 
+<tt>/etc/HOSTNAME</tt>, the <tt>localDHCP</tt> function 
+in <tt>/etc/rc.d/rc.inet1</tt> starts the DHCP client with:
+<br><br>
+<cite>/sbin/dhcpcd -i $NNOM -h $HNOM -F both $ETH</cite>
+<br><br> 
+and in the DHCPDISCOVER message dnsmasq sees
+<pre>
+        vendorclass = <font color="blue">net-b</font>
+        hostname = <font color="blue">ldap-nb</font>
+        update FQDN 
+        update PTR
+        assign a dynamic address 
+</pre>
+dnsmasq processes these instructions using directives in <tt>/etc/dnsmasq.d/</tt>
+There are lots of comments in those files, but let's look at the 
+key directives here.
+
+<br><br>
+First, assign a dynamic IP address. We want this done based on the 
+subnet, so in <tt>/etc/dnsmasq.d/dhcp</tt>
+we have several directives with a string to match, a range 
+for address assignment, and a lease time for the address 
+
+<pre>
+    dhcp-vendorclass = netA, net-a
+    dhcp-vendorclass = <font color="red">net-B</font>, <font color="blue">net-b</font>
+    dhcp-vendorclass = netC, net-c
+
+    dhcp-range = net:netA, 192.168.56.102, 192.168.56.252, 12h
+    dhcp-range = net:<font color="red">net-B</font>, 192.168.<font color="red">66</font>.102, 192.168.<font color="red">66</font>.252, 12h
+    dhcp-range = net:netC, 192.168.76.102, 192.168.76.252, 12h
+</pre>
+
+An address to use with <cite>route add default gw</cite> is also passed back
+
+<pre>
+    dhcp-option = net:netA, option:router, 192.168.56.101
+    dhcp-option = net:<font color="red">net-B</font>, option:router, 192.168.<font color="red">66</font>.101
+    dhcp-option = net:netC, option:router, 192.168.76.101
+</pre>
+
+Since these are interfaces on the gateway and dnsmasq is there,
+this address also works to identify the default nameserver
+<br><br>
+
+In <tt>/etc/dnsmasq.d/dns</tt>
+we set dnsmasq to always record the Fully Qualified Domain Name (FQDN) 
+in its lookup tables. Then we set different domains for the subnets, 
+so queries in these domains are answered from <tt>/etc/hosts</tt> or 
+DHCP only. This is equivalent to the <cite>SOA</cite> record in a "real" 
+(ISC bind) setup. 
+<br><br>
+<pre>
+    dhcp-fqdn
+
+    domain = tinynet.edu
+    domain = net-a.tinynet.edu, 192.168.56.0/24
+    domain = <font color="blue">net-b.tinynet.edu</font>, 192.168.<font color="red">66</font>.0/24
+    domain = net-c.tinynet.edu, 192.168.76.0/24
+
+    local = /tinynet.edu/
+    local = /net-a.tinynet.edu/
+    local = /net-b.tinynet.edu/
+    local = /net-c.tinynet.edu/
+</pre>
+
+We use <tt>/etc/dnsmasq.d/cnames</tt> 
+to define aliases for the hosts that request dynamic addresses 
+<br><br>
+<pre>
+    cname = webmail.tinynet.edu, web-na.net-a.tinynet.edu
+    cname = ldap.tinynet.edu, <font color="blue">ldap-nb.net-b.tinynet.edu</font>
+    cname = mailhost.tinynet.edu, mail-nc.net-c.tinynet.edu
+</pre>
+
+Nothing more really: "Resource Records" are the basic information element 
+of the DNS, and <cite>PTR</cite> records are for querying the DNS server with 
+an IP address and getting back the name (called "reverse lookup"),  
+which dnsmasq does "automagically", saving us some work - we 
+have to do this by hand for each one in a "real" (ISC bind) setup.  
+A <cite>MX</cite> (Mail eXchanger") record returns the fully qualified domain name 
+of a mailserver for a site. When an e-mail message is sent through the Internet, 
+the sending mail transfer agent (MTA) sends out a DNS query 
+for the MX records of each recipient's domain name, which returns 
+a list of host names for servers accepting incoming mail 
+for that domain, so the MTA can attempt to establish a SMTP connection.
+<br><br>
+
+
+<hr>
+The "reference implementation" of DNS that runs the global Internet root name servers 
+is called "bind", and is maintained by the Internet Software Consortium (ISC). ISC 
+also maintains a reference implementation of DHCP. There is a very good explanation 
+of how to configure the ISC versions to get the same functionality as dnsmasq at
+<br>
+<a href="http://blog.bigdinosaur.org/running-bind9-and-isc-dhcp/">
+http://blog.bigdinosaur.org/running-bind9-and-isc-dhcp/</a>
+<br><hr>
+<blockquote><br>
+dnsmasq can do a lot more than we ask it to do! Check out all of the features at
+<blockquote>
+<a href="http://www.thekelleys.org.uk/dnsmasq/doc.html">
+http://www.thekelleys.org.uk/dnsmasq/doc.html</a><br>
+
+<a href="http://www.thekelleys.org.uk/dnsmasq/docs/FAQ">
+http://www.thekelleys.org.uk/dnsmasq/docs/FAQ</a><br>
+
+<a href="http://www.thekelleys.org.uk/dnsmasq/docs/dnsmasq-man.html">
+http://www.thekelleys.org.uk/dnsmasq/docs/dnsmasq-man.html</a><br>
+
+<a href="http://www.thekelleys.org.uk/dnsmasq/docs/dnsmasq.conf.example">
+http://www.thekelleys.org.uk/dnsmasq/docs/dnsmasq.conf.example</a>
+</blockquote></blockquote>
+
+
+<br><hr>
+<!-- -->
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</div>
+</div>
+</body>
+</html>

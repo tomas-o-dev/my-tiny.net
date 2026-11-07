@@ -1,0 +1,219 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!-- http://www.dynamicdrive.com/style/layouts/item/css-liquid-layout-33-fluid-fluid-fluid/ -->
+<title>MyTinyNet::ASCII Art</title>
+<LINK rel=stylesheet type=text/css href="css/3fluid.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/twcode.css" media=screen>
+<LINK rel=stylesheet type=text/css href="css/sidebarmenu.css" media=screen>
+<script src="css/equalcolumns.js" type="text/javascript"></script>
+<script src="css/sidebarmenu.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="maincontainer">
+<div id="topsection">
+<div class="innertube">
+<h1>My-Tiny.Net&nbsp;::&nbsp;Networking with Virtual Machines</h1>
+</div>
+</div>
+<div id="contentwrapper">
+<div id="contentcolumn">
+<div class="innertube">
+<!--Content Column-->
+<br>
+<br>
+
+<h2>Fun with ASCII Art</h2>
+
+<hr>
+
+<br>
+Back in the 1980s the "Berkeley Standard Distribution" (BSD) Unix included a package of games - there were not really any GUIs at the time, so they were all terminal (text) based. By the early 1990s people came up with the idea of creating ASCII Art text, using combinations of normal characters and whitespace to make pictures. 
+<br><br>
+We have a few examples we can play with to sharpen our understanding of shell command substitution and redirection: <cite>caeser</cite> and <cite>fortune</cite> from the BSD games, <cite>figlet</cite> and <cite>boxes</cite> from the ASCII art community. The <em>GCC and Make</em> page on the menu has instructions you 
+can use to compile two more ASCII art applications, the Steam Locomotive 
+(<cite>sl</cite>, just for fun) and 
+<cite>TOIlet</cite> which is like a supercharged figlet.
+
+<br><br>
+So, check the man pages and 
+<em>Standard I/O::Redirection</em> on the menu, 
+relax, get your imagination working, 
+and play around with these examples to get started.
+
+<br><br>
+One thing to note: in bash, when command lines are quite long we can use <cite>\</cite> (backslash) to break them up into two lines. 
+The <cite>\</cite> means in this case "to be continued" or "more to come". 
+A command ending with <cite>\</cite> in your terminal will reply 
+with <tt>PS2</tt>, which means it is waiting for the rest of your command.
+<br><br>
+<i><b>IMPORTANT:</b></i> If there is a space after the <cite>\</cite> the command WILL NOT work.<br>
+
+<br><br>
+<h3>Figlet and Boxes</h3>
+
+<i><b>Boxes</b></i> is a text filter which can draw any kind of box around its input text. Box design choices range from simple boxes to complex ASCII art. It was designed to be used with text editors that support filters to create comments in programming code, but we can use it on the command line by piping (|) text output through it.
+
+<br><br>
+Run <code>boxes -l | less</code> to list all designs with their description. 
+Any user may define box designs by copying the system-wide config file to $HOME/.boxes, and editing it. The syntax of the config file is explained on 
+the boxes home page, along with several examples: 
+<a href="http://boxes.thomasjensen.com/docs/">http://boxes.thomasjensen.com/docs/</a>
+
+<br><br>
+As usual, <cite>man&nbsp;boxes</cite> has all the details (type <cite>q</cite> 
+to quit), but here is a quickstart list of switches:
+<ul>
+<li><cite>-d</cite> selects a design from your config file.
+<br><br>
+<li><cite>-a</cite> can be used to position the input text inside a box. The factory default setting is <cite>-a&nbsp;hlvtjl</cite> which stands for "horizontally centered, vertically top, justification left". Since no one really wants to all type that just to center text inside a box, there are shorthand notations: 
+<code>-a&nbsp;l</code> is short for <cite>-a&nbsp;hlvcjl</cite>, 
+<code>-a&nbsp;c</code> is short for <cite>-a&nbsp;hcvcjc</cite>, and
+<code>-a&nbsp;r</code> is short for <cite>-a&nbsp;hrvcjr</cite>.
+<br><br>    
+<li><cite>-p</cite> sets text padding: <cite>-p&nbsp;h0v0</cite> sets padding to "horizontal zero, vertical zero". <cite>-p&nbsp;a1l2</cite> stands for "all 1, left 2", and tells boxes to put one space (or empty line, in the vertical direction) around the input text block, except for the left side where two spaces shall be used.
+<br><br>
+<li><cite>-s</cite> sets the box size. Using <cite>-s&nbsp;40</cite> sets the box width to 40 characters. Using <cite>-s&nbsp;40x11</cite> sets both width and height. Set the height only  with <cite>-s&nbsp;x11</cite> (note the leading x on the argument).
+</ul>
+<br>
+<b><i>FIGlet</i></b> makes large character ASCII banners out of ordinary text. 
+For the full story see 
+<a href="http://www.figlet.org/figlet_history.html">
+http://www.figlet.org/figlet_history.html</a>, and for a nice demo see 
+<a href="http://www.kammerl.de/ascii/AsciiSignature.php">
+http://www.kammerl.de/ascii/AsciiSignature.php</a>. 
+As usual, try <code>figlet&nbsp;--help</code> for a quick list of switches, 
+and <code>man&nbsp;figlet</code> to see all the details. 
+<br><br>
+So let's try it out (<cite>-f</cite> chooses a font) 
+<br><br>
+<blockquote><blockquote>
+<code>showfigfonts&nbsp;|less</code>
+<br><br>
+<code>figlet $(date +%A)</code>
+<br><br>
+<code>figlet -f slant $(date +%x) | boxes -d peek</code>
+<br><br>
+<code>echo -e "\e[01;32m"; figlet $(date +%R) |boxes; echo -e "\e[00m"</code>
+</blockquote></blockquote>
+NOTE: The <cite>-e</cite> option of the echo command enables parsing of the escape sequences. Check <em>Quick Reference&nbsp;::&nbsp;Escape Codes</em> on the menu 
+for a list of possibilities.
+<br><br>
+
+<h3>fortune</h3>
+You can have a random fortune or quote printed each time a user logs in, 
+by simply setting the execute bits on <cite>/etc/profile.d/login-fortune.sh</cite><br>
+Use <code>man fortune</code> to view the options (type <cite>q</cite> to exit the man page). 
+<br><br>
+It's super easy to create your own fortune data file: see 
+<tt>/usr/share/games/fortunes/fortunes</tt> for an example. 
+You can create a new file in this directory, and type in your quotes 
+with a <cite>%</cite> on a line by itself to separate each quote. 
+The last step is to run <code>strfile&nbsp;filename</code> to create 
+a <tt>.dat</tt> file for your fortunes, which contains a header structure 
+and a table of file offsets for each group of lines. This allows random 
+access to the strings.
+<br><br> 
+One thing to note though: the name of the original text file is embedded 
+in the <tt>.dat</tt> file, and it cannot follow symlinks. So - No Renaming!
+<br><br> 
+<h3>fortune, boxes, and wordwrap</h3>
+When you try these examples using <cite>fortune |boxes;</cite> you will find that 
+the wordwrap is pretty messy, because the screen is always 80 characters wide and 
+long lines are automatically wrapped (we see this a lot with long command lines). 
+The way to correct this with fortune is to pipe the output through to 
+the <cite>fold</cite> command, like this:
+<br><br>
+<code>fortune |fold -s -w 70 |boxes -d columns;</code>
+<br><br>
+where <cite>-s</cite> means to wrap on spaces (proper wordwrap) 
+and <cite>-w</cite> says to have only 70 characters on a line rather than the 
+default of 80, which is good for a complex design like <cite>columns</cite>. 
+<br><br>
+
+Do a little experimentation at the command line with the <cite>-w</cite> and 
+<cite>-d</cite> switches to get the design and the size right!
+<br><br> 
+
+<h3>caeser</h3>
+rot13 is a simple encryption method, said to date back to "nn" BC when it was used by the Roman emperor Julius Caeser to keep communications with his army in the field confidential. It works by shifting each character forward 13 times, so that A becomes N, B becomes O, etc. The number 13 is chosen because scrambling and descrambling  uses the exact same algorithm. Only A-Z and a-z is scrambled, other characters and symbols are left untouched.
+<b><i>caesar</i></b> is a utility from BSD games for doing this, using any number for the shift:
+<br><br>
+<blockquote><blockquote>
+<code>echo "You are in a twisty maze of passages, all alike." |caesar 13</code>
+<br><br>
+<code>echo "Lbh ner va n gjvfgl znmr bs cnffntrf, nyy nyvxr." |caesar 13</code>
+</blockquote></blockquote>
+
+<br>
+<h3>All Together at Login Time</h3>
+It can be fun to combine these in your 
+login scripts. 
+At login time, user environment variables are initialized from various global 
+system files like <tt>/etc/profile</tt> or <tt>/etc/bashrc</tt> and user files 
+<tt>~/.bash_profile, ~/.bash_login, ~/.profile, ~/.bashrc</tt> (exactly which 
+one depends on your system). 
+Use <code>man bash</code> to see details - you can 
+type <tt>/search&nbsp;term</tt> to find words in a man page, and <cite>q</cite> to exit.
+
+<br><br>
+On our system, <tt>/etc/profile</tt> will call all of the executable scripts 
+in <tt>/etc/profile.d</tt> that end with <tt>.sh</tt> 
+<br><br>
+So all we need to do is set the execute bits on 
+<cite>/etc/profile.d/login-fortune.sh</cite> and then edit it
+to take away the nonexistent <tt>fortunz</tt> file (the default file 
+is <cite>/usr/games/fortunes</cite> which we 
+have, so we can leave just <cite>fortune</cite> there), and finally 
+pick a nice color (<code>33m</code> is just an example) like this:
+<br><br>
+<pre>
+      echo -e "\e[01;33m"; fortune |fold -s -w 70 |boxes; echo -e "\e[00m" 
+</pre>
+<br><br>
+or perhaps
+<pre>
+      # save the fortune to a variable
+      FF=$(fortune)
+
+      # show cyphertext
+      echo -e "\e[01;31m"; echo $FF |caeser 13 |boxes; echo -e "\e[00m"
+
+      read -p "Press any key to decrypt\n"
+
+      # show plaintext
+      echo -e "\e[01;32m"; echo $FF |boxes; echo -e "\e[00m"
+</pre>
+
+<br><br>
+
+<hr><hr>
+<br>
+
+<br><br>
+<!--Content Column-->
+</div>
+</div>
+</div>
+<div id="leftcolumn">
+<div class="innertube"> 
+<br>
+<script type="text/javascript" src="css/menu_ul.js"> </script>
+</div>
+</div>
+<div id="rightcolumn">
+<div class="innertube">
+&nbsp;
+</div>
+</div>
+<div id="footer">
+<font size="-1">Copyright &copy; 2020 tomas-o<br>
+Designed with the <a href="http://www.dynamicdrive.com/style/">Dynamic Drive CSS Library</a> and font styles by Twitter 
+</font></div>
+</div>
+</body>
+</html>
+
+
